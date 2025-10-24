@@ -1,0 +1,3 @@
+/home/vishon/transport-for-slough/build/CMakeFiles/tfs.dir
+/home/vishon/transport-for-slough/build/CMakeFiles/edit_cache.dir
+/home/vishon/transport-for-slough/build/CMakeFiles/rebuild_cache.dir

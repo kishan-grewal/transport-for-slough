@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/vishon/transport-for-slough/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

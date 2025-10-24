@@ -1,0 +1,1 @@
+/usr/sbin/c++ -Wl,--dependency-file=CMakeFiles/tfs.dir/link.d CMakeFiles/tfs.dir/src/main.cpp.o -o tfs
