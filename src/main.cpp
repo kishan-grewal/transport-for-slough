@@ -5,7 +5,9 @@
 #include "station.hpp"
 #include "train.hpp"
 
-int main(int argc, char** argv) {
-    std::cout << "Hello World!" << std::endl;
-    return 0;
+#include <boost/numeric/odeint.hpp>
+
+int main(int argc, char **argv) {
+  std::cout << "Hello World!" << std::endl;
+  return 0;
 }
