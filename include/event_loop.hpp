@@ -1,4 +1,7 @@
 #include <vector>
+#include <thread>
+#include <atomic>
+#include <memory>
 #include "station.hpp"
 #include "event_pool.hpp"
 
@@ -14,13 +17,13 @@
 
 class EventLoop {
 private:
-    EventPool events;
+    std::atomic<std::shared_ptr<EventPool>> events;
+    std::vector<std::thread> stationThreads{};
     std::vector<Station> stations; //maybe station, inherits from an agent class
 
 public:
     EventLoop();
     void start(); //spawn thread for EventPool operations
-    void stop();
     ~EventLoop();
 };
 

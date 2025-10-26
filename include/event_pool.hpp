@@ -10,13 +10,13 @@ class EventPool {
 private:
     std::multiset<Event> pool;
     int globalTime = 0;
-
-    int dispatchNextEvent();
+    //send a request to the station you would like for event to occur on
+    int sendRequest(std::shared_ptr<Station> target);
     int progressTime(int t);
 
 public:
     EventPool();
-    int addEvent(Event e);
+    int dispatch(Event e);
     int getGlobalTime();
     ~EventPool();
 };
