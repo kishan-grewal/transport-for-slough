@@ -1,10 +1,7 @@
 #include <iostream>
 #include <vector>
 
-#define BOOST_JSON_NO_LIB
-#define BOOST_CONTAINER_NO_LIB
 #include <boost/json/src.hpp>
-
 #include <boost/numeric/odeint.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
@@ -145,9 +142,9 @@ int main(int argc, char **argv) {
   std::vector<double> times;
   // Custom class solver
   boost::numeric::odeint::runge_kutta4<state_type> stepper;
-  ODE_System<boost::numeric::odeint::runge_kutta4<state_type>, harm_osc,
-             state_type>
-      ode_system = ODE_System(stepper, harm_osc(0.15), x);
+  ODE_SystemSolver<boost::numeric::odeint::runge_kutta4<state_type>, harm_osc,
+                   state_type>
+      ode_system = ODE_SystemSolver(stepper, harm_osc(0.15), x);
 
   // Adaptive step (dt is initial step size)
   harm_osc ho(0.15);
@@ -169,7 +166,17 @@ int main(int argc, char **argv) {
   std::ifstream inFile("test.json", std::ios_base::in);
   boost::json::value j = boost::json::parse(inFile);
   inFile.close();
-  pretty_print(std::cout, j);
+  // pretty_print(std::cout, j);
+
+  boost::numeric::odeint::runge_kutta4<LinearODESystem::Vector>
+      linear_ode_stepper;
+  auto ss = StateSpaceFromJSON(linear_ode_stepper,
+                               j.at("equations").as_array().at(0));
+  // ss.system.input = 9.81;
+
+  ss.SolveToTime(10);
+  std::cout << ss.LastState().first << "  " << ss.LastState().second[0] << " "
+            << ss.LastState().second[1] << std::endl;
 
   /*
   // Constant step
