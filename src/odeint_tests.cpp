@@ -5,7 +5,7 @@
 #include <boost/numeric/odeint.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "ode_system.hpp"
+#include "ode/ode_solver.hpp"
 
 // rhs_function
 /* The type of container used to hold the state vector */
@@ -142,9 +142,9 @@ int main(int argc, char **argv) {
   std::vector<double> times;
   // Custom class solver
   boost::numeric::odeint::runge_kutta4<state_type> stepper;
-  ODE_SystemSolver<boost::numeric::odeint::runge_kutta4<state_type>, harm_osc,
-                   state_type>
-      ode_system = ODE_SystemSolver(stepper, harm_osc(0.15), x);
+  ODE_Solver::Solver<boost::numeric::odeint::runge_kutta4<state_type>, harm_osc,
+                     state_type>
+      ode_system = ODE_Solver::Solver(stepper, harm_osc(0.15), x);
 
   // Adaptive step (dt is initial step size)
   harm_osc ho(0.15);
@@ -168,10 +168,10 @@ int main(int argc, char **argv) {
   inFile.close();
   // pretty_print(std::cout, j);
 
-  boost::numeric::odeint::runge_kutta4<LinearODESystem::Vector>
+  boost::numeric::odeint::runge_kutta4<ODE_Solver::LinearSystem::Vector>
       linear_ode_stepper;
-  auto ss = StateSpaceFromJSON(linear_ode_stepper,
-                               j.at("equations").as_array().at(0));
+  auto ss = ODE_Solver::StateSpaceFromJSON(linear_ode_stepper,
+                                           j.at("equations").as_array().at(0));
   // ss.system.input = 9.81;
 
   ss.SolveToTime(10);

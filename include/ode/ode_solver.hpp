@@ -1,36 +1,16 @@
-#ifndef ODE_SYSTEM_HPP
-#define ODE_SYSTEM_HPP
+#ifndef ODE_SOLVER_HPP
+#define ODE_SOLVER_HPP
 
 #include <boost/json/src.hpp>
 #include <boost/numeric/odeint.hpp>
 
 #include <stdexcept>
 
-class LinearODESystem {
+#include "ode/ode_system.hpp"
 
-public:
-  typedef boost::numeric::ublas::vector<double> Vector;
-  typedef boost::numeric::ublas::matrix<double,
-                                        boost::numeric::ublas::row_major>
-      Matrix;
+namespace ODE_Solver {
 
-  double input;
-
-  LinearODESystem(LinearODESystem::Matrix A, LinearODESystem::Vector B,
-                  double input = 0)
-      : A(A), B(B), input(input) {}
-
-  void operator()(const LinearODESystem::Vector &x,
-                  LinearODESystem::Vector &dxdt, const double t) {
-    dxdt = boost::numeric::ublas::prod(A, x) + B * input;
-  }
-
-private:
-  LinearODESystem::Matrix A;
-  LinearODESystem::Vector B;
-};
-
-template <class Stepper, class System, class State> class ODE_SystemSolver {
+template <class Stepper, class System, class State> class Solver {
 private:
   Stepper system_stepper;
 
@@ -40,7 +20,7 @@ private:
 public:
   System system;
 
-  ODE_SystemSolver(Stepper stepper, System system, State state)
+  Solver(Stepper stepper, System system, State state)
       : system_stepper(stepper), system(system), last_update_state(state) {
     this->last_update_time = 0;
   };
@@ -77,7 +57,7 @@ static void JSON_ParseToDouble(double &out, const boost::json::value *value) {
 }
 
 template <class Stepper>
-ODE_SystemSolver<Stepper, LinearODESystem, LinearODESystem::Vector>
+Solver<Stepper, LinearSystem, LinearSystem::Vector>
 StateSpaceFromJSON(Stepper stepper, boost::json::value system_definition) {
   if (system_definition.kind() != boost::json::kind::object) {
     throw std::runtime_error(
@@ -109,7 +89,7 @@ StateSpaceFromJSON(Stepper stepper, boost::json::value system_definition) {
   if (val.kind() != boost::json::kind::array)
     throw std::runtime_error("Invalid JSON value for key [A] in equation "
                              "system initialisation\n");
-  LinearODESystem::Matrix A = LinearODESystem::Matrix(sys_size, sys_size);
+  LinearSystem::Matrix A = LinearSystem::Matrix(sys_size, sys_size);
   {
     boost::json::array const &arr = val.get_array();
     if (!arr.empty()) {
@@ -132,7 +112,7 @@ StateSpaceFromJSON(Stepper stepper, boost::json::value system_definition) {
   if (val.kind() != boost::json::kind::array)
     throw std::runtime_error("Invalid JSON value for key [B] in equation "
                              "system initialisation\n");
-  LinearODESystem::Vector B = LinearODESystem::Vector(sys_size);
+  LinearSystem::Vector B = LinearSystem::Vector(sys_size);
   {
     boost::json::array const &arr = val.get_array();
     if (!arr.empty()) {
@@ -155,7 +135,7 @@ StateSpaceFromJSON(Stepper stepper, boost::json::value system_definition) {
   if (val.kind() != boost::json::kind::array)
     throw std::runtime_error("Invalid JSON value for key [initial] in equation "
                              "system initialisation\n");
-  LinearODESystem::Vector x0 = LinearODESystem::Vector(sys_size);
+  LinearSystem::Vector x0 = LinearSystem::Vector(sys_size);
   {
     boost::json::array const &arr = val.get_array();
     if (!arr.empty()) {
@@ -175,8 +155,10 @@ StateSpaceFromJSON(Stepper stepper, boost::json::value system_definition) {
     }
   }
 
-  return ODE_SystemSolver<Stepper, LinearODESystem, LinearODESystem::Vector>(
-      stepper, LinearODESystem(A, B), x0);
+  return Solver<Stepper, LinearSystem, LinearSystem::Vector>(
+      stepper, LinearSystem(A, B), x0);
 }
+
+} // namespace ODE_Solver
 
 #endif
