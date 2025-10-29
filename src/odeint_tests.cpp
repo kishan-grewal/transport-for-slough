@@ -1,7 +1,12 @@
 #include <iostream>
 #include <vector>
 
+#define BOOST_JSON_NO_LIB
+#define BOOST_CONTAINER_NO_LIB
+#include <boost/json/src.hpp>
+
 #include <boost/numeric/odeint.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 #include "ode_system.hpp"
 
@@ -56,6 +61,79 @@ void display(std::vector<double> times, std::vector<state_type> state,
   }
 }
 
+void pretty_print(std::ostream &os, boost::json::value const &jv,
+                  std::string *indent = nullptr) {
+  std::string indent_;
+  if (!indent)
+    indent = &indent_;
+  switch (jv.kind()) {
+  case boost::json::kind::object: {
+    os << "{\n";
+    indent->append(4, ' ');
+    auto const &obj = jv.get_object();
+    if (!obj.empty()) {
+      auto it = obj.begin();
+      for (;;) {
+        os << *indent << boost::json::serialize(it->key()) << " : ";
+        pretty_print(os, it->value(), indent);
+        if (++it == obj.end())
+          break;
+        os << ",\n";
+      }
+    }
+    os << "\n";
+    indent->resize(indent->size() - 4);
+    os << *indent << "}";
+    break;
+  }
+
+  case boost::json::kind::array: {
+    os << "[\n";
+    indent->append(4, ' ');
+    auto const &arr = jv.get_array();
+    if (!arr.empty()) {
+      auto it = arr.begin();
+      for (;;) {
+        os << *indent;
+        pretty_print(os, *it, indent);
+        if (++it == arr.end())
+          break;
+        os << ",\n";
+      }
+    }
+    os << "\n";
+    indent->resize(indent->size() - 4);
+    os << *indent << "]";
+    break;
+  }
+
+  case boost::json::kind::string: {
+    os << boost::json::serialize(jv.get_string());
+    break;
+  }
+
+  case boost::json::kind::uint64:
+  case boost::json::kind::int64:
+  case boost::json::kind::double_:
+    os << jv;
+    break;
+
+  case boost::json::kind::bool_:
+    if (jv.get_bool())
+      os << "true";
+    else
+      os << "false";
+    break;
+
+  case boost::json::kind::null:
+    os << "null";
+    break;
+  }
+
+  if (indent->empty())
+    os << "\n";
+}
+
 int main(int argc, char **argv) {
 
   // state_initialization
@@ -84,6 +162,14 @@ int main(int argc, char **argv) {
   std::pair<double, state_type> s = ode_system.LastState();
   std::cout << s.first << "  " << s.second[0] << " " << s.second[1]
             << std::endl;
+
+  //
+  // JSON read
+  //
+  std::ifstream inFile("test.json", std::ios_base::in);
+  boost::json::value j = boost::json::parse(inFile);
+  inFile.close();
+  pretty_print(std::cout, j);
 
   /*
   // Constant step
@@ -143,31 +229,4 @@ int main(int argc, char **argv) {
                      harmonic_oscillator, x, 0.0, 10.0, 0.01);
   //]
   */
-
-  // #ifdef BOOST_NUMERIC_ODEINT_CXX11
-  //   //[ define_const_stepper_cpp11
-  //   {
-  //     runge_kutta4<state_type> stepper;
-  //     integrate_const(
-  //         stepper,
-  //         [](const state_type &x, state_type &dxdt, double t) {
-  //           dxdt[0] = x[1];
-  //           dxdt[1] = -x[0] - gam * x[1];
-  //         },
-  //         x, 0.0, 10.0, 0.01);
-  //   }
-  //   //]
-
-  //   //[ harm_iterator_const_step]
-  //   std::for_each(
-  //       make_const_step_time_iterator_begin(stepper, harmonic_oscillator, x,
-  //       0.0,
-  //                                           0.1, 10.0),
-  //       make_const_step_time_iterator_end(stepper, harmonic_oscillator, x),
-  //       [](std::pair<const state_type &, const double &> x) {
-  //         std::cout << x.second << " " << x.first[0] << " " << x.first[1] <<
-  //         "\n";
-  //       });
-  // //]
-  // #endif
 }
