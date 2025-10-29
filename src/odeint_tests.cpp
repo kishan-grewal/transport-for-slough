@@ -3,6 +3,8 @@
 
 #include <boost/numeric/odeint.hpp>
 
+#include "ode_system.hpp"
+
 // rhs_function
 /* The type of container used to hold the state vector */
 typedef std::vector<double> state_type;
@@ -54,16 +56,20 @@ void display(std::vector<double> times, std::vector<state_type> state,
   }
 }
 
-int main(int /* argc */, char ** /* argv */) {
+int main(int argc, char **argv) {
 
   // state_initialization
   state_type x(2);
   x[0] = 1.0; // start at x=1.0, p=0.0
   x[1] = 0.0;
-
   // Observed
   std::vector<state_type> x_vec;
   std::vector<double> times;
+  // Custom class solver
+  boost::numeric::odeint::runge_kutta4<state_type> stepper;
+  ODE_System<boost::numeric::odeint::runge_kutta4<state_type>, harm_osc,
+             state_type>
+      ode_system = ODE_System(stepper, harm_osc(0.15), x);
 
   // Adaptive step (dt is initial step size)
   harm_osc ho(0.15);
@@ -73,6 +79,13 @@ int main(int /* argc */, char ** /* argv */) {
   display(times, x_vec, steps);
   times.clear(), x_vec.clear();
 
+  // Class-based solver
+  ode_system.SolveToTime(10);
+  std::pair<double, state_type> s = ode_system.LastState();
+  std::cout << s.first << "  " << s.second[0] << " " << s.second[1]
+            << std::endl;
+
+  /*
   // Constant step
   boost::numeric::odeint::runge_kutta4<state_type> stepper;
   steps = boost::numeric::odeint::integrate_const(
@@ -129,6 +142,7 @@ int main(int /* argc */, char ** /* argv */) {
   integrate_adaptive(make_controlled(1.0e-10, 1.0e-6, error_stepper_type()),
                      harmonic_oscillator, x, 0.0, 10.0, 0.01);
   //]
+  */
 
   // #ifdef BOOST_NUMERIC_ODEINT_CXX11
   //   //[ define_const_stepper_cpp11
