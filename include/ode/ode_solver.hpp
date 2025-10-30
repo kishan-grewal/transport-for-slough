@@ -26,6 +26,12 @@ public:
   };
   // ~ODE_System();
 
+  template <class Observer> void SolveToTime(double t, Observer observer) {
+    boost::numeric::odeint::integrate_adaptive(
+        this->system_stepper, this->system, this->last_update_state,
+        this->last_update_time, t, 0.01, observer);
+    this->last_update_time = t;
+  }
   void SolveToTime(double t) {
     boost::numeric::odeint::integrate_adaptive(
         this->system_stepper, this->system, this->last_update_state,

@@ -50,6 +50,21 @@ struct push_back_state_and_time {
   }
 };
 
+struct push_back_state_and_time_vec {
+  std::vector<ODE_Solver::LinearSystem::Vector> &m_states;
+  std::vector<double> &m_times;
+
+  push_back_state_and_time_vec(
+      std::vector<ODE_Solver::LinearSystem::Vector> &states,
+      std::vector<double> &times)
+      : m_states(states), m_times(times) {}
+
+  void operator()(const ODE_Solver::LinearSystem::Vector &x, double t) {
+    m_states.push_back(x);
+    m_times.push_back(t);
+  }
+};
+
 void display(std::vector<double> times, std::vector<state_type> state,
              size_t steps) {
   for (size_t i = 0; i <= steps; i++) {
@@ -168,15 +183,58 @@ int main(int argc, char **argv) {
   inFile.close();
   // pretty_print(std::cout, j);
 
-  boost::numeric::odeint::runge_kutta4<ODE_Solver::LinearSystem::Vector>
-      linear_ode_stepper;
-  auto ss = ODE_Solver::StateSpaceFromJSON(linear_ode_stepper,
+  // --------------------------------------
+  // Solver class testing
+  // --------------------------------------
+
+  /* Const step */
+  // auto ss = ODE_Solver::StateSpaceFromJSON(error_solver(),
+  //                                          j.at("equations").as_array().at(0));
+  /*            */
+
+  /* Relative step */
+  typedef boost::numeric::odeint::runge_kutta_cash_karp54<
+      ODE_Solver::LinearSystem::Vector>
+      error_stepper_type;
+  typedef boost::numeric::odeint::controlled_runge_kutta<error_stepper_type>
+      controlled_stepper_type;
+  double abs_err = 1.0e-10, rel_err = 1.0e-6, a_x = 1.0, a_dxdt = 1.0;
+  controlled_stepper_type controlled_stepper(
+      boost::numeric::odeint::default_error_checker<
+          double, boost::numeric::odeint::vector_space_algebra,
+          boost::numeric::odeint::default_operations>(abs_err, rel_err, a_x,
+                                                      a_dxdt));
+
+  auto ss = ODE_Solver::StateSpaceFromJSON(controlled_stepper,
                                            j.at("equations").as_array().at(0));
+  /*               */
+
   // ss.system.input = 9.81;
 
-  ss.SolveToTime(10);
-  std::cout << ss.LastState().first << "  " << ss.LastState().second[0] << " "
-            << ss.LastState().second[1] << std::endl;
+  // Solving
+  std::vector<ODE_Solver::LinearSystem::Vector> states;
+  ss.SolveToTime(10, push_back_state_and_time_vec(states, times));
+  for (size_t i = 0; i < states.size(); i++) {
+    std::cout << std::fixed << std::setprecision(5) << times[i] << " "
+              << states[i][0] << " " << states[i][1] << '\n';
+  }
+  {
+    typedef boost::numeric::odeint::runge_kutta_cash_karp54<state_type>
+        error_stepper_type;
+    typedef boost::numeric::odeint::controlled_runge_kutta<error_stepper_type>
+        controlled_stepper_type;
+    controlled_stepper_type controlled_stepper;
+    integrate_adaptive(controlled_stepper, harmonic_oscillator, x, 0.0, 10.0,
+                       0.01);
+    //]
+
+    //[integrate_adapt_full
+    double abs_err = 1.0e-10, rel_err = 1.0e-6, a_x = 1.0, a_dxdt = 1.0;
+    controlled_stepper_type c(boost::numeric::odeint::default_error_checker<
+                              double, boost::numeric::odeint::range_algebra,
+                              boost::numeric::odeint::default_operations>(
+        abs_err, rel_err, a_x, a_dxdt));
+  }
 
   /*
   // Constant step
