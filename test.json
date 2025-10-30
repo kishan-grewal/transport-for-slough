@@ -15,7 +15,13 @@
       "initial": [
         1,
         0
-      ]
+      ],
+      "stepper": {
+        "abs_err": 1.0e-10,
+        "rel_err": 1.0e-6,
+        "a_x": 1.0,
+        "a_dxdt": 1.0
+      }
     }
   ]
 }

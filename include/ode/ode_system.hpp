@@ -4,30 +4,24 @@
 #include <boost/numeric/odeint.hpp>
 
 namespace ODE_Solver {
+typedef typename boost::numeric::ublas::vector<double> Vector;
+typedef typename boost::numeric::ublas::matrix<double, boost::numeric::ublas::row_major> Matrix;
 
 class LinearSystem {
-
-public:
-  typedef boost::numeric::ublas::vector<double> Vector;
-  typedef boost::numeric::ublas::matrix<double,
-                                        boost::numeric::ublas::row_major>
-      Matrix;
-
+  public:
   double input;
 
-  LinearSystem(LinearSystem::Matrix A, LinearSystem::Vector B, double input = 0)
-      : A(A), B(B), input(input) {}
+  LinearSystem(Matrix A, Vector B, double input = 0) : A(A), B(B), input(input) {}
 
-  void operator()(const LinearSystem::Vector &x, LinearSystem::Vector &dxdt,
-                  const double t) {
+  void operator()(const Vector &x, Vector &dxdt, const double t) {
     dxdt = boost::numeric::ublas::prod(A, x) + B * input;
   }
 
-private:
-  LinearSystem::Matrix A;
-  LinearSystem::Vector B;
+  private:
+  Matrix A;
+  Vector B;
 };
 
-} // namespace ODE_Solver
+}  // namespace ODE_Solver
 
 #endif

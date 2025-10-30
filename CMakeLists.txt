@@ -25,6 +25,7 @@ add_executable(${PROJECT_NAME}
   # src/train.cpp
 
   src/odeint_tests.cpp
+  src/ode/ode_solver.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
