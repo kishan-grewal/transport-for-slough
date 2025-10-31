@@ -14,7 +14,7 @@ class LinearSystem {
   LinearSystem(Matrix A, Vector B, double input = 0) : A(A), B(B), input(input) {}
 
   void operator()(const Vector &x, Vector &dxdt, const double t) {
-    dxdt = boost::numeric::ublas::prod(A, x) + B * input;
+    dxdt = boost::numeric::ublas::prod(A, x) + (B * input);
   }
 
   private:

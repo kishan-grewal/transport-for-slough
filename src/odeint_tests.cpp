@@ -5,6 +5,10 @@
 #include <boost/numeric/odeint.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+#include <SFML/Graphics.hpp>
+#include <SFGraphing/SFPlot.h>
+#include <SFGraphing/PlotDataSet.h>
+
 #include "ode/ode_solver.hpp"
 
 // rhs_function
@@ -25,31 +29,25 @@ class harm_osc {
   }
 };
 
-// integrate_observer
-struct push_back_state_and_time {
-  std::vector<state_type> &m_states;
-  std::vector<double> &m_times;
-
-  push_back_state_and_time(std::vector<state_type> &states, std::vector<double> &times)
-      : m_states(states), m_times(times) {}
-
-  void operator()(const state_type &x, double t) {
-    m_states.push_back(x);
-    m_times.push_back(t);
-  }
-};
-
-struct push_back_state_and_time_vec {
+struct StateTimeObserver {
   std::vector<ODE_Solver::Vector> &m_states;
   std::vector<double> &m_times;
 
-  push_back_state_and_time_vec(std::vector<ODE_Solver::Vector> &states, std::vector<double> &times)
+  StateTimeObserver(std::vector<ODE_Solver::Vector> &states, std::vector<double> &times)
       : m_states(states), m_times(times) {}
 
   void operator()(const ODE_Solver::Vector &x, double t) {
     m_states.push_back(x);
     m_times.push_back(t);
   }
+};
+struct LinearSystemInput {
+  ODE_Solver::LinearSystem &system;
+  double timestep = 0.1;
+
+  LinearSystemInput(ODE_Solver::LinearSystem &system) : system(system) {}
+
+  void operator()(double t) { system.input = t / 10; };
 };
 
 void display(std::vector<double> times, std::vector<state_type> state, size_t steps) {
@@ -131,7 +129,24 @@ void pretty_print(std::ostream &os, boost::json::value const &jv, std::string *i
     os << "\n";
 }
 
+void SystemToPlot(csrc::SFPlot &plot, std::vector<ODE_Solver::Vector> &states,
+                  std::vector<double> &times, sf::Color colour = sf::Color::Green,
+                  std::string label = "") {
+  auto sets = csrc::PlotDataSet::MultiPlotDatSet(times, states, colour, csrc::PlottingType::LINE,
+                                                 {"x1", "x2"});
+  for (auto set = sets.begin(); set != sets.end(); ++set)
+    plot.AddDataSet(*set);
+
+  plot.SetupAxes(*std::min_element(times.begin(), times.end()),
+                 *std::max_element(times.begin(), times.end()), -2, 2, 1, 0.5, sf::Color::White);
+  plot.GenerateVertices();
+}
+
 int main(int argc, char **argv) {
+  sf::RenderWindow window(sf::VideoMode(800, 800), "ODEint Testing");
+  sf::Font font;
+  font.loadFromFile("/mnt/c/Windows/Fonts/arial.ttf");
+
   //
   // Manual equation definition
   //
@@ -170,18 +185,26 @@ int main(int argc, char **argv) {
   std::vector<ODE_Solver::Vector> states;
   std::vector<double> times;
 
-  ss.SolveToTime(10, push_back_state_and_time_vec(states, times));
-  std::cout << std::endl;
-  for (size_t i = 0; i < states.size(); i++) {
-    std::cout << std::fixed << std::setprecision(5) << times[i] << " " << states[i][0] << " "
-              << states[i][1] << '\n';
-  }
-
+  ss.SolveToTime(10, StateTimeObserver(states, times), -1, LinearSystemInput(ss.system));
+  csrc::SFPlot plot(sf::Vector2f(0, 0), sf::Vector2f(300, 700), 50, font, "t", "X");
+  SystemToPlot(plot, states, times);
   states.clear(), times.clear();
-  ss2.SolveToTime(10, push_back_state_and_time_vec(states, times));
-  std::cout << std::endl;
-  for (size_t i = 0; i < states.size(); i++) {
-    std::cout << std::fixed << std::setprecision(5) << times[i] << " " << states[i][0] << " "
-              << states[i][1] << '\n';
+
+  ss2.SolveToTime(10, StateTimeObserver(states, times), -1);
+  csrc::SFPlot plot2(sf::Vector2f(350, 0), sf::Vector2f(300, 700), 50, font, "t", "X");
+  SystemToPlot(plot2, states, times, sf::Color::Blue);
+  states.clear(), times.clear();
+
+  while (window.isOpen()) {
+    sf::Event event;
+    while (window.pollEvent(event)) {
+      if (event.type == sf::Event::Closed) {
+        window.close();
+      }
+    }
+    window.clear();
+    window.draw(plot);
+    window.draw(plot2);
+    window.display();
   }
 }
