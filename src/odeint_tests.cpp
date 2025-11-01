@@ -11,10 +11,6 @@
 
 #include "ode/ode_solver.hpp"
 
-// rhs_function
-/* The type of container used to hold the state vector */
-typedef std::vector<double> state_type;
-
 // rhs_class
 /* The rhs of x' = f(x) defined as a class */
 class harm_osc {
@@ -23,7 +19,7 @@ class harm_osc {
   public:
   harm_osc(double gam) : m_gam(gam) {}
 
-  void operator()(const state_type &x, state_type &dxdt, const double /* t */) {
+  void operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt, const double /* t */) {
     dxdt[0] = x[1];
     dxdt[1] = -x[0] - m_gam * x[1];
   }
@@ -49,13 +45,6 @@ struct LinearSystemInput {
 
   void operator()(double t) { system.input = t / 10; };
 };
-
-void display(std::vector<double> times, std::vector<state_type> state, size_t steps) {
-  for (size_t i = 0; i <= steps; i++) {
-    std::cout << std::fixed << std::setprecision(5) << times[i] << " " << state[i][0] << " "
-              << state[i][1] << '\n';
-  }
-}
 
 void pretty_print(std::ostream &os, boost::json::value const &jv, std::string *indent = nullptr) {
   std::string indent_;
@@ -129,6 +118,7 @@ void pretty_print(std::ostream &os, boost::json::value const &jv, std::string *i
     os << "\n";
 }
 
+const double t = 50;
 void SystemToPlot(csrc::SFPlot &plot, std::vector<ODE_Solver::Vector> &states,
                   std::vector<double> &times, sf::Color colour = sf::Color::Green,
                   std::string label = "") {
@@ -137,8 +127,9 @@ void SystemToPlot(csrc::SFPlot &plot, std::vector<ODE_Solver::Vector> &states,
   for (auto set = sets.begin(); set != sets.end(); ++set)
     plot.AddDataSet(*set);
 
-  plot.SetupAxes(*std::min_element(times.begin(), times.end()),
-                 *std::max_element(times.begin(), times.end()), -2, 2, 1, 0.5, sf::Color::White);
+  auto minmax = std::minmax_element(times.begin(), times.end());
+  plot.SetupAxes(*minmax.first, *minmax.second, -2, 2, (*minmax.second - *minmax.first) / 10, 0.5,
+                 sf::Color::White);
   plot.GenerateVertices();
 }
 
@@ -152,17 +143,18 @@ int main(int argc, char **argv) {
   //
 
   // state_initialization
-  state_type x(2);
-  x[0] = 1.0;  // start at x=1.0, p=0.0
-  x[1] = 0.0;
+  ODE_Solver::Vector x(2);
+  x[0] = 1.0, x[1] = 0.0;  // start at x=1.0, p=0.0
 
   // Custom class solver
-  ODE_Solver::Solver<boost::numeric::odeint::runge_kutta4<state_type>, harm_osc, state_type>
-    ode_system =
-      ODE_Solver::Solver(boost::numeric::odeint::runge_kutta4<state_type>(), harm_osc(0.15), x);
-  ode_system.SolveToTime(10);
-  state_type s = ode_system.LastState();
-  std::cout << "Ending state:" << ode_system.LastTime() << "  " << s[0] << " " << s[1] << std::endl;
+  ODE_Solver::Solver<boost::numeric::odeint::runge_kutta4<ODE_Solver::Vector>, harm_osc,
+                     ODE_Solver::Vector>
+    ode_system = ODE_Solver::Solver(boost::numeric::odeint::runge_kutta4<ODE_Solver::Vector>(),
+                                    harm_osc(0.15), x);
+  ode_system.SolveToTime(t);
+  ODE_Solver::Vector s = ode_system.LastState();
+  std::cout << "Harmonic Osc. ending state:" << ode_system.LastTime() << "  " << s[0] << " " << s[1]
+            << std::endl;
 
   //
   // JSON equation defintion
@@ -175,26 +167,29 @@ int main(int argc, char **argv) {
   // --------------------------------------
   // Solver class testing
   // --------------------------------------
-  auto const &equation_array = j.at("equations").as_array();
+  auto const &equation_definition_array = j.at("equations").as_array();
 
-  auto ss = ODE_Solver::LinearSysFromJSON(
-    boost::numeric::odeint::runge_kutta_dopri5<ODE_Solver::Vector>(), equation_array.at(0));
-  auto ss2 = ODE_Solver::LinearSysFromJSON(equation_array.at(0));
+  auto ss =
+    ODE_Solver::LinearSysFromJSON(boost::numeric::odeint::runge_kutta_dopri5<ODE_Solver::Vector>(),
+                                  equation_definition_array.at(0));
+  auto ss2 = ODE_Solver::LinearSysFromJSON(equation_definition_array.at(1));
+  ss2.system.input = 0.05;
 
   // Solving
   std::vector<ODE_Solver::Vector> states;
   std::vector<double> times;
 
-  ss.SolveToTime(10, StateTimeObserver(states, times), -1, LinearSystemInput(ss.system));
-  csrc::SFPlot plot(sf::Vector2f(0, 0), sf::Vector2f(300, 700), 50, font, "t", "X");
+  ss.SolveToTime(t, StateTimeObserver(states, times), -1, LinearSystemInput(ss.system));
+  csrc::SFPlot plot(sf::Vector2f(0, 0), sf::Vector2f(375, 700), 35, font, "t", "X");
   SystemToPlot(plot, states, times);
   states.clear(), times.clear();
 
-  ss2.SolveToTime(10, StateTimeObserver(states, times), -1);
-  csrc::SFPlot plot2(sf::Vector2f(350, 0), sf::Vector2f(300, 700), 50, font, "t", "X");
+  ss2.SolveToTime(t, StateTimeObserver(states, times), -1);
+  csrc::SFPlot plot2(sf::Vector2f(400, 0), sf::Vector2f(375, 700), 35, font, "t", "X");
   SystemToPlot(plot2, states, times, sf::Color::Blue);
   states.clear(), times.clear();
 
+  // Window rendering
   while (window.isOpen()) {
     sf::Event event;
     while (window.pollEvent(event)) {
