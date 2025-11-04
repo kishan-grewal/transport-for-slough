@@ -10,13 +10,15 @@ EventPool::EventPool(int time) {
     this->maxTime = time;
     this->target = -1;
 
-    this->dispatch(Event(20, 1));
+    this->dispatch(Event(5, 1));
     this->dispatch(Event(10, 0));
+    //this->dispatch(Event(15, 2));
 }
 
 
 int EventPool::progressTime() {
     //print the pool for debugging
+    {
     std::lock_guard<std::mutex> lock(this->poolMutex);
     std::cout << "Current Event Pool: " << std::endl;
     for (const auto& e : this->pool) {
@@ -39,15 +41,22 @@ int EventPool::progressTime() {
         //erase and re insert for modification of times
     }
     else {
-        this->tOffset = tAgg;
+        this->tOffset = this->globalTime;
     }
     this->globalTime += tAgg;
-
     //send request to target at event time
     
     int target = (*it).getTarget();
     this->pool.erase(it);
     this->sendRequest(target);
+    }
+    if(target < 5 && target != -1) {
+        this->dispatch(Event(40+this->globalTime, target+1));
+    }
+
+    if(target == 5) {
+        std::cout << "End of line reached, no further events dispatched." << std::endl;
+    }
 
     return 0;
 }
@@ -63,7 +72,7 @@ int EventPool::getPoolEmpty() {
 
 int EventPool::dispatch(Event e) {
     std::lock_guard<std::mutex> lock(this->poolMutex);
-    this->pool.insert(e);
+    this->pool.insert(e); 
     return 0; //lock goes out of scope at end of function
 }
 

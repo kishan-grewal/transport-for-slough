@@ -5,7 +5,7 @@
 
 EventLoop::EventLoop(int time) {
     this->events = std::make_shared<EventPool>(time);
-    this->stations = {Station("Stratford"),Station("West Ham")};
+    this->stations = {Station("Stratford"),Station("West Ham"),Station("Canning Town"),Station("North Greenwich"),Station("Canary Wharf"), Station("Canada Water")};
 }
 
 void EventLoop::start() {
@@ -19,9 +19,7 @@ void EventLoop::start() {
 
 void EventLoop::run() {
     while (this->running.load()) {
-        std::cout << "Event Loop progressing time..." << std::endl;
         this->events.load()->progressTime();
-        std::cout << "Event Loop dispatched event." << std::endl;
         int target = this->events.load()->getTarget();
         std::cout << "Dispatching event to station index: " << target << std::endl;
         if (target != -1) {

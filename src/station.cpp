@@ -11,12 +11,9 @@ void Station::listen() {
     //listen for events from event pool
 
     while (this->running) {
-        std::cout << "Listening at " << this->name << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(1));
         if (this->request == true) {
             //check busy, set event
-            std::cout << "Event Received at " << this->name << std::endl;
-
             this->request = false;
         }
     }
@@ -29,7 +26,7 @@ void Station::stop() {
 void Station::receiveLeaveRequest() {
     this->request = true;
     std::cout << "Leave request received at " << this->name << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::microseconds(100));
 }
 
 Station::~Station() {
