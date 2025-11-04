@@ -1,22 +1,29 @@
 #include "event.hpp"
 #include <exception>
+#include <stdexcept>
 
 Event::Event(int t, int index) {
     this->time = t;
     this->targetIndex = index;
 }
 
-int Event::addTime(int t) {
-    this->time += t;
-    if(this->time <= 0) {
-        throw std::logic_error("TimeError, event should have executed");
-    }
+int Event::getTarget() const {
+    return this->targetIndex;
 }
 
-int Event::getTime() {
+int Event::getTime() const{
     return this->time;
 }
 
-bool Event::operator<(Event& rhs) {
-    return this->time < rhs.getTime();
+bool Event::propogate() const {
+    return this->propogateOthers;
+}
+
+Event::~Event() {
+    this->targetIndex = 0;
+    this->time = 0;
+}
+
+bool operator<(Event lhs, Event rhs) {
+    return lhs.getTime() < rhs.getTime();
 }

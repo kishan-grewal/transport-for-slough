@@ -20,10 +20,12 @@ private:
     std::atomic<std::shared_ptr<EventPool>> events;
     std::vector<std::thread> stationThreads{};
     std::vector<Station> stations; //maybe station, inherits from an agent class
-
+    std::shared_ptr<std::thread> runThread;
+    std::atomic<bool> running = true;
 public:
-    EventLoop();
+    EventLoop(int time = 0);
     void start(); //spawn thread for EventPool operations
+    void run();
     ~EventLoop();
 };
 
