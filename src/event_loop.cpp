@@ -4,8 +4,10 @@
 #include <iostream>
 
 EventLoop::EventLoop(int time) {
-    this->events = std::make_shared<EventPool>(time);
-    this->stations = {Station("Stratford"),Station("West Ham"),Station("Canning Town"),Station("North Greenwich"),Station("Canary Wharf"), Station("Canada Water")};
+    this->stations = {Station("Stratford"),Station("West Ham"),Station("Canning Town"),Station("North Greenwich"),Station("Canary Wharf"), Station("Canada Water"),
+                      Station("Bermondsey"),Station("London Bridge"),Station("Southwark"),Station("Waterloo"),};
+
+    this->events = std::make_shared<EventPool>(time, this->stations.size());
 }
 
 void EventLoop::start() {
@@ -22,6 +24,9 @@ void EventLoop::run() {
         this->events.load()->progressTime();
         int target = this->events.load()->getTarget();
         std::cout << "Dispatching event to station index: " << target << std::endl;
+        if(target >= this->stations.size()) {
+            target = 0;
+        }
         if (target != -1) {
             this->stations[target].receiveLeaveRequest();
         }

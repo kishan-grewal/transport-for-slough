@@ -16,6 +16,7 @@ private:
     int maxTime = 0;
     int tOffset = 0; //multiset is immutable
     int target = -1;
+    int maxSize = 0;
     //rather than subtract the times from individual events
     //store the number to subtract from all elements and compute
     //on event fetch
@@ -24,7 +25,7 @@ private:
     int sendRequest(int target);
 
 public:
-    EventPool(int time);
+    EventPool(int time, int stationSize);
     int dispatch(Event e);
     int getGlobalTime();
     int getTarget();

@@ -3,15 +3,16 @@
 #include <iostream>
 #include <thread>
 
-EventPool::EventPool(int time) {
+EventPool::EventPool(int time, int stationSize) {
     this->pool = std::multiset<Event>();
     this->globalTime = 0;
     this->tOffset = 0;
     this->maxTime = time;
     this->target = -1;
+    this->maxSize = stationSize;
 
     this->dispatch(Event(5, 1));
-    this->dispatch(Event(10, 0));
+    this->dispatch(Event(5, 0));
     //this->dispatch(Event(15, 2));
 }
 
@@ -50,13 +51,13 @@ int EventPool::progressTime() {
     this->pool.erase(it);
     this->sendRequest(target);
     }
-    if(target < 5 && target != -1) {
+    if(target >= 0 && target < this->maxSize - 1) {
         this->dispatch(Event(40+this->globalTime, target+1));
     }
-
-    if(target == 5) {
-        std::cout << "End of line reached, no further events dispatched." << std::endl;
+    else if(target == this->maxSize - 1) {
+        this->dispatch(Event(40+this->globalTime, 0));
     }
+
 
     return 0;
 }

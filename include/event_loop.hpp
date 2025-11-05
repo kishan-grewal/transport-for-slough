@@ -3,6 +3,7 @@
 #include <atomic>
 #include <memory>
 #include "station.hpp"
+#include "train.hpp"
 #include "event_pool.hpp"
 
 #ifndef EVENT_LOOP_HPP
@@ -15,11 +16,14 @@
 //station progresses state and dispatches new event to loop
 //alternatively if failed request, modify time of the request that called to repeat later
 
+//we want to just pass a bunch of trains and stations, and the event loop automatically manages them
+
 class EventLoop {
 private:
     std::atomic<std::shared_ptr<EventPool>> events;
     std::vector<std::thread> stationThreads{};
     std::vector<Station> stations; //maybe station, inherits from an agent class
+    std::vector<Train> trains;
     std::shared_ptr<std::thread> runThread;
     std::atomic<bool> running = true;
 public:
