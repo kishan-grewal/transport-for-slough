@@ -1,12 +1,9 @@
-#include <mutex>
-
-#include "event.hpp"
-#include "station.hpp"
-
 #ifndef EVENT_POOL_HPP
 #define EVENT_POOL_HPP
-
+#include <mutex>
+#include "state.hpp"
 #include <set>
+#include "event.hpp"
 
 class EventPool {
 private:
@@ -17,6 +14,8 @@ private:
     int tOffset = 0; //multiset is immutable
     int target = -1;
     int maxSize = 0;
+    int trainsSize = 0;
+    State* state;
     //rather than subtract the times from individual events
     //store the number to subtract from all elements and compute
     //on event fetch
@@ -25,7 +24,7 @@ private:
     int sendRequest(int target);
 
 public:
-    EventPool(int time, int stationSize);
+    EventPool(int time, int stationSize, int trainsSize, State* loop);
     int dispatch(Event e);
     int getGlobalTime();
     int getTarget();

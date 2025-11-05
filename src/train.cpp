@@ -22,3 +22,10 @@ int Train::getEndIndex() const {
 int Train::getDirection() const {
     return this->direction;
 }
+
+Train::~Train() {
+    this->capacity = 0;
+    this->startIndex = 0;
+    this->endIndex = 0;
+    this->direction = 0;
+}

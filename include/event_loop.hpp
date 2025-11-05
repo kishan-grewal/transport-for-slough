@@ -1,3 +1,5 @@
+#ifndef EVENT_LOOP_HPP
+#define EVENT_LOOP_HPP
 #include <vector>
 #include <thread>
 #include <atomic>
@@ -5,9 +7,7 @@
 #include "station.hpp"
 #include "train.hpp"
 #include "event_pool.hpp"
-
-#ifndef EVENT_LOOP_HPP
-#define EVENT_LOOP_HPP
+#include "state.hpp"
 
 //spawn a thread for eventpool to run on
 //spawn threads for the stations to run on
@@ -22,12 +22,11 @@ class EventLoop {
 private:
     std::atomic<std::shared_ptr<EventPool>> events;
     std::vector<std::thread> stationThreads{};
-    std::vector<Station> stations; //maybe station, inherits from an agent class
-    std::vector<Train> trains;
     std::shared_ptr<std::thread> runThread;
     std::atomic<bool> running = true;
 public:
     EventLoop(int time = 0);
+    State state; //for now global state is public
     void start(); //spawn thread for EventPool operations
     void run();
     ~EventLoop();
