@@ -12,7 +12,7 @@ private:
     int globalTime = 0;
     int maxTime = 0;
     int tOffset = 0; //multiset is immutable
-    int target = -1;
+    std::vector<int> target = {};
     int maxSize = 0;
     int trainsSize = 0;
     State* state;
@@ -27,8 +27,9 @@ public:
     EventPool(int time, int stationSize, int trainsSize, State* loop);
     int dispatch(Event e);
     int getGlobalTime();
-    int getTarget();
-    int progressTime();
+    std::vector<int> getTargets();
+    void emptyTargets() {this->target = {-1};}
+    int progressTime(std::barrier<>& syncPoint);
     int getPoolEmpty();
     ~EventPool();
 };

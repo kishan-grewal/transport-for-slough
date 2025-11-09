@@ -3,45 +3,58 @@
 #include <iterator>
 #include <iostream>
 #include <thread>
+#include <barrier>
 
 EventPool::EventPool(int time, int stationSize, int trainsSize, State* state) {
     this->pool = std::multiset<Event>();
     this->globalTime = 0;
     this->tOffset = 0;
     this->maxTime = time;
-    this->target = -1;
+    this->target = {-1};
     this->maxSize = stationSize;
     this->trainsSize = trainsSize;
     this->state = state;
-
+    std::cout << state->trains.size() << state->stations.size() << std::endl;
     for (int i = 0; i < trainsSize; ++i) {
         this->dispatch(Event(10, state->getTrain(i).getStartIndex(), i)); //set off the trains, choo choo
     }
 }
 
 
-int EventPool::progressTime() {
+int EventPool::progressTime(std::barrier<>& syncPoint) {
     //print the pool for debugging
     
     int target = -1;
     int trainIndex = -1;
-    {
-    std::lock_guard<std::mutex> lock(this->poolMutex);
-    std::cout << "Current Event Pool: " << std::endl;
-    for (const auto& e : this->pool) {
-        std::cout << "Event Time: " << e.getTime() << " Target: " << e.getTarget() << "Train: " << e.getTrainIndex() << "Global time: " << this->globalTime << std::endl;
-    }
+    int t = 0; int nextT = 0; bool multi = false; bool propogate = false;
+    int tOffsetNow = this->globalTime;
+    {std::lock_guard<std::mutex> lock(this->poolMutex);
+        //std::cout << "Current Event Pool: " << std::endl;
+        //for (const auto& e : this->pool) {
+        //    std::cout << "Event Time: " << e.getTime() << " Target: " << e.getTarget() << "Train: " << e.getTrainIndex() << "Global time: " << this->globalTime << std::endl;
+        //}
+
+        //std::cout << "BAR" << std::endl;
     
-    if (this->pool.empty()) {
-        std::cout << "No events to progress time to." << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        this->target = -1; //reset to no event target
-        return -1; //no events to progress time to
+        if (this->pool.empty()) {
+            std::cout << "No events to progress time to." << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            this->target = {-1}; //reset to no event target
+            return -1; //no events to progress time to
+        }
+        auto it = this->pool.begin();
+        t = (*it).getTime();
+        nextT = (*std::next(it,1)).getTime();
+        target = (*it).getTarget();
+        trainIndex = (*it).getTrainIndex();
+        propogate = (*it).propogate();
+        this->pool.erase(it);
+    }   
+    if(nextT == t) {
+        this->progressTime(syncPoint);
+        multi = true;
     }
-    auto it = this->pool.begin();
-    int t = (*it).getTime();
-    int disturbanceLocation = (*it).getTarget();
-    if((*it).propogate()) { //propogation events happen instantly increasing ttl
+    if(propogate) { //propogation events happen instantly increasing ttl
         t += 0;
         //find all events that share target
         //erase and re insert for modification of times
@@ -49,30 +62,28 @@ int EventPool::progressTime() {
     else {
         this->tOffset = this->globalTime;
     }
-    this->globalTime += t - this->tOffset;
+    if(!multi) {
+        this->globalTime += t - tOffsetNow;
+        std::cout << "TIME PROGRESS " << this->globalTime << std::endl;
+    }
     //send request to target at event time
 
     if (this->globalTime > this->maxTime) {
         //end simulation
         std::cout << "Max simulation time reached." << std::endl;
-        this->target = -1; //reset to no event target
+        this->target = {}; //reset to no event target
         std::this_thread::sleep_for(std::chrono::seconds(1));
         return -2;
     }
     
-    target = (*it).getTarget();
-    trainIndex = (*it).getTrainIndex();
-    this->pool.erase(it);
     this->sendRequest(target);
-    }
+    
     if(target >= 0 && target < this->maxSize - 1) {
         this->dispatch(Event(40+this->globalTime, target+1, trainIndex));
     }
     else if(target == this->maxSize - 1) {
         this->dispatch(Event(40+this->globalTime, 0, trainIndex));
     }
-
-
     return 0;
 }
 
@@ -93,11 +104,11 @@ int EventPool::dispatch(Event e) {
 
 int EventPool::sendRequest(int target) {
     //send request to station at target index
-    this->target = target;
+    this->target.push_back(target);
     return 0;
 }
 
-int EventPool::getTarget() {
+std::vector<int> EventPool::getTargets() {
     return this->target;
 } 
 

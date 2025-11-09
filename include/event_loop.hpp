@@ -4,6 +4,7 @@
 #include <thread>
 #include <atomic>
 #include <memory>
+#include <barrier>
 #include "station.hpp"
 #include "train.hpp"
 #include "event_pool.hpp"
@@ -23,12 +24,14 @@ private:
     std::atomic<std::shared_ptr<EventPool>> events;
     std::vector<std::thread> stationThreads{};
     std::shared_ptr<std::thread> runThread;
+    std::barrier<> barrier;
     std::atomic<bool> running = true;
 public:
-    EventLoop(int time = 0);
+    EventLoop(int time, State initState);
     State state; //for now global state is public
     void start(); //spawn thread for EventPool operations
     void run();
+    void waitBarrier();
     ~EventLoop();
 };
 
