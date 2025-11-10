@@ -5,11 +5,13 @@
 #include <boost/numeric/odeint.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include <SFML/Graphics.hpp>
-#include <SFGraphing/SFPlot.h>
 #include <SFGraphing/PlotDataSet.h>
+#include <SFGraphing/SFPlot.h>
+#include <SFML/Graphics.hpp>
 
 #include "ode/ode_solver.hpp"
+
+namespace odeint = boost::numeric::odeint;
 
 // rhs_class
 /* The rhs of x' = f(x) defined as a class */
@@ -23,6 +25,17 @@ class harm_osc {
     dxdt[0] = x[1];
     dxdt[1] = -x[0] - m_gam * x[1];
   }
+};
+
+// Logistic growth:
+// dN/dt = rN( 1 - N/k )
+class nonlinear_sys_test : ODE_Solver::CoefficientSystem {
+  public:
+  nonlinear_sys_test(boost::json::value values) : ODE_Solver::CoefficientSystem(values) {}
+  void operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt, const double t) {
+    // Pass
+    dxdt[0] = this->coefficients[0] * x[0] * (1 - x[0] / this->coefficients[1]);
+  };
 };
 
 struct StateTimeObserver {
@@ -46,78 +59,6 @@ struct LinearSystemInput {
   void operator()(double t) { system.input = t / 10; };
 };
 
-void pretty_print(std::ostream &os, boost::json::value const &jv, std::string *indent = nullptr) {
-  std::string indent_;
-  if (!indent)
-    indent = &indent_;
-  switch (jv.kind()) {
-    case boost::json::kind::object: {
-      os << "{\n";
-      indent->append(4, ' ');
-      auto const &obj = jv.get_object();
-      if (!obj.empty()) {
-        auto it = obj.begin();
-        for (;;) {
-          os << *indent << boost::json::serialize(it->key()) << " : ";
-          pretty_print(os, it->value(), indent);
-          if (++it == obj.end())
-            break;
-          os << ",\n";
-        }
-      }
-      os << "\n";
-      indent->resize(indent->size() - 4);
-      os << *indent << "}";
-      break;
-    }
-
-    case boost::json::kind::array: {
-      os << "[\n";
-      indent->append(4, ' ');
-      auto const &arr = jv.get_array();
-      if (!arr.empty()) {
-        auto it = arr.begin();
-        for (;;) {
-          os << *indent;
-          pretty_print(os, *it, indent);
-          if (++it == arr.end())
-            break;
-          os << ",\n";
-        }
-      }
-      os << "\n";
-      indent->resize(indent->size() - 4);
-      os << *indent << "]";
-      break;
-    }
-
-    case boost::json::kind::string: {
-      os << boost::json::serialize(jv.get_string());
-      break;
-    }
-
-    case boost::json::kind::uint64:
-    case boost::json::kind::int64:
-    case boost::json::kind::double_:
-      os << jv;
-      break;
-
-    case boost::json::kind::bool_:
-      if (jv.get_bool())
-        os << "true";
-      else
-        os << "false";
-      break;
-
-    case boost::json::kind::null:
-      os << "null";
-      break;
-  }
-
-  if (indent->empty())
-    os << "\n";
-}
-
 const double t = 50;
 void SystemToPlot(csrc::SFPlot &plot, std::vector<ODE_Solver::Vector> &states,
                   std::vector<double> &times, sf::Color colour = sf::Color::Green,
@@ -128,7 +69,7 @@ void SystemToPlot(csrc::SFPlot &plot, std::vector<ODE_Solver::Vector> &states,
     plot.AddDataSet(*set);
 
   auto minmax = std::minmax_element(times.begin(), times.end());
-  plot.SetupAxes(*minmax.first, *minmax.second, -2, 2, (*minmax.second - *minmax.first) / 10, 0.5,
+  plot.SetupAxes(*minmax.first, *minmax.second, -5, 5, (*minmax.second - *minmax.first) / 10, 0.5,
                  sf::Color::White);
   plot.GenerateVertices();
 }
@@ -147,10 +88,8 @@ int main(int argc, char **argv) {
   x[0] = 1.0, x[1] = 0.0;  // start at x=1.0, p=0.0
 
   // Custom class solver
-  ODE_Solver::Solver<boost::numeric::odeint::runge_kutta4<ODE_Solver::Vector>, harm_osc,
-                     ODE_Solver::Vector>
-    ode_system = ODE_Solver::Solver(boost::numeric::odeint::runge_kutta4<ODE_Solver::Vector>(),
-                                    harm_osc(0.15), x);
+  ODE_Solver::Solver<odeint::runge_kutta4<ODE_Solver::Vector>, harm_osc, ODE_Solver::Vector>
+    ode_system = ODE_Solver::Solver(odeint::runge_kutta4<ODE_Solver::Vector>(), harm_osc(0.15), x);
   ode_system.SolveToTime(t);
   ODE_Solver::Vector s = ode_system.LastState();
   std::cout << "Harmonic Osc. ending state:" << ode_system.LastTime() << "  " << s[0] << " " << s[1]
@@ -162,16 +101,14 @@ int main(int argc, char **argv) {
   std::ifstream inFile("test.json", std::ios_base::in);
   boost::json::value j = boost::json::parse(inFile);
   inFile.close();
-  // pretty_print(std::cout, j);
 
   // --------------------------------------
   // Solver class testing
   // --------------------------------------
   auto const &equation_definition_array = j.at("equations").as_array();
 
-  auto ss =
-    ODE_Solver::LinearSysFromJSON(boost::numeric::odeint::runge_kutta_dopri5<ODE_Solver::Vector>(),
-                                  equation_definition_array.at(0));
+  auto ss = ODE_Solver::LinearSysFromJSON(odeint::runge_kutta_dopri5<ODE_Solver::Vector>(),
+                                          equation_definition_array.at(0));
   auto ss2 = ODE_Solver::LinearSysFromJSON(equation_definition_array.at(1));
   ss2.system.input = 0.05;
 
@@ -189,6 +126,17 @@ int main(int argc, char **argv) {
   SystemToPlot(plot2, states, times, sf::Color::Blue);
   states.clear(), times.clear();
 
+  auto nonlinear_state = ODE_Solver::Vector(1);
+  nonlinear_state[0] = 5;
+  auto nonlinear = ODE_Solver::Solver<
+    odeint::controlled_runge_kutta<odeint::runge_kutta_dopri5<ODE_Solver::Vector>>,
+    nonlinear_sys_test, ODE_Solver::Vector>(
+    odeint::controlled_runge_kutta<odeint::runge_kutta_dopri5<ODE_Solver::Vector>>(),
+    nonlinear_sys_test(j.at("coefficients").as_array().at(0)), nonlinear_state);
+  nonlinear.SolveToTime(t, StateTimeObserver(states, times), 0.1);
+  csrc::SFPlot plot3(sf::Vector2f(0, 0), sf::Vector2f(700, 700), 35, font, "t", "X");
+  SystemToPlot(plot3, states, times, sf::Color::Blue);
+
   // Window rendering
   while (window.isOpen()) {
     sf::Event event;
@@ -198,8 +146,9 @@ int main(int argc, char **argv) {
       }
     }
     window.clear();
-    window.draw(plot);
-    window.draw(plot2);
+    // window.draw(plot);
+    // window.draw(plot2);
+    window.draw(plot3);
     window.display();
   }
 }

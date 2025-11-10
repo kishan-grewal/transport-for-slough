@@ -6,6 +6,7 @@
 
 #include <stdexcept>
 
+#include "ode/json_util.hpp"
 #include "ode/ode_system.hpp"
 
 namespace ODE_Solver {
@@ -119,24 +120,6 @@ class Solver {
   double LastTime() { return this->last_update_time; }
   State LastState() { return this->last_update_state; }
 };
-
-static void JSON_ParseNumericToDouble(double &out, const boost::json::value *value) {
-  switch (value->kind()) {
-    case boost::json::kind::int64:
-      out = (double)value->as_int64();
-      break;
-    case boost::json::kind::uint64:
-      out = (double)value->as_uint64();
-      break;
-    case boost::json::kind::double_:
-      out = value->as_double();
-      break;
-    default:
-      std::cout << "Invalid JSON value in equation system initialisation - expected numeric type - "
-                   "ignoring";
-      break;
-  }
-}
 
 template <class Stepper>
 Solver<Stepper, LinearSystem, Vector> LinearSysFromJSON(Stepper stepper,
