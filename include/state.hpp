@@ -12,6 +12,11 @@ public:
     const Train& getTrain(int index) const {
         return this->trains[index];
     }
+
+    void changeTrainDirection(int index) {
+        int cur = this->trains[index].getDirection();
+        this->trains[index].setDirection(-cur);
+    }
     
 };
 

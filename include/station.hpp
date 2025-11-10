@@ -14,7 +14,8 @@ private:
     int timeToLeaveRequest;
 
     bool busy;
-    bool request;
+    bool request = false;
+    bool request2 = false;
     bool running = true;
 
 public:

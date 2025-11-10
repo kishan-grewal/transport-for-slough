@@ -26,12 +26,24 @@ void EventLoop::run() {
             break;
         }
         std::vector<int> targets = this->events.load()->getTargets(); //turn into vector for multiple events dispatched simultaneously
-        for(int i{}; i < targets.size(); ++i) {
-            if(targets[i] >= this->state.stations.size() && targets[i] != -1) {
-                targets[i] = 0;
-            }
-            if (targets[i] != -1) {
-                this->state.stations[targets[i]].receiveLeaveRequest();
+        if(targets.size() == 0) {
+            std::thread t = std::thread(&EventLoop::waitBarrier, this);
+            t.detach();
+        }
+        else if(targets.size() == 1 && targets[0] < 0) {
+            //prevent hang by releasing barrier when no events
+            std::thread t = std::thread(&EventLoop::waitBarrier, this);
+            t.detach();
+        }
+        else {
+            for(int i{}; i < targets.size(); ++i) {
+                if(targets[i] >= this->state.stations.size() && targets[i] != -1) {
+                    targets[i] = 0;
+                }
+                if (targets[i] != -1) {
+                    //issue here now with multiple requests receieved at a station
+                    this->state.stations[targets[i]].receiveLeaveRequest();
+                }
             }
         }
         this->events.load()->emptyTargets();   

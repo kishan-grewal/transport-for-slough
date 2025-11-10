@@ -77,12 +77,35 @@ int EventPool::progressTime(std::barrier<>& syncPoint) {
     }
     
     this->sendRequest(target);
+
+    //set up next target
+
+    Train thisTrain = this->state->getTrain(trainIndex);
+    int direction = thisTrain.getDirection();
+    int nextTarget = target;
     
-    if(target >= 0 && target < this->maxSize - 1) {
-        this->dispatch(Event(40+this->globalTime, target+1, trainIndex));
+    if(target > 0 && target < this->maxSize - 1) {
+        if(direction == 1) {
+            nextTarget = target + 1;
+        }
+        else {
+            nextTarget = target -1;
+        }
     }
     else if(target == this->maxSize - 1) {
-        this->dispatch(Event(40+this->globalTime, 0, trainIndex));
+        if(direction == 1) {
+            this->state->changeTrainDirection(trainIndex);
+        }
+        nextTarget = target - 1;
+    }
+    else if(target == 0) {
+        if(direction == -1) {
+            this->state->changeTrainDirection(trainIndex);
+        }
+        nextTarget = target + 1;
+    }
+    if(target != -1) {
+        this->dispatch(Event(40+this->globalTime, nextTarget, trainIndex));
     }
     return 0;
 }

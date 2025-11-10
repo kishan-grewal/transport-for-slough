@@ -23,6 +23,10 @@ int Train::getDirection() const {
     return this->direction;
 }
 
+void Train::setDirection(int newDirection) {
+    this->direction = newDirection;
+}
+
 Train::~Train() {
     this->capacity = 0;
     this->startIndex = 0;

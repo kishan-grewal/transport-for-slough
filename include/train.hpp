@@ -15,6 +15,7 @@ public:
     int getStartIndex() const;
     int getEndIndex() const;
     int getDirection() const;
+    void setDirection(int newDirection);
     ~Train();
 };
 
