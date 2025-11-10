@@ -1,4 +1,6 @@
 #include <iostream>
+#include <vector>
+#include <string>
 
 #include "event_loop.hpp"
 #include "platform.hpp"
@@ -10,14 +12,25 @@ int main(int argc, char** argv) {
 
     int simTime = 100000; //in seconds
     State initialState;
-    initialState.stations = std::vector{Station("Stratford"),Station("West Ham"),Station("Canning Town"),Station("North Greenwich"),Station("Canary Wharf"), Station("Canada Water"),
-                      Station("Bermondsey"),Station("London Bridge"),Station("Southwark"),Station("Waterloo"),Station("Westminster"),Station("Green Park"),
-                      Station("Bond Street"), Station("Baker Street"), Station("St John's Wood"), Station("Swiss Cottage"), Station("Finchley Road"), Station("West Hampstead"),
-                      Station("Kilburn"), Station("Willesden Green"), Station("Dollis Hill"), Station("Neasden"), Station("Wembley Park"), Station("Kingsbury"), Station("Queensbury"),
-                      Station("Canons Park"), Station("Stanmore")};
+    std::vector<std::string> stationNames = {"Stratford","West Ham","Canning Town","North Greenwich","Canary Wharf","Canada Water",
+                      "Bermondsey","London Bridge","Southwark","Waterloo","Westminster","Green Park",
+                      "Bond Street","Baker Street","St John's Wood","Swiss Cottage","Finchley Road","West Hampstead",
+                      "Kilburn","Willesden Green","Dollis Hill","Neasden","Wembley Park","Kingsbury","Queensbury",
+                      "Canons Park","Stanmore","Turnaround point"};
 
-    initialState.trains = std::vector{Train(100, 0, 0, 1), Train(100, 1, 10, 1), Train(100, 2, 20, 1), Train(100, 3, 20, 1), Train(100, 4, 20, 1), Train(100, 5, 10, 1), Train(100, 6, 20, 1), Train(100, 7, 20, 1), Train(100, 8, 20, 1)};
-    EventLoop loop = EventLoop(simTime, initialState);
+    
+    initialState.stations = std::vector<Station>();
+    initialState.stations.reserve(stationNames.size());
+    for(int i = 0; i < stationNames.size(); ++i) {
+        initialState.stations.emplace_back(stationNames[i]);
+    }
+
+    initialState.trains = std::vector<Train>();
+    initialState.trains.reserve(10);
+    for(int i = 0; i < 10; ++i) {
+        initialState.trains.emplace_back(100, i, 10, 1);
+    }
+    EventLoop loop = EventLoop(simTime, std::move(initialState), initialState.stations.size());
     loop.start();
     std::cin.get();
     loop.waitBarrier();

@@ -3,34 +3,41 @@
 #include <iostream>
 #include <thread>
 #include <barrier>
+#include <mutex>
 
 Station::Station(std::string name) {
     this->name = name;
+    this->running.store(true);
 }
 
 void Station::listen(std::barrier<>& syncPoint) {
     //listen for events from event pool
 
-    while (this->running) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        if(this->request2 == true) { //if request 2 arrives first, we don't unlock the barrier
-                this->request2 = false;
-                continue;
+    while (this->running.load()) {
+        {std::lock_guard<std::mutex> lock(this->stationMutex);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            if(this->request2 == true) { //
+                    this->request2 = false;
+            }
+            else if (this->request == true) { //add logic, directionality not matched to specific request yet
+                //check busy, set event
+                this->request = false;
+            }
         }
-        if (this->request == true) { //check for request 2 as well
-            //check busy, set event
-            this->request = false; //if request 1 arrives first, this is fine, we continue the loop here. If request 2 arrives first no action is taken
-            std::thread t = std::thread([](std::barrier<>& sync){sync.arrive_and_wait();}, std::ref(syncPoint));
-            t.detach();
-        }
+        syncPoint.arrive_and_wait();
+
+        //more logic for action based on request status
+
+        syncPoint.arrive_and_wait();
     }
 }
 
 void Station::stop() {
-    this->running = false;
+    this->running.store(false);
 }
 
 void Station::receiveLeaveRequest() {
+    std::lock_guard<std::mutex> lock(this->stationMutex);
     //stations now only receive one request at a time, modify this
     if(this->request2 == false) {
         this->request = true;

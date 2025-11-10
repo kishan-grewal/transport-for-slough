@@ -111,6 +111,7 @@ int EventPool::progressTime(std::barrier<>& syncPoint) {
 }
 
 int EventPool::getGlobalTime() {
+    std::lock_guard<std::mutex> lock(this->poolMutex);
     return this->globalTime;
 } 
 

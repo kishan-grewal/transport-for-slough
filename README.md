@@ -1,6 +1,8 @@
 # transport-for-slough
 
 TODO:
-Train info at station
-Train directions
-Sim not reaching full time - add double barrier
+Terminal stations for reversing
+Depots, sidings, etc
+Station arrive requests
+Delay and delay propogation
+Scheduling for multiple tracks

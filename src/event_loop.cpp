@@ -5,8 +5,10 @@
 
 //next send train info to station
 
-EventLoop::EventLoop(int time, State initState) : state(initState), barrier(2) {
-    this->events = std::make_shared<EventPool>(time, initState.stations.size(), initState.trains.size(), &(this->state));
+EventLoop::EventLoop(int time, State initState, int stationSize) : state(std::move(initState)), barrier(stationSize+1) {
+    int s = this->state.stations.size();
+    int s2 = this->state.trains.size();
+    this->events = std::make_shared<EventPool>(time, s, s2, &(this->state));
 }
 
 void EventLoop::start() {
@@ -48,6 +50,10 @@ void EventLoop::run() {
         }
         this->events.load()->emptyTargets();   
         this->waitBarrier();
+
+        this->waitBarrier();
+
+        //this->waitBarrier(); //double barrier
     }
 }
 
@@ -66,4 +72,6 @@ EventLoop::~EventLoop() {
             this->stationThreads[i].join(); 
         }
     }
+
+    this->runThread->join();
 }
