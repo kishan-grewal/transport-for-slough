@@ -59,6 +59,14 @@ struct LinearSystemInput {
   void operator()(double t) { system.input = t / 10; };
 };
 
+struct GlobalStateTimeObserver : ODE_Solver::GlobalTimeObserverTemplate {
+  GlobalStateTimeObserver() { this->timestep = 1; }
+
+  virtual void operator()(const ODE_Solver::Vector &x, double t) {
+    std::cout << "Step " << t << std::endl;
+  };
+};
+
 const double t = 50;
 void SystemToPlot(csrc::SFPlot &plot, std::vector<ODE_Solver::Vector> &states,
                   std::vector<double> &times, sf::Color colour = sf::Color::Green,
@@ -88,8 +96,11 @@ int main(int argc, char **argv) {
   x[0] = 1.0, x[1] = 0.0;  // start at x=1.0, p=0.0
 
   // Custom class solver
-  ODE_Solver::Solver<odeint::runge_kutta4<ODE_Solver::Vector>, harm_osc, ODE_Solver::Vector>
-    ode_system = ODE_Solver::Solver(odeint::runge_kutta4<ODE_Solver::Vector>(), harm_osc(0.15), x);
+  ODE_Solver::Solver<odeint::runge_kutta4<ODE_Solver::Vector>, harm_osc, ODE_Solver::Vector,
+                     GlobalStateTimeObserver>
+    ode_system = ODE_Solver::Solver(odeint::runge_kutta4<ODE_Solver::Vector>(), harm_osc(0.15), x,
+                                    GlobalStateTimeObserver());
+  ode_system.SolveToTime(0.1);
   ode_system.SolveToTime(t);
   ODE_Solver::Vector s = ode_system.LastState();
   std::cout << "Harmonic Osc. ending state:" << ode_system.LastTime() << "  " << s[0] << " " << s[1]
@@ -117,8 +128,8 @@ int main(int argc, char **argv) {
   std::vector<double> times;
 
   ss.SolveToTime(t, StateTimeObserver(states, times), -1, LinearSystemInput(ss.system));
-  csrc::SFPlot plot(sf::Vector2f(0, 0), sf::Vector2f(375, 700), 35, font, "t", "X");
-  SystemToPlot(plot, states, times);
+  csrc::SFPlot plot1(sf::Vector2f(0, 0), sf::Vector2f(375, 700), 35, font, "t", "X");
+  SystemToPlot(plot1, states, times);
   states.clear(), times.clear();
 
   ss2.SolveToTime(t, StateTimeObserver(states, times), -1);
@@ -126,6 +137,9 @@ int main(int argc, char **argv) {
   SystemToPlot(plot2, states, times, sf::Color::Blue);
   states.clear(), times.clear();
 
+  //
+  // Nonlinear equation defintion (JSON coefficients)
+  //
   auto nonlinear_state = ODE_Solver::Vector(1);
   nonlinear_state[0] = 5;
   auto nonlinear = ODE_Solver::Solver<

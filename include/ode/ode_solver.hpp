@@ -11,10 +11,19 @@
 
 namespace ODE_Solver {
 
-template <class Stepper, class System, class State>
+class EmptyObserver {};
+class GlobalTimeObserverTemplate {
+  public:
+  double timestep;
+
+  virtual void operator()(const ODE_Solver::Vector &x, double t) = 0;
+};
+
+template <class Stepper, class System, class State, class GlobalObserver = EmptyObserver>
 class Solver {
   private:
   Stepper system_stepper;
+  GlobalObserver global_time_observer;
 
   double last_update_time;
   State last_update_state;
@@ -22,8 +31,11 @@ class Solver {
   public:
   System system;
 
-  Solver(Stepper stepper, System system, State state)
-      : system_stepper(stepper), system(system), last_update_state(state) {
+  Solver(Stepper stepper, System system, State state, GlobalObserver observer = EmptyObserver())
+      : system_stepper(stepper),
+        system(system),
+        last_update_state(state),
+        global_time_observer(observer) {
     this->last_update_time = 0;
   };
   // ~ODE_System();
@@ -70,10 +82,30 @@ class Solver {
     if (t < this->last_update_time)
       throw std::runtime_error("Attempting to run ODE solver to target time before stored time");
 
-    // No need for integrate_const to force observer timestep
-    boost::numeric::odeint::integrate_adaptive(
-      this->system_stepper, this->system, this->last_update_state, this->last_update_time, t, 0.1);
-    this->last_update_time = t;
+    if (std::is_same<GlobalObserver, EmptyObserver>::value) {
+      // No need for integrate_const to force observer timestep
+      boost::numeric::odeint::integrate_adaptive(this->system_stepper, this->system,
+                                                 this->last_update_state, this->last_update_time, t,
+                                                 0.1);
+      this->last_update_time = t;
+    }
+    else {
+      std::cout << "Run observer" << std::endl;
+      if (std::fmod(this->last_update_time, this->global_time_observer.timestep) != 0) {
+        // Fast-forward the simulation to the next observer timestep, without observation
+        double new_time = (int)(this->last_update_time / this->global_time_observer.timestep) + 1;
+        new_time *= this->global_time_observer.timestep;
+
+        boost::numeric::odeint::integrate_adaptive(this->system_stepper, this->system,
+                                                   this->last_update_state, this->last_update_time,
+                                                   new_time, 0.1);
+        this->last_update_time = new_time;
+      }
+      boost::numeric::odeint::integrate_const(
+        this->system_stepper, this->system, this->last_update_state, this->last_update_time, t,
+        this->global_time_observer.timestep, this->global_time_observer);
+      this->last_update_time = t;
+    }
   }
 
   template <class Observer, class InputDriver>
