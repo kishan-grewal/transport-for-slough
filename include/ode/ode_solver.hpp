@@ -90,7 +90,6 @@ class Solver {
       this->last_update_time = t;
     }
     else {
-      std::cout << "Run observer" << std::endl;
       if (std::fmod(this->last_update_time, this->global_time_observer.timestep) != 0) {
         // Fast-forward the simulation to the next observer timestep, without observation
         double new_time = (int)(this->last_update_time / this->global_time_observer.timestep) + 1;

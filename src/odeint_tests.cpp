@@ -83,9 +83,10 @@ void SystemToPlot(csrc::SFPlot &plot, std::vector<ODE_Solver::Vector> &states,
 }
 
 int main(int argc, char **argv) {
-  sf::RenderWindow window(sf::VideoMode(800, 800), "ODEint Testing");
+  sf::RenderWindow window(sf::VideoMode({800, 800}), "ODEint Testing");
   sf::Font font;
-  font.loadFromFile("/mnt/c/Windows/Fonts/arial.ttf");
+  if (!font.openFromFile("/mnt/c/Windows/Fonts/arial.ttf"))
+    throw std::runtime_error("Failed to load font");
 
   //
   // Manual equation definition
@@ -100,7 +101,7 @@ int main(int argc, char **argv) {
                      GlobalStateTimeObserver>
     ode_system = ODE_Solver::Solver(odeint::runge_kutta4<ODE_Solver::Vector>(), harm_osc(0.15), x,
                                     GlobalStateTimeObserver());
-  ode_system.SolveToTime(0.1);
+  ode_system.SolveToTime(3.6745);
   ode_system.SolveToTime(t);
   ODE_Solver::Vector s = ode_system.LastState();
   std::cout << "Harmonic Osc. ending state:" << ode_system.LastTime() << "  " << s[0] << " " << s[1]
@@ -153,16 +154,15 @@ int main(int argc, char **argv) {
 
   // Window rendering
   while (window.isOpen()) {
-    sf::Event event;
-    while (window.pollEvent(event)) {
-      if (event.type == sf::Event::Closed) {
+    while (const std::optional<sf::Event> event = window.pollEvent()) {
+      if (event->is<sf::Event::Closed>()) {
         window.close();
       }
     }
     window.clear();
-    // window.draw(plot);
-    // window.draw(plot2);
-    window.draw(plot3);
+    window.draw(plot1);
+    window.draw(plot2);
+    // window.draw(plot3);
     window.display();
   }
 }

@@ -33,8 +33,5 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 target_include_directories(${PROJECT_NAME} PUBLIC libs/boost/include libs/SFGraphing/include)
 
-# Link SFML
-find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
-target_link_libraries(${PROJECT_NAME} sfml-graphics sfml-window sfml-system)
-
+# Link SFGraphing fork (which builds with SFML exposed publically)
 target_link_libraries(${PROJECT_NAME} SFGraphing)
