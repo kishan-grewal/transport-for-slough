@@ -1,3 +1,7 @@
 build/*
+.venv/
 
 .vscode/*
+.cache/*
+
+compile_commands.json
