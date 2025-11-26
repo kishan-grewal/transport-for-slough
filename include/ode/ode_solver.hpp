@@ -82,7 +82,7 @@ class Solver {
     if (t < this->last_update_time)
       throw std::runtime_error("Attempting to run ODE solver to target time before stored time");
 
-    if (std::is_same<GlobalObserver, EmptyObserver>::value) {
+    if constexpr (std::is_same<GlobalObserver, EmptyObserver>::value) {
       // No need for integrate_const to force observer timestep
       boost::numeric::odeint::integrate_adaptive(this->system_stepper, this->system,
                                                  this->last_update_state, this->last_update_time, t,
@@ -116,14 +116,14 @@ class Solver {
         "Attempting to run ODE solver with an invalid input timestep - must be > 0");
 
     double tmp_t = this->last_update_time;
-    input(tmp_t);  // Initialise input signal
+    input(last_update_state, tmp_t);  // Initialise input signal
 
     while (tmp_t < t) {
       // Update internal time
       tmp_t = std::clamp(tmp_t + input.timestep, 0.0, t);
       this->SolveToTime(tmp_t, observer, observer_timestep);
 
-      input(tmp_t);  // Update input signal after running solver
+      input(last_update_state, tmp_t);  // Update input signal after running solver
     }
     this->last_update_time = t;
   }
@@ -137,13 +137,14 @@ class Solver {
         "Attempting to run ODE solver with an invalid input timestep - must be > 0");
 
     double tmp_t = this->last_update_time;
-    input(tmp_t);  // Initialise input signal
+    input(last_update_state, tmp_t);  // Initialise input signal
 
     while (tmp_t < t) {
       // Update internal time
       tmp_t = std::clamp(tmp_t + input.timestep, 0.0, t);
+      this->SolveToTime(tmp_t);
 
-      input(tmp_t);  // Update input signal after running solver
+      input(last_update_state, tmp_t);  // Update input signal after running solver
     }
     this->last_update_time = t;
   }
