@@ -43,17 +43,16 @@ void EventLoop::run() {
                     targets[i] = 0;
                 }
                 if (targets[i] != -1) {
-                    //issue here now with multiple requests receieved at a station
                     this->state.stations[targets[i]].receiveLeaveRequest();
                 }
             }
         }
         this->events.load()->emptyTargets();   
-        this->waitBarrier();
+        this->waitBarrier(); //synchronise detecting of events
 
-        this->waitBarrier();
+        this->waitBarrier(); //synchronise state calculations
 
-        //this->waitBarrier(); //double barrier
+        //continue loop to repeat for next timestep
     }
 }
 

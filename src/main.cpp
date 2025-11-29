@@ -33,7 +33,6 @@ int main(int argc, char** argv) {
     EventLoop loop = EventLoop(simTime, std::move(initialState), initialState.stations.size());
     loop.start();
     std::cin.get();
-    loop.waitBarrier();
 
     std::cout << "Program finished successfully." << std::endl;
 
