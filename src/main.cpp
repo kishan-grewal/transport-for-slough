@@ -7,6 +7,7 @@
 #include "station.hpp"
 #include "train.hpp"
 
+<<<<<<< HEAD
 int main(int argc, char** argv) {
     std::cout << "Hello World!" << std::endl;
 
@@ -37,4 +38,11 @@ int main(int argc, char** argv) {
     std::cout << "Program finished successfully." << std::endl;
 
     return 0;
+=======
+#include <boost/numeric/odeint.hpp>
+
+int main(int argc, char **argv) {
+  std::cout << "Hello World!" << std::endl;
+  return 0;
+>>>>>>> 58cc8be5ed5a2f5a772f7d79d0ca06d7214177ef
 }
