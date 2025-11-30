@@ -6,6 +6,7 @@
 #include <string>
 #include <mutex>
 #include <barrier>
+#include <vector>
 
 class Station {
 private:
@@ -16,20 +17,19 @@ private:
     int population;
     int timeToLeaveRequest;
 
-    bool busy;
-    bool request = false;
-    bool request2 = false;
     std::atomic<bool> running;
+    std::vector<bool> platformStatus; //only edited internally
+    std::vector<int> platforms; //platforms with integer for direction, setup defined
 
 public:
-    Station(std::string name);
+    Station(std::string name, std::vector<int> platforms);
     Station(Station&& other) noexcept : name(other.getName()) {this->running.store(true);};
     Station(const Station&) = delete;
     Station& operator=(const Station&) = delete;
     void listen(std::barrier<>& syncPoint);
     void stop();
-    void sendLeaveRequest();
-    void receiveLeaveRequest();
+    void receiveEntryRequest(int direction);
+    void receiveLeaveRequest(int direction);
     std::string getName() {return this->name;}
     ~Station();
 };

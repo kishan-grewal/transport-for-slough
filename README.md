@@ -1,6 +1,9 @@
 # transport-for-slough
 
 TODO:
+Export state to CSV
+N platforms with direction per station
+
 Terminal stations for reversing
 Depots, sidings, etc
 Station arrive requests

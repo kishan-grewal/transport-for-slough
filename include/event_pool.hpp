@@ -13,6 +13,7 @@ private:
     int maxTime = 0;
     int tOffset = 0; //multiset is immutable
     std::vector<int> target = {};
+    std::vector<std::pair<int, bool>> targetInfo = {};
     int maxSize = 0;
     int trainsSize = 0;
     State* state;
@@ -21,14 +22,15 @@ private:
     //on event fetch
 
     //send a request to the station you would like for event to occur on
-    int sendRequest(int target);
+    int sendRequest(int target, int direction, bool entryExit);
 
 public:
     EventPool(int time, int stationSize, int trainsSize, State* loop);
     int dispatch(Event e);
     int getGlobalTime();
     std::vector<int> getTargets();
-    void emptyTargets() {this->target = {-1};}
+    std::vector<std::pair<int, bool>> getTargetInfo();
+    void emptyTargets() {this->target = {-1}; this->targetInfo = {{0,false}};}
     int progressTime(std::barrier<>& syncPoint);
     int getPoolEmpty();
     ~EventPool();

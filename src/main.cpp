@@ -10,19 +10,19 @@
 int main(int argc, char** argv) {
     std::cout << "Hello World!" << std::endl;
 
-    int simTime = 100000; //in seconds
+    int simTime = 10000000; //in seconds
     State initialState;
-    std::vector<std::string> stationNames = {"Stratford","West Ham","Canning Town","North Greenwich","Canary Wharf","Canada Water",
-                      "Bermondsey","London Bridge","Southwark","Waterloo","Westminster","Green Park",
-                      "Bond Street","Baker Street","St John's Wood","Swiss Cottage","Finchley Road","West Hampstead",
-                      "Kilburn","Willesden Green","Dollis Hill","Neasden","Wembley Park","Kingsbury","Queensbury",
-                      "Canons Park","Stanmore","Turnaround point"};
+    std::vector<std::pair<std::string,std::vector<int>>> stationNames = {{"Stratford", {0, 0, 0}},{"West Ham", {1, -1}},{"Canning Town", {1, -1}},{"North Greenwich", {1, -1, -1}},{"Canary Wharf", {1, -1}},{"Canada Water", {1, -1}},
+                      {"Bermondsey", {1, -1}},{"London Bridge", {1, -1}},{"Southwark", {1, -1}},{"Waterloo", {1,-1}},{"Westminster", {1,-1}},{"Green Park", {1,-1}},
+                      {"Bond Street", {1,-1}},{"Baker Street", {1,-1}},{"St John's Wood", {1,-1}},{"Swiss Cottage", {1,-1}},{"Finchley Road",{1,-1}},{"West Hampstead",{1,-1}},
+                      {"Kilburn",{1,-1}},{"Willesden Green",{1,-1}},{"Dollis Hill",{1,-1}},{"Neasden",{1,-1}},{"Wembley Park",{1,-1}},{"Kingsbury",{1,-1}},{"Queensbury",{1,-1}},
+                      {"Canons Park",{1,-1}},{"Stanmore",{1,-1}},{"Turnaround point",{0,0,0}}};
 
     
     initialState.stations = std::vector<Station>();
     initialState.stations.reserve(stationNames.size());
     for(int i = 0; i < stationNames.size(); ++i) {
-        initialState.stations.emplace_back(stationNames[i]);
+        initialState.stations.emplace_back(std::get<std::string>(stationNames[i]), std::get<std::vector<int>>(stationNames[i]));
     }
 
     initialState.trains = std::vector<Train>();

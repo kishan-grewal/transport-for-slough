@@ -6,14 +6,16 @@ private:
     int time; //in seconds <timestep> to request trigger
     int targetIndex; //index to target of request being dispatched
     int trainIndex;
+    bool entryExit;
     bool propogateOthers; //if this event is to cause a delay, set this flag to true
     //add time attribute to all elements of the queue and remove this event immediately
 
 public:
-    Event(int t, int index, int trainIndex);
+    Event(int t, int index, int trainIndex, bool entryExit);
     int getTime() const;
     int getTarget() const;
     int getTrainIndex() const;
+    bool getEntryExit() const;
     bool propogate() const;
     ~Event();
 };

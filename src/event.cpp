@@ -2,10 +2,11 @@
 #include <exception>
 #include <stdexcept>
 
-Event::Event(int t, int index, int trainIndex) {
+Event::Event(int t, int index, int trainIndex, bool entryExit) {
     this->time = t;
     this->targetIndex = index;
     this->trainIndex = trainIndex;
+    this->entryExit = entryExit;
 }
 
 int Event::getTarget() const {
@@ -18,6 +19,10 @@ int Event::getTime() const{
 
 int Event::getTrainIndex() const {
     return this->trainIndex;
+}
+
+bool Event::getEntryExit() const {
+    return this->entryExit;
 }
 
 bool Event::propogate() const {

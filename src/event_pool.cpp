@@ -16,7 +16,7 @@ EventPool::EventPool(int time, int stationSize, int trainsSize, State* state) {
     this->state = state;
     std::cout << state->trains.size() << state->stations.size() << std::endl;
     for (int i = 0; i < trainsSize; ++i) {
-        this->dispatch(Event(10, state->getTrain(i).getStartIndex(), i)); //set off the trains, choo choo
+        this->dispatch(Event(10, state->getTrain(i).getStartIndex(), i, false)); //set off the trains, choo choo
     }
 }
 
@@ -26,7 +26,7 @@ int EventPool::progressTime(std::barrier<>& syncPoint) {
     
     int target = -1;
     int trainIndex = -1;
-    int t = 0; int nextT = 0; bool multi = false; bool propogate = false;
+    int t = 0; int nextT = 0; bool multi = false; bool propogate = false; bool entryExit = false;
     int tOffsetNow = this->globalTime;
     {std::lock_guard<std::mutex> lock(this->poolMutex);
         //std::cout << "Current Event Pool: " << std::endl;
@@ -48,6 +48,7 @@ int EventPool::progressTime(std::barrier<>& syncPoint) {
         target = (*it).getTarget();
         trainIndex = (*it).getTrainIndex();
         propogate = (*it).propogate();
+        entryExit = (*it).getEntryExit();
         this->pool.erase(it);
     }   
     if(nextT == t) {
@@ -75,37 +76,46 @@ int EventPool::progressTime(std::barrier<>& syncPoint) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         return -2;
     }
-    
-    this->sendRequest(target);
 
     //set up next target
-
     Train thisTrain = this->state->getTrain(trainIndex);
     int direction = thisTrain.getDirection();
-    int nextTarget = target;
     
-    if(target > 0 && target < this->maxSize - 1) {
-        if(direction == 1) {
+    //send request for station to process event (actioned now)
+    this->sendRequest(target, direction, entryExit);
+
+    //start setting up next event to be dispatched
+    
+    int nextTarget = target;
+
+    if(entryExit) { //if we have just left a station
+    
+        if(target > 0 && target < this->maxSize - 1) {
+            if(direction == 1) {
+                nextTarget = target + 1;
+            }
+            else {
+                nextTarget = target -1;
+            }
+        }
+        else if(target == this->maxSize - 1) {
+            if(direction == 1) {
+                this->state->changeTrainDirection(trainIndex);
+            }
+            nextTarget = target - 1;
+        }
+        else if(target == 0) {
+            if(direction == -1) {
+                this->state->changeTrainDirection(trainIndex);
+            }
             nextTarget = target + 1;
         }
-        else {
-            nextTarget = target -1;
+        if(target != -1) {
+            this->dispatch(Event(40+this->globalTime, nextTarget, trainIndex, false)); //entry request at next station
         }
     }
-    else if(target == this->maxSize - 1) {
-        if(direction == 1) {
-            this->state->changeTrainDirection(trainIndex);
-        }
-        nextTarget = target - 1;
-    }
-    else if(target == 0) {
-        if(direction == -1) {
-            this->state->changeTrainDirection(trainIndex);
-        }
-        nextTarget = target + 1;
-    }
-    if(target != -1) {
-        this->dispatch(Event(40+this->globalTime, nextTarget, trainIndex));
+    else {
+        this->dispatch(Event(40+this->globalTime, target, trainIndex, true)); //leave request 
     }
     return 0;
 }
@@ -126,15 +136,20 @@ int EventPool::dispatch(Event e) {
     return 0; //lock goes out of scope at end of function
 }
 
-int EventPool::sendRequest(int target) {
+int EventPool::sendRequest(int target, int direction, bool entryExit) {
     //send request to station at target index
     this->target.push_back(target);
+    this->targetInfo.push_back({direction, entryExit});
     return 0;
 }
 
 std::vector<int> EventPool::getTargets() {
     return this->target;
-} 
+}
+
+std::vector<std::pair<int, bool>> EventPool::getTargetInfo() {
+    return this->targetInfo;
+}
 
 EventPool::~EventPool() {
     this->pool = std::multiset<Event>();

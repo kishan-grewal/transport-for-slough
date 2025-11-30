@@ -27,7 +27,9 @@ void EventLoop::run() {
             this->running.store(false);
             break;
         }
-        std::vector<int> targets = this->events.load()->getTargets(); //turn into vector for multiple events dispatched simultaneously
+        std::shared_ptr<EventPool> cur = this->events.load();
+        std::vector<int> targets = cur->getTargets(); //turn into vector for multiple events dispatched simultaneously
+        std::vector<std::pair<int, bool>> targetInfo = cur->getTargetInfo();
         if(targets.size() == 0) {
             std::thread t = std::thread(&EventLoop::waitBarrier, this);
             t.detach();
@@ -35,7 +37,7 @@ void EventLoop::run() {
         else if(targets.size() == 1 && targets[0] < 0) {
             //prevent hang by releasing barrier when no events
             std::thread t = std::thread(&EventLoop::waitBarrier, this);
-            t.detach();
+            t.detach(); //maybe remove?
         }
         else {
             for(int i{}; i < targets.size(); ++i) {
@@ -43,7 +45,13 @@ void EventLoop::run() {
                     targets[i] = 0;
                 }
                 if (targets[i] != -1) {
-                    this->state.stations[targets[i]].receiveLeaveRequest();
+                    bool entryExit = std::get<bool>(targetInfo[i]);
+                    if (entryExit) {
+                        this->state.stations[targets[i]].receiveLeaveRequest(std::get<int>(targetInfo[i]));
+                    }
+                    else {
+                        this->state.stations[targets[i]].receiveEntryRequest(std::get<int>(targetInfo[i]));
+                    }
                 }
             }
         }
