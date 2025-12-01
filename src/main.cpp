@@ -9,8 +9,15 @@
 
 int main(int argc, char** argv) {
     std::cout << "Hello World!" << std::endl;
+    int simTime = 10000;
 
-    int simTime = 10000000; //in seconds
+    for(int i = 0; i < argc; ++i) {
+        std::string arg = argv[i];
+        if(arg.substr(0,2) == "-t") {
+            simTime = std::stoi(arg.substr(2));
+        }
+    }
+
     State initialState;
     std::vector<std::pair<std::string,std::vector<int>>> stationNames = {{"Stratford", {0, 0, 0}},{"West Ham", {1, -1}},{"Canning Town", {1, -1}},{"North Greenwich", {1, -1, -1}},{"Canary Wharf", {1, -1}},{"Canada Water", {1, -1}},
                       {"Bermondsey", {1, -1}},{"London Bridge", {1, -1}},{"Southwark", {1, -1}},{"Waterloo", {1,-1}},{"Westminster", {1,-1}},{"Green Park", {1,-1}},
@@ -26,10 +33,11 @@ int main(int argc, char** argv) {
     }
 
     initialState.trains = std::vector<Train>();
-    initialState.trains.reserve(10);
-    for(int i = 0; i < 10; ++i) {
+    initialState.trains.reserve(26);
+    for(int i = 0; i < 25; ++i) {
         initialState.trains.emplace_back(100, i, 10, 1);
     }
+    //initialState.trains.emplace_back(100, 0, 10, 1);
     EventLoop loop = EventLoop(simTime, std::move(initialState), initialState.stations.size());
     loop.start();
     std::cin.get();

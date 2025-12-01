@@ -1,4 +1,5 @@
 #include "station.hpp"
+#include "state.hpp"
 #include <string>
 #include <iostream>
 #include <thread>
@@ -9,29 +10,43 @@ Station::Station(std::string name, std::vector<int> platforms) {
     this->name = name;
     this->running.store(true);
     this->platforms = platforms;
+    this->population = 100000;
     for(int i = 0; i < this->platforms.size(); ++i) {
-        this->platformStatus.emplace_back(false);
+        this->platformStatus.push_back(false);
+        this->leaveRequests.push_back(-1);
+        this->entryRequests.push_back(-1); //consider using ints instead of fixed size requests
     }
     std::cout << platforms[0] << std::endl;
 }
 
 void Station::listen(std::barrier<>& syncPoint) {
     //listen for events from event pool
-
+    int popEnter = 0;
+    int popLeave = 0;
     while (this->running.load()) {
+        //for each step in time we recalculate populations
         {std::lock_guard<std::mutex> lock(this->stationMutex);
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            if(this->request2 == true) { //
-                    this->request2 = false;
-            }
-            else if (this->request == true) { //add logic, directionality not matched to specific request yet
-                //check busy, set event
-                this->request = false;
+            for (int i = 0; i < this->platforms.size(); ++i) {
+                if (this->entryRequests[i] > -1) {
+                    popEnter += 10000;
+                    this->entryRequests[i] = -1; //replace with train id
+                }
+                if (this->leaveRequests[i] > -1) {
+                    popLeave += 1000;
+                    this->leaveRequests[i] = -1;
+                }
             }
         }
+
         syncPoint.arrive_and_wait();
 
-        //more logic for action based on request status
+        //population calculations
+        this->population += popEnter;
+        this->population -= popLeave;
+        popEnter = 0;
+        popLeave = 0;
+
+        std::cout << this->name << " population: " << this->population << std::endl;
 
         syncPoint.arrive_and_wait();
     }
@@ -41,33 +56,39 @@ void Station::stop() {
     this->running.store(false);
 }
 
-void Station::receiveEntryRequest(int direction) {
+Event Station::receiveEntryRequest(Event e, State* state) {
     std::lock_guard<std::mutex> lock(this->stationMutex);
+
     std::cout << "Entry request received at " << this->name << std::endl;
     std::this_thread::sleep_for(std::chrono::microseconds(1));
     for(int i = 0; i < this->platforms.size(); ++i) {
-        if(this->platforms[i] == direction && this->platformStatus[i] == false) {
+        if((this->platforms[i] == state->getTrain(e.getTrainIndex()).getDirection() || !(this->platforms[i])) && this->platformStatus[i] == false) {
             this->platformStatus[i] = true; //make busy
-            return;
+            this->entryRequests[i] = e.getTrainIndex();
+            return Event(0,-1,-1,false);
         }
     }
-    //add time to current event
-    return;
+    //add time to current event and return to be re added to event pool
+    e.propogate(40);
+    return e;
 }
 
-void Station::receiveLeaveRequest(int direction) {
+Event Station::receiveLeaveRequest(Event e, State* state) {
     std::lock_guard<std::mutex> lock(this->stationMutex);
 
     std::cout << "Leave request received at " << this->name << std::endl;
     std::this_thread::sleep_for(std::chrono::microseconds(1));
     for(int i = 0; i < this->platforms.size(); ++i) {
-        if(this->platforms[i] == direction && this->platformStatus[i] == false) {
+        if((this->platforms[i] == state->getTrain(e.getTrainIndex()).getDirection() || !(this->platforms[i])) && this->platformStatus[i] == true) {
             this->platformStatus[i] = false; //make free
-            return;
+            this->leaveRequests[i] = e.getTrainIndex();
+            return Event(0,-1,-1,false); //empty event signals no new event to add
         }
     }
-    //add time to current event
-    return;
+    //add time to current event and return to be re added to event pool
+
+    e.propogate(40);
+    return e;
 }
 
 Station::~Station() {

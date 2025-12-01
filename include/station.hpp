@@ -7,6 +7,9 @@
 #include <mutex>
 #include <barrier>
 #include <vector>
+#include "event.hpp"
+
+class State;
 
 class Station {
 private:
@@ -19,6 +22,8 @@ private:
 
     std::atomic<bool> running;
     std::vector<bool> platformStatus; //only edited internally
+    std::vector<int> leaveRequests; //train index/id
+    std::vector<int> entryRequests; //train index/id
     std::vector<int> platforms; //platforms with integer for direction, setup defined
 
 public:
@@ -28,8 +33,8 @@ public:
     Station& operator=(const Station&) = delete;
     void listen(std::barrier<>& syncPoint);
     void stop();
-    void receiveEntryRequest(int direction);
-    void receiveLeaveRequest(int direction);
+    Event receiveEntryRequest(Event e, State* state);
+    Event receiveLeaveRequest(Event e, State* state);
     std::string getName() {return this->name;}
     ~Station();
 };

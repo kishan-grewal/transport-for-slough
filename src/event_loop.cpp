@@ -21,6 +21,7 @@ void EventLoop::start() {
 }
 
 void EventLoop::run() {
+    Event propogation = {Event(0,-1,-1,false)};
     while (this->running.load()) {
         int res = this->events.load()->progressTime(std::ref(this->barrier));
         if(res == -2) {
@@ -29,7 +30,7 @@ void EventLoop::run() {
         }
         std::shared_ptr<EventPool> cur = this->events.load();
         std::vector<int> targets = cur->getTargets(); //turn into vector for multiple events dispatched simultaneously
-        std::vector<std::pair<int, bool>> targetInfo = cur->getTargetInfo();
+        std::vector<Event> targetInfo = cur->getTargetInfo();
         if(targets.size() == 0) {
             std::thread t = std::thread(&EventLoop::waitBarrier, this);
             t.detach();
@@ -45,12 +46,15 @@ void EventLoop::run() {
                     targets[i] = 0;
                 }
                 if (targets[i] != -1) {
-                    bool entryExit = std::get<bool>(targetInfo[i]);
-                    if (entryExit) {
-                        this->state.stations[targets[i]].receiveLeaveRequest(std::get<int>(targetInfo[i]));
+                    if (targetInfo[i].getEntryExit()) { //if leaving train
+                        propogation = this->state.stations[targets[i]].receiveLeaveRequest(targetInfo[i], &(this->state));
                     }
                     else {
-                        this->state.stations[targets[i]].receiveEntryRequest(std::get<int>(targetInfo[i]));
+                        propogation = this->state.stations[targets[i]].receiveEntryRequest(targetInfo[i], &(this->state));
+                    }
+                    if (propogation.getTrainIndex() != -1) {
+                        std::cout << "propogation" << std::endl;
+                        this->events.load()->dispatch(propogation);
                     }
                 }
             }

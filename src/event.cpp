@@ -25,8 +25,8 @@ bool Event::getEntryExit() const {
     return this->entryExit;
 }
 
-bool Event::propogate() const {
-    return this->propogateOthers;
+void Event::propogate(int addition) {
+    this->time += addition; //does this lag from global time? maybe fetch too
 }
 
 Event::~Event() {

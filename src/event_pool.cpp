@@ -11,6 +11,7 @@ EventPool::EventPool(int time, int stationSize, int trainsSize, State* state) {
     this->tOffset = 0;
     this->maxTime = time;
     this->target = {-1};
+    this->targetInfo = {Event(0,-1,-1,false)};
     this->maxSize = stationSize;
     this->trainsSize = trainsSize;
     this->state = state;
@@ -27,6 +28,7 @@ int EventPool::progressTime(std::barrier<>& syncPoint) {
     int target = -1;
     int trainIndex = -1;
     int t = 0; int nextT = 0; bool multi = false; bool propogate = false; bool entryExit = false;
+    Event eCopy = Event(0,-1,-1,false); //dummy initialised
     int tOffsetNow = this->globalTime;
     {std::lock_guard<std::mutex> lock(this->poolMutex);
         //std::cout << "Current Event Pool: " << std::endl;
@@ -40,25 +42,21 @@ int EventPool::progressTime(std::barrier<>& syncPoint) {
             std::cout << "No events to progress time to." << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(1));
             this->target = {-1}; //reset to no event target
+            this->targetInfo = {Event(0,-1,-1,false)};
             return -1; //no events to progress time to
         }
         auto it = this->pool.begin();
+        eCopy = (*it);
         t = (*it).getTime();
         nextT = (*std::next(it,1)).getTime();
         target = (*it).getTarget();
         trainIndex = (*it).getTrainIndex();
-        propogate = (*it).propogate();
         entryExit = (*it).getEntryExit();
         this->pool.erase(it);
     }   
     if(nextT == t) {
         this->progressTime(syncPoint);
         multi = true;
-    }
-    if(propogate) { //propogation events happen instantly increasing ttl
-        t += 0;
-        //find all events that share target
-        //erase and re insert for modification of times
     }
     else {
         this->tOffset = this->globalTime;
@@ -82,7 +80,7 @@ int EventPool::progressTime(std::barrier<>& syncPoint) {
     int direction = thisTrain.getDirection();
     
     //send request for station to process event (actioned now)
-    this->sendRequest(target, direction, entryExit);
+    this->sendRequest(target, eCopy);
 
     //start setting up next event to be dispatched
     
@@ -136,10 +134,10 @@ int EventPool::dispatch(Event e) {
     return 0; //lock goes out of scope at end of function
 }
 
-int EventPool::sendRequest(int target, int direction, bool entryExit) {
+int EventPool::sendRequest(int target, Event e) {
     //send request to station at target index
     this->target.push_back(target);
-    this->targetInfo.push_back({direction, entryExit});
+    this->targetInfo.push_back(e);
     return 0;
 }
 
@@ -147,7 +145,7 @@ std::vector<int> EventPool::getTargets() {
     return this->target;
 }
 
-std::vector<std::pair<int, bool>> EventPool::getTargetInfo() {
+std::vector<Event> EventPool::getTargetInfo() {
     return this->targetInfo;
 }
 
