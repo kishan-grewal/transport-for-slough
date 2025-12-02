@@ -36,7 +36,8 @@ class StationSystem {
     return fmin(Qb_out(p1) * split, Qb_in(p2)) - fmin(Qb_out(p2), Qb_in(p3));
   }
 
-  enum SegmentType {
+  enum SegmentType : unsigned char {
+    INVALID,
     // Straight corridor
     DIRECT,
     // Upstream inflow comes from a junction
@@ -48,18 +49,20 @@ class StationSystem {
     // Entrance
     AREA_OUTFLOW
   };
+  enum AreaLink : unsigned char { NONE = 0, FROM = 1, TO = 2, BOTH = FROM | TO };
 
   struct SegmentData {
     SegmentType type;
+    AreaLink linked_to_area;
     unsigned int prev, next;
     double xk;
-    bool from_area;
 
     // SPLIT_OUTPUT fields
     // These then get read back by SPLIT_INPUT structures in calculations, to avoid data duplication
     unsigned int secondary;
     double split_ratio;
 
+    SegmentData();
     SegmentData(boost::json::object data);
   };
   std::vector<SegmentData> segments;

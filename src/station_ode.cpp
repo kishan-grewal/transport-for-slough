@@ -2,17 +2,19 @@
 #include "ode/json_util.hpp"
 
 StationSystem::StationSystem(boost::json::array structure) {
-  segments = std::vector<SegmentData>(structure.size());
+  unsigned long len = structure.size();
+  segments = std::vector<SegmentData>(len);
 
-  int i = 0;
-  for (auto it = structure.begin(); it != structure.end(); ++it, ++i) {
-    if (!it->is_object()) {
+  for (int i = 0; i < len; ++i) {
+    if (!structure.at(i).is_object()) {
       printf("WARN - invalid station structure field");
       break;
     }
-    segments[i] = SegmentData(it->as_object());
+    segments[i] = SegmentData(structure.at(i).as_object());
   }
 }
+
+StationSystem::SegmentData::SegmentData() { this->type = SegmentType::INVALID; }
 StationSystem::SegmentData::SegmentData(boost::json::object data) {
   if (!data.contains("type") || !data.at("type").is_string())
     throw std::runtime_error(
@@ -32,46 +34,64 @@ StationSystem::SegmentData::SegmentData(boost::json::object data) {
     throw std::runtime_error(
       "Invalid JSON value for station segment data, invalid value at key [type]");
 
-  if (!data.contains("prev") || (!data.at("prev").is_int64() && !data.at("prev").is_uint64()))
-    throw std::runtime_error(
-      "Invalid JSON value for station segment data, missing/mistyped key [prev]");
-  auto &val = data.at("prev");
-  switch (val.kind()) {
-    case boost::json::kind::int64:
-      this->prev = val.as_int64();
-      break;
-    case boost::json::kind::uint64:
-      this->prev = val.as_uint64();
-      break;
-    default:  // Should be caught in above statement
-      break;
+  if (this->type != AREA_OUTFLOW) {
+    if (!data.contains("prev") || (!data.at("prev").is_int64() && !data.at("prev").is_uint64()))
+      throw std::runtime_error(
+        "Invalid JSON value for station segment data, missing/mistyped key [prev]");
+
+    auto &val = data.at("prev");
+    switch (val.kind()) {
+      case boost::json::kind::int64:
+        this->prev = val.as_int64();
+        break;
+      case boost::json::kind::uint64:
+        this->prev = val.as_uint64();
+        break;
+      default:  // Should be caught in above statement
+        break;
+    }
   }
 
-  if (!data.contains("next") || (!data.at("next").is_int64() && !data.at("next").is_uint64()))
-    throw std::runtime_error(
-      "Invalid JSON value for station segment data, missing/mistyped key [next]");
-  val = data.at("next");
-  switch (val.kind()) {
-    case boost::json::kind::int64:
-      this->next = val.as_int64();
-      break;
-    case boost::json::kind::uint64:
-      this->next = val.as_uint64();
-      break;
-    default:  // Should be caught in above statement
-      break;
+  if (this->type != AREA_INFLOW) {
+    if (!data.contains("next") || (!data.at("next").is_int64() && !data.at("next").is_uint64()))
+      throw std::runtime_error(
+        "Invalid JSON value for station segment data, missing/mistyped key [next]");
+
+    auto &val = data.at("next");
+    switch (val.kind()) {
+      case boost::json::kind::int64:
+        this->next = val.as_int64();
+        break;
+      case boost::json::kind::uint64:
+        this->next = val.as_uint64();
+        break;
+      default:  // Should be caught in above statement
+        break;
+    }
   }
 
   if (!data.contains("xk") || (!data.at("xk").is_number()))
     throw std::runtime_error(
       "Invalid JSON value for station segment data, missing/mistyped key [xk]");
-  val = data.at("xk");
+  auto &val = data.at("xk");
   JSON_ParseNumericToDouble(this->xk, &val);
 
-  if (!data.contains("from_area") || (!data.at("from_area").is_bool()))
+  if (!data.contains("linked_to_area"))
+    this->linked_to_area = NONE;
+  else if (!data.at("linked_to_area").is_string())
     throw std::runtime_error(
-      "Invalid JSON value for station segment data, missing/mistyped key [from_area]");
-  this->from_area = data.at("from_area").as_bool();
+      "Invalid JSON value for station segment data, missing/mistyped key [linked_to_area]");
+  else {
+    str = data.at("linked_to_area").as_string();
+    if (str == "NONE")
+      this->linked_to_area = AreaLink::NONE;
+    else if (str == "FROM")
+      this->linked_to_area = AreaLink::FROM;
+    else if (str == "TO")
+      this->linked_to_area = AreaLink::TO;
+    else if (str == "BOTH")
+      this->linked_to_area = AreaLink::BOTH;
+  }
 
   if (this->type == SPLIT_OUTPUT) {  // Read extra fields
     if (!data.contains("secondary") ||
@@ -101,30 +121,39 @@ StationSystem::SegmentData::SegmentData(boost::json::object data) {
 void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt,
                                const double /* t */) {
   for (int i = 0; i < x.size(); ++i) {
-    double in_density_factor = segments[i].from_area ? segments[i].xk : 1;
+    double in_density_factor =
+      segments[i].linked_to_area & FROM ? segments[segments[i].prev].xk : 1;
+    double out_density_factor = segments[i].linked_to_area & TO ? segments[segments[i].next].xk : 1;
     double fct = 1 / segments[i].xk;
 
     switch (segments[i].type) {
+      case SegmentType::INVALID:
+        throw std::runtime_error("Uninitialised segment in station system");
       case SegmentType::DIRECT:
-        dxdt[i] = fct * dQe(x[segments[i].prev] / in_density_factor, x[i], x[segments[i].next]);
+        dxdt[i] = fct * dQe(x[segments[i].prev] / in_density_factor, x[i],
+                            x[segments[i].next] / out_density_factor);
         break;
       case SegmentType::AREA_INFLOW:
-        dxdt[i] = Qb_out(x[segments[i].prev]);
+        dxdt[i] =
+          fmin(Qb_out(x[segments[i].prev] / in_density_factor), Qb_in(x[i] / segments[i].xk));
         break;
       case SegmentType::AREA_OUTFLOW:
-        dxdt[i] = -fmin(Qb_out(x[i] / in_density_factor), Qb_in(x[segments[i].next]));
+        dxdt[i] =
+          -fmin(Qb_out(x[i] / segments[i].xk), Qb_in(x[segments[i].next] / out_density_factor));
         break;
       case SegmentType::SPLIT_OUTPUT:
-        dxdt[i] = fct * dQe(x[segments[i].prev] / in_density_factor, x[i],
-                            (x[segments[i].next] * segments[i].split_ratio) +
-                              (x[segments[i].secondary] * (1 - segments[i].split_ratio)));
+        dxdt[i] =
+          fct *
+          dQe(x[segments[i].prev] / in_density_factor, x[i],
+              (x[segments[i].next] * segments[i].split_ratio / out_density_factor) +
+                (x[segments[i].secondary] * (1 - segments[i].split_ratio) / out_density_factor));
         break;
       case SegmentType::SPLIT_INPUT:
         double split_ratio = segments[segments[i].prev].next == i
                                ? segments[segments[i].prev].split_ratio
                                : 1 - segments[segments[i].prev].split_ratio;
         dxdt[i] = fct * dQe_split_in(x[segments[i].prev] / in_density_factor, x[i],
-                                     x[segments[i].next], split_ratio);
+                                     x[segments[i].next] / out_density_factor, split_ratio);
         break;
     }
   }

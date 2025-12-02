@@ -10,6 +10,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "ode/ode_solver.hpp"
+#include "station_ode.hpp"
 
 namespace odeint = boost::numeric::odeint;
 
@@ -121,19 +122,21 @@ struct GlobalStateTimeObserver : ODE_Solver::GlobalTimeObserverTemplate {
 
 const double t = 50;
 void SystemToPlot(csrc::SFPlot &plot, std::vector<ODE_Solver::Vector> &states,
-                  std::vector<double> &times, sf::Color colour = sf::Color::Green,
-                  std::string label = "") {
+                  std::vector<double> &times, const double y_range[2] = (double[2]){-1, 1},
+                  sf::Color colour = sf::Color::Green, std::string label = "") {
   auto sets = csrc::PlotDataSet::MultiPlotDatSet(times, states, colour, csrc::PlottingType::LINE,
                                                  {"x1", "x2"});
   for (auto set = sets.begin(); set != sets.end(); ++set)
     plot.AddDataSet(*set);
 
   auto minmax = std::minmax_element(times.begin(), times.end());
-  plot.SetupAxes(*minmax.first, *minmax.second, -5, 10, (*minmax.second - *minmax.first) / 10, 0.5,
+  plot.SetupAxes(*minmax.first, *minmax.second, y_range[0], y_range[1],
+                 (*minmax.second - *minmax.first) / 10, (y_range[1] - y_range[0]) / 10,
                  sf::Color::White);
   plot.GenerateVertices();
 }
 
+/*
 int main(int argc, char **argv) {
   sf::RenderWindow window(sf::VideoMode({800, 800}), "ODEint Testing");
   sf::Font font;
@@ -237,6 +240,48 @@ int main(int argc, char **argv) {
     // window.draw(plot3);
 
     window.draw(plot4);
+    window.display();
+  }
+}
+*/
+
+int main(int argc, char **argv) {
+  sf::RenderWindow window(sf::VideoMode({800, 800}), "ODEint Testing");
+  sf::Font font;
+  if (!font.openFromFile("/mnt/c/Windows/Fonts/arial.ttf"))
+    throw std::runtime_error("Failed to load font");
+
+  std::ifstream inFile("test.json", std::ios_base::in);
+  boost::json::value j = boost::json::parse(inFile);
+  inFile.close();
+
+  StationSystem station = StationSystem(j.as_object().at("stations").as_array().at(0).as_array());
+  auto initial_state = ODE_Solver::Vector(6);
+  initial_state[0] = 50;
+
+  std::vector<ODE_Solver::Vector> states;
+  std::vector<double> times;
+
+  auto station_system = ODE_Solver::Solver(odeint::runge_kutta4<ODE_Solver::Vector>(), station,
+                                           initial_state, GlobalStateTimeObserver(states, times));
+  station_system.SolveToTime(200);
+  ODE_Solver::Vector s = station_system.LastState();
+  std::cout << "Ending state:" << "  " << s[0] << " " << s[1] << " " << s[2] << " " << s[3] << " "
+            << s[4] << " " << s[5] << std::endl;
+
+  csrc::SFPlot plot(sf::Vector2f(35, 35), sf::Vector2f(700, 700), 35, font, "t", "X");
+  double y_range[2] = {0, 50};
+  SystemToPlot(plot, states, times, y_range);
+
+  // Window rendering
+  while (window.isOpen()) {
+    while (const std::optional<sf::Event> event = window.pollEvent()) {
+      if (event->is<sf::Event::Closed>()) {
+        window.close();
+      }
+    }
+    window.clear();
+    window.draw(plot);
     window.display();
   }
 }
