@@ -7,6 +7,7 @@
 #include <mutex>
 #include <barrier>
 #include <vector>
+#include <fstream>
 #include "event.hpp"
 
 class State;
@@ -16,6 +17,7 @@ private:
     std::mutex stationMutex;
 
     std::string name;
+    std::ofstream file;
     int capacity;
     int population;
     int timeToLeaveRequest;
@@ -36,6 +38,9 @@ public:
     Event receiveEntryRequest(Event e, State* state);
     Event receiveLeaveRequest(Event e, State* state);
     std::string getName() {return this->name;}
+
+    void exportCurState();
+    void finishExport();
     ~Station();
 };
 

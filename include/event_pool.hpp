@@ -3,6 +3,7 @@
 #include <mutex>
 #include "state.hpp"
 #include <set>
+#include <fstream>
 #include "event.hpp"
 
 class EventPool {
@@ -20,6 +21,8 @@ private:
     //rather than subtract the times from individual events
     //store the number to subtract from all elements and compute
     //on event fetch
+
+    std::ofstream file;
 
     //send a request to the station you would like for event to occur on
     int sendRequest(int target, Event e);

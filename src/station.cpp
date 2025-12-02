@@ -17,6 +17,14 @@ Station::Station(std::string name, std::vector<int> platforms) {
         this->entryRequests.push_back(-1); //consider using ints instead of fixed size requests
     }
     std::cout << platforms[0] << std::endl;
+
+    std::string fname = "out/" + name + ".csv";
+    this->file = std::ofstream(fname);
+    std::string cols = "population";
+    for(int i = 0; i < this->platforms.size(); ++i) {
+        cols += ",platform " + std::to_string(i);
+    }
+    this->file << cols << std::endl;
 }
 
 void Station::listen(std::barrier<>& syncPoint) {
@@ -47,6 +55,7 @@ void Station::listen(std::barrier<>& syncPoint) {
         popLeave = 0;
 
         std::cout << this->name << " population: " << this->population << std::endl;
+        this->exportCurState();
 
         syncPoint.arrive_and_wait();
     }
@@ -89,6 +98,18 @@ Event Station::receiveLeaveRequest(Event e, State* state) {
 
     e.propogate(40);
     return e;
+}
+
+void Station::exportCurState() {
+    std::string status = "";
+    for(int i = 0; i < this->platformStatus.size(); ++i) {
+        status += "," + std::to_string(this->platformStatus[i]);
+    }
+    this->file << this->population << status << std::endl;
+}
+
+void Station::finishExport() {
+    this->file.close();
 }
 
 Station::~Station() {

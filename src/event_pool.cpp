@@ -15,6 +15,8 @@ EventPool::EventPool(int time, int stationSize, int trainsSize, State* state) {
     this->maxSize = stationSize;
     this->trainsSize = trainsSize;
     this->state = state;
+    this->file = std::ofstream("out/time.csv");
+    this->file << "t" << std::endl;
     std::cout << state->trains.size() << state->stations.size() << std::endl;
     for (int i = 0; i < trainsSize; ++i) {
         this->dispatch(Event(10, state->getTrain(i).getStartIndex(), i, false)); //set off the trains, choo choo
@@ -63,15 +65,17 @@ int EventPool::progressTime(std::barrier<>& syncPoint) {
     }
     if(!multi) {
         this->globalTime += t - tOffsetNow;
+        this->file << std::to_string(this->globalTime) << std::endl;
         std::cout << "TIME PROGRESS " << this->globalTime << std::endl;
     }
     //send request to target at event time
+
 
     if (this->globalTime > this->maxTime) {
         //end simulation
         std::cout << "Max simulation time reached." << std::endl;
         this->target = {}; //reset to no event target
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        this->file.close();
         return -2;
     }
 

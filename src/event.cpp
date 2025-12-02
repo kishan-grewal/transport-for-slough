@@ -1,6 +1,7 @@
 #include "event.hpp"
 #include <exception>
 #include <stdexcept>
+#include <iostream>
 
 Event::Event(int t, int index, int trainIndex, bool entryExit) {
     this->time = t;
@@ -26,6 +27,7 @@ bool Event::getEntryExit() const {
 }
 
 void Event::propogate(int addition) {
+    std::cout << "propogating" << std::endl;
     this->time += addition; //does this lag from global time? maybe fetch too
 }
 

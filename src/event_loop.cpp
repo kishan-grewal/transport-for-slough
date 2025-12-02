@@ -26,6 +26,11 @@ void EventLoop::run() {
         int res = this->events.load()->progressTime(std::ref(this->barrier));
         if(res == -2) {
             this->running.store(false);
+            for(int i = 0; i < this->state.stations.size(); ++i) {
+                this->state.stations[i].finishExport();
+            }
+            this->waitBarrier();
+            this->waitBarrier();
             break;
         }
         std::shared_ptr<EventPool> cur = this->events.load();

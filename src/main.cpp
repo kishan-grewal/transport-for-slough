@@ -39,8 +39,13 @@ int main(int argc, char** argv) {
     }
     //initialState.trains.emplace_back(100, 0, 10, 1);
     EventLoop loop = EventLoop(simTime, std::move(initialState), initialState.stations.size());
+    auto simStart = std::chrono::system_clock::now();
     loop.start();
     std::cin.get();
+    auto simEnd = std::chrono::system_clock::now();
+    auto simTimeReal = std::chrono::duration_cast<std::chrono::seconds>(simEnd - simStart);
+
+    std::cout << "Simulation took: " << simTimeReal.count() << "seconds" << std::endl;
 
     std::cout << "Program finished successfully." << std::endl;
 
