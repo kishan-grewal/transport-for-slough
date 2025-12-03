@@ -31,6 +31,9 @@ class Solver {
   public:
   System system;
 
+  // Using std::forward<T> to allow use of both lvalues and rvalues in the constructure for the
+  // system - this means you can both directly instantiate the system in the constructor, OR use a
+  // reference to it (where a standard copy constructor would then break the reference)
   explicit Solver(Stepper stepper, System &&system, GlobalObserver observer = EmptyObserver())
       : system_stepper(stepper),
         system(std::forward<System>(system)),
@@ -271,9 +274,11 @@ Solver<boost::numeric::odeint::controlled_runge_kutta<
 LinearSysFromJSON(boost::json::value system_definition);
 
 // Deduction guide
-template <class Stepper, class GlobalObserver>
-Solver(Stepper stepper, InitialStateSystem &&system, GlobalObserver observer = EmptyObserver())
-  -> Solver<Stepper, InitialStateSystem, Vector, GlobalObserver>;
+//  For InitialStateSystem which contains the initial state internally
+template <class Stepper, class GlobalObserver, class State>
+Solver(Stepper stepper, InitialStateSystem<State> &&system,
+       GlobalObserver observer = EmptyObserver())
+  -> Solver<Stepper, InitialStateSystem<State>, State, GlobalObserver>;
 
 }  // namespace ODE_Solver
 

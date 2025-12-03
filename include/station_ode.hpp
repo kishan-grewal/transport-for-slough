@@ -3,7 +3,7 @@
 
 #include "ode/ode_system.hpp"
 
-class StationSystem : public ODE_Solver::InitialStateSystem {
+class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> {
   public:
   StationSystem(boost::json::object data);
 

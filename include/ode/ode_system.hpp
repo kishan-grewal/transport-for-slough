@@ -25,9 +25,10 @@ class LinearSystem {
   Vector B;
 };
 
+template <class T>
 class InitialStateSystem {
   public:
-  Vector get_initialised_state() { return this->initial_state; }
+  T get_initialised_state() { return this->initial_state; }
 
   protected:
   Vector initial_state;
