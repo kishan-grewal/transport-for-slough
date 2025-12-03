@@ -3,9 +3,9 @@
 
 #include "ode/ode_system.hpp"
 
-class StationSystem {
+class StationSystem : public ODE_Solver::InitialStateSystem {
   public:
-  StationSystem(boost::json::array structure);
+  StationSystem(boost::json::object data);
 
   void operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt, const double /* t */);
 

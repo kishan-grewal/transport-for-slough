@@ -31,13 +31,22 @@ class Solver {
   public:
   System system;
 
-  Solver(Stepper stepper, System system, State state, GlobalObserver observer = EmptyObserver())
+  explicit Solver(Stepper stepper, System &&system, GlobalObserver observer = EmptyObserver())
       : system_stepper(stepper),
-        system(system),
+        system(std::forward<System>(system)),
+        last_update_state(system.get_initialised_state()),
+        global_time_observer(observer) {
+    this->last_update_time = 0;
+  };
+  explicit Solver(Stepper stepper, System &&system, State state,
+                  GlobalObserver observer = EmptyObserver())
+      : system_stepper(stepper),
+        system(std::forward<System>(system)),
         last_update_state(state),
         global_time_observer(observer) {
     this->last_update_time = 0;
   };
+
   // ~ODE_System();
 
   /** SolveToTime(double t, Observer observer, double observer_timestep):
@@ -260,6 +269,11 @@ Solver<boost::numeric::odeint::controlled_runge_kutta<
          boost::numeric::odeint::runge_kutta_dopri5<Vector>>,
        LinearSystem, Vector>
 LinearSysFromJSON(boost::json::value system_definition);
+
+// Deduction guide
+template <class Stepper, class GlobalObserver>
+Solver(Stepper stepper, InitialStateSystem &&system, GlobalObserver observer = EmptyObserver())
+  -> Solver<Stepper, InitialStateSystem, Vector, GlobalObserver>;
 
 }  // namespace ODE_Solver
 

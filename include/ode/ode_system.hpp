@@ -25,6 +25,14 @@ class LinearSystem {
   Vector B;
 };
 
+class InitialStateSystem {
+  public:
+  Vector get_initialised_state() { return this->initial_state; }
+
+  protected:
+  Vector initial_state;
+};
+
 class CoefficientSystem {
   public:
   double input;

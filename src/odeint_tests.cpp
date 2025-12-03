@@ -255,15 +255,14 @@ int main(int argc, char **argv) {
   boost::json::value j = boost::json::parse(inFile);
   inFile.close();
 
-  StationSystem station = StationSystem(j.as_object().at("stations").as_array().at(0).as_array());
-  auto initial_state = ODE_Solver::Vector(6);
-  initial_state[0] = 50;
-
   std::vector<ODE_Solver::Vector> states;
   std::vector<double> times;
 
-  auto station_system = ODE_Solver::Solver(odeint::runge_kutta4<ODE_Solver::Vector>(), station,
-                                           initial_state, GlobalStateTimeObserver(states, times));
+  auto station_system = ODE_Solver::Solver<odeint::runge_kutta4<ODE_Solver::Vector>, StationSystem,
+                                           ODE_Solver::Vector, GlobalStateTimeObserver>(
+    odeint::runge_kutta4<ODE_Solver::Vector>(),
+    StationSystem(j.as_object().at("stations").as_array().at(0).as_object()),
+    GlobalStateTimeObserver(states, times));
   station_system.SolveToTime(200);
   ODE_Solver::Vector s = station_system.LastState();
   std::cout << "Ending state:" << "  " << s[0] << " " << s[1] << " " << s[2] << " " << s[3] << " "

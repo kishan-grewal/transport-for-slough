@@ -18,14 +18,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory(libs/SFGraphing)
 
-add_executable(${PROJECT_NAME} 
-  # src/main.cpp
-  # src/event_queue.cpp
-  # src/event.cpp
-  # src/platform.cpp
-  # src/station.cpp
-  # src/train.cpp
-
+add_executable(${PROJECT_NAME}
   src/odeint_tests.cpp
   src/ode/ode_solver.cpp
   src/station_ode.cpp

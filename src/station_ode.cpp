@@ -1,7 +1,11 @@
 #include "station_ode.hpp"
 #include "ode/json_util.hpp"
 
-StationSystem::StationSystem(boost::json::array structure) {
+StationSystem::StationSystem(boost::json::object data) {
+  if (!data.at("structure").is_array())
+    throw std::runtime_error(
+      "Invalid JSON value for station data, expected array for key [structure]");
+  auto structure = data.at("structure").as_array();
   unsigned long len = structure.size();
   segments = std::vector<SegmentData>(len);
 
@@ -11,6 +15,23 @@ StationSystem::StationSystem(boost::json::array structure) {
       break;
     }
     segments[i] = SegmentData(structure.at(i).as_object());
+  }
+
+  this->initial_state = ODE_Solver::Vector(len);
+  if (!data.at("initial_state").is_array())
+    throw std::runtime_error(
+      "Invalid JSON value for station data, expected array for key [initial_state]");
+  auto state = data.at("initial_state").as_array();
+  if (state.size() != len)
+    throw std::runtime_error("Invalid JSON value for station data, expected array [initial_state] "
+                             "to have equal length to [structure]");
+
+  for (int i = 0; i < len; ++i) {
+    if (!state.at(i).is_number()) {
+      throw std::runtime_error(
+        "Invalid JSON value for station data, expected numeric inside array [initial_state]");
+    }
+    JSON_ParseNumericToDouble(this->initial_state[i], &state.at(i));
   }
 }
 
