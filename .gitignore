@@ -1,6 +1,6 @@
-build/
-.cache/
-
-.vscode/*
-
 *.csv
+build/
+compile_commands.json
+
+.vscode/
+.cache/

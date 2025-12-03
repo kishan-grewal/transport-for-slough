@@ -1,0 +1,87 @@
+{
+  "equations": [
+    {
+      "size": 2,
+      "A": [
+        0,
+        1,
+        -1,
+        -0.15
+      ],
+      "B": [
+        0,
+        1
+      ],
+      "initial": [
+        1,
+        0
+      ],
+      "stepper": {
+        "abs_err": 1.0e-10,
+        "rel_err": 1.0e-7,
+        "a_x": 1.0,
+        "a_dxdt": 1.0
+      }
+    },
+    {
+      "size": 4,
+      "A": [
+         0,    1,   0,   0,
+        -0.35, 0,   0.2, 0,
+         0,    0,   0,   1,
+         0.2,  0,  -0.2, 0
+      ],
+      "B": [
+        0,-1,0,-1
+      ],
+      "initial": [
+        1,0,2,0
+      ]
+    }
+  ],
+  "coefficients":[
+    [
+      0.1,2
+    ]
+  ],
+  "stations":[
+    [
+        {
+          "type": "AREA_OUTFLOW",
+          "next": 1,
+          "xk": 5
+        },
+        {
+          "type": "DIRECT",
+          "prev": 0,
+          "next": 2,
+          "xk": 1,
+          "linked_to_area": "FROM"
+        },
+        {
+          "type": "DIRECT",
+          "prev": 1,
+          "next": 3,
+          "xk": 1
+        },
+        {
+          "type": "DIRECT",
+          "prev": 2,
+          "next": 4,
+          "xk": 1
+        },
+        {
+          "type": "DIRECT",
+          "prev": 3,
+          "next": 5,
+          "xk": 1,
+          "linked_to_area": "TO"
+        },
+        {
+          "type": "AREA_INFLOW",
+          "prev": 4,
+          "xk": 5
+        }
+      ]
+  ]
+}
