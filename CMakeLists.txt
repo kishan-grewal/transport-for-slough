@@ -24,6 +24,6 @@ add_executable(${PROJECT_NAME}
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
-target_include_directories(${PROJECT_NAME} PUBLIC libs/SFGraphing/include/)
+target_include_directories(${PROJECT_NAME} PUBLIC libs/boost/include/ libs/SFGraphing/include/)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC SFGraphing)

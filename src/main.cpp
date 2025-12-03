@@ -2,6 +2,8 @@
 #include <vector>
 #include <string>
 
+#include <boost/json/src.hpp>
+
 #include "event_loop.hpp"
 #include "platform.hpp"
 #include "station.hpp"
