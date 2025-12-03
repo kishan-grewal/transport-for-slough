@@ -3,7 +3,7 @@
     {
       "id": "",
       "initial_state": [
-        50,
+        0,
         0,
         0,
         0,
@@ -14,7 +14,8 @@
         {
           "type": "AREA_OUTFLOW",
           "next": 1,
-          "xk": 5
+          "xk": 5,
+          "is_entrance": true
         },
         {
           "type": "DIRECT",
@@ -47,7 +48,8 @@
           "prev": 4,
           "xk": 5
         }
-      ]
+      ],
+      "input": 0.2
     }
   ]
 }

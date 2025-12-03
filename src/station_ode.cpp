@@ -1,7 +1,21 @@
 #include "station_ode.hpp"
 #include "ode/json_util.hpp"
 
+void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
+  if (this->system == NULL)
+    return;
+
+  // Const input (used in testing)
+  if (input_n >= 0) {
+    x += system->EntranceUpdate(std::vector<double>(1, input_n));
+    return;
+  }
+  // RVG-driven input
+  //  ...
+}
+
 StationSystem::StationSystem(boost::json::object data) {
+  // Setup internal equation structure
   if (!data.at("structure").is_array())
     throw std::runtime_error(
       "Invalid JSON value for station data, expected array for key [structure]");
@@ -15,8 +29,15 @@ StationSystem::StationSystem(boost::json::object data) {
       break;
     }
     segments[i] = SegmentData(structure.at(i).as_object());
+
+    if (structure.at(i).as_object().contains("is_entrance") &&
+        structure.at(i).as_object().at("is_entrance").is_bool() &&
+        structure.at(i).as_object().at("is_entrance").as_bool()) {
+      this->input_segment_index.push_back(i);
+    }
   }
 
+  // Setup initial state
   this->initial_state = ODE_Solver::Vector(len);
   if (!data.at("initial_state").is_array())
     throw std::runtime_error(
@@ -33,6 +54,28 @@ StationSystem::StationSystem(boost::json::object data) {
     }
     JSON_ParseNumericToDouble(this->initial_state[i], &state.at(i));
   }
+
+  // Setup input driver (optional, defaults to const 0 input)
+  if (data.contains("input")) {
+    this->input_driver.system = this;
+    if (data.at("input").is_number())
+      JSON_ParseNumericToDouble(this->input_driver.input_n, &data.at("input"));
+    else {
+    }
+  }
+}
+
+ODE_Solver::Vector StationSystem::EntranceUpdate(std::vector<double> n_people) {
+  if (this->input_segment_index.size() != n_people.size()) {
+    throw std::runtime_error("Invalid input size for station system");
+  }
+
+  unsigned long long len = this->input_segment_index.size();
+  ODE_Solver::Vector out = ODE_Solver::Vector(this->segments.size(), 0);
+  for (int i = 0; i < len; ++i) {
+    out[this->input_segment_index[i]] += n_people[i];
+  }
+  return out;
 }
 
 StationSystem::SegmentData::SegmentData() { this->type = SegmentType::INVALID; }

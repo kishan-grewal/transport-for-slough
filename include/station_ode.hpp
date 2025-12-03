@@ -3,11 +3,38 @@
 
 #include "ode/ode_system.hpp"
 
+class StationSystem;
+struct StationSystemInput {
+  StationSystem *system;
+  double timestep = 1;
+
+  double input_n;
+
+  StationSystemInput(const StationSystemInput &cpy, StationSystem *override = NULL)
+      : system(cpy.system), input_n(cpy.input_n) {
+    if (override != NULL)
+      this->system = override;
+  }
+  StationSystemInput(StationSystem *system = NULL, int input = -1)
+      : system(system), input_n(input) {}
+
+  void operator()(ODE_Solver::Vector &x, double t);
+};
+
 class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> {
   public:
   StationSystem(boost::json::object data);
+  // Override copy constructor to make sure the input system pointer updates correctly
+  StationSystem(const StationSystem &cpy)
+      : segments(cpy.segments), input_segment_index(cpy.input_segment_index) {
+    this->input_driver = StationSystemInput(cpy.input_driver, this);
+  }
 
   void operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt, const double /* t */);
+
+  // Return the state update vector which should be added to the current state
+  ODE_Solver::Vector EntranceUpdate(std::vector<double> n_people);
+  StationSystemInput InputDriver() { return this->input_driver; }
 
   private:
   // Standard pedestrian parameters
@@ -17,6 +44,9 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
 
   constexpr static double l_eff = 1 / p_max;
   constexpr static double p_cap = 1 / (v0 * t_gap + l_eff);
+
+  StationSystemInput input_driver;
+  std::vector<int> input_segment_index;
 
   // --------------------
   //  Flow rate equations
