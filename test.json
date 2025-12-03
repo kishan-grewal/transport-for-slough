@@ -3,7 +3,13 @@
     {
       "id": "",
       "initial_state": [
+        100,
         0,
+        0,
+        0,
+        0,
+        0,
+        100,
         0,
         0,
         0,
@@ -21,6 +27,7 @@
           "type": "DIRECT",
           "prev": 0,
           "next": 2,
+          "adjacent": 10,
           "xk": 1,
           "linked_to_area": "FROM"
         },
@@ -28,28 +35,76 @@
           "type": "DIRECT",
           "prev": 1,
           "next": 3,
+          "adjacent": 9,
           "xk": 1
         },
         {
           "type": "DIRECT",
           "prev": 2,
           "next": 4,
+          "adjacent": 8,
           "xk": 1
         },
         {
           "type": "DIRECT",
           "prev": 3,
           "next": 5,
+          "adjacent": 7,
           "xk": 1,
           "linked_to_area": "TO"
         },
         {
           "type": "AREA_INFLOW",
           "prev": 4,
-          "xk": 5
+          "adjacent": 6,
+          "xk": 5,
+          "platform_id": 0
+        },
+
+        {
+          "type": "AREA_OUTFLOW",
+          "next": 7,
+          "adjacent": 5,
+          "xk": 5,
+          "platform_id": 0
+        },
+        {
+          "type": "DIRECT",
+          "prev": 6,
+          "next": 8,
+          "adjacent": 4,
+          "xk": 1,
+          "linked_to_area": "FROM"
+        },
+        {
+          "type": "DIRECT",
+          "prev": 7,
+          "next": 9,
+          "adjacent": 3,
+          "xk": 1
+        },
+        {
+          "type": "DIRECT",
+          "prev": 8,
+          "next": 10,
+          "adjacent": 2,
+          "xk": 1
+        },
+        {
+          "type": "DIRECT",
+          "prev": 9,
+          "next": 11,
+          "adjacent": 1,
+          "xk": 1,
+          "linked_to_area": "TO"
+        },
+        {
+          "type": "AREA_INFLOW",
+          "prev": 10,
+          "xk":  5
         }
       ],
-      "input": 0.2
+      "input": 0
     }
   ]
 }

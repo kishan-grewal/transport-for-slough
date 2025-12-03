@@ -26,14 +26,18 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
   StationSystem(boost::json::object data);
   // Override copy constructor to make sure the input system pointer updates correctly
   StationSystem(const StationSystem &cpy)
-      : segments(cpy.segments), input_segment_index(cpy.input_segment_index) {
+      : segments(cpy.segments),
+        input_segment_index(cpy.input_segment_index),
+        platform_alight_segment_mapping(cpy.platform_alight_segment_mapping),
+        platform_board_segment_mapping(cpy.platform_board_segment_mapping) {
     this->input_driver = StationSystemInput(cpy.input_driver, this);
   }
 
   void operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt, const double /* t */);
 
   // Return the state update vector which should be added to the current state
-  ODE_Solver::Vector EntranceUpdate(std::vector<double> n_people);
+  ODE_Solver::Vector EntranceUpdateVector(std::vector<double> n_people);
+  ODE_Solver::Vector PlatformUpdateVector(double n_people, unsigned int platform_id);
   StationSystemInput InputDriver() { return this->input_driver; }
 
   private:
@@ -48,6 +52,9 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
   StationSystemInput input_driver;
   std::vector<int> input_segment_index;
 
+  std::vector<int> platform_board_segment_mapping;   // Platform segments that you board from
+  std::vector<int> platform_alight_segment_mapping;  // Platform segments that you alight onto
+
   // --------------------
   //  Flow rate equations
   // --------------------
@@ -58,12 +65,22 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
     return v0 * p_cap * (0 <= p && p <= p_cap) +
            (1 / t_gap * (1 - p * l_eff)) * (p_cap < p && p <= p_max);
   }
-  static double dQe(double p1, double p2, double p3) {
-    return fmin(Qb_out(p1), Qb_in(p2)) - fmin(Qb_out(p2), Qb_in(p3));
+  // static double dQe(double p1, double p2, double p3) {
+  //   return fmin(Qb_out(p1), Qb_in(p2)) - fmin(Qb_out(p2), Qb_in(p3));
+  // }
+  static double dQe(double p1_in, double p2_full, double p2_in, double p3_full) {
+    return fmin(Qb_out(p1_in), Qb_in(p2_full)) - fmin(Qb_out(p2_in), Qb_in(p3_full));
   }
 
   static double dQe_split_in(double p1, double p2, double p3, double split) {
     return fmin(Qb_out(p1) * split, Qb_in(p2)) - fmin(Qb_out(p2), Qb_in(p3));
+  }
+
+  inline double _in_density_factor(int i) {
+    return segments[i].linked_to_area & AreaLink::FROM ? segments[segments[i].prev].xk : 1;
+  }
+  inline double _out_density_factor(int i) {
+    return segments[i].linked_to_area & AreaLink::TO ? segments[segments[i].next].xk : 1;
   }
 
   enum SegmentType : unsigned char {
@@ -85,6 +102,7 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
     SegmentType type;
     AreaLink linked_to_area;
     unsigned int prev, next;
+    unsigned int adjacent = -1;
     double xk;
 
     // SPLIT_OUTPUT fields

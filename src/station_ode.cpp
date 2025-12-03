@@ -7,7 +7,7 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
 
   // Const input (used in testing)
   if (input_n >= 0) {
-    x += system->EntranceUpdate(std::vector<double>(1, input_n));
+    x += system->EntranceUpdateVector(std::vector<double>(1, input_n));
     return;
   }
   // RVG-driven input
@@ -21,19 +21,44 @@ StationSystem::StationSystem(boost::json::object data) {
       "Invalid JSON value for station data, expected array for key [structure]");
   auto structure = data.at("structure").as_array();
   unsigned long len = structure.size();
-  segments = std::vector<SegmentData>(len);
+  this->segments = std::vector<SegmentData>(len);
 
   for (int i = 0; i < len; ++i) {
     if (!structure.at(i).is_object()) {
       printf("WARN - invalid station structure field");
       break;
     }
-    segments[i] = SegmentData(structure.at(i).as_object());
+    auto segment = structure.at(i).as_object();
+    this->segments[i] = SegmentData(segment);
 
-    if (structure.at(i).as_object().contains("is_entrance") &&
-        structure.at(i).as_object().at("is_entrance").is_bool() &&
-        structure.at(i).as_object().at("is_entrance").as_bool()) {
+    if (segment.contains("is_entrance") && segment.at("is_entrance").is_bool() &&
+        segment.at("is_entrance").as_bool()) {
       this->input_segment_index.push_back(i);
+    }
+    else if (segment.contains("platform_id")) {
+      int id;
+      if (segment.at("platform_id").is_int64())
+        id = segment.at("platform_id").as_int64();
+      else if (segment.at("platform_id").is_uint64())
+        id = segment.at("platform_id").as_uint64();
+      else
+        throw std::runtime_error(
+          "Invalid JSON value for station data, expected integer for key [platform_id]");
+
+      switch (this->segments[i].type) {
+        case AREA_INFLOW:
+          if (id >= this->platform_board_segment_mapping.size())
+            this->platform_board_segment_mapping.resize(id + 1);
+          this->platform_board_segment_mapping[id] = i;
+          break;
+        case AREA_OUTFLOW:
+          if (id >= this->platform_alight_segment_mapping.size())
+            this->platform_alight_segment_mapping.resize(id + 1);
+          this->platform_alight_segment_mapping[id] = i;
+          break;
+        default:
+          throw std::runtime_error("Non-area segment cannot be specified as a platform");
+      }
     }
   }
 
@@ -65,15 +90,28 @@ StationSystem::StationSystem(boost::json::object data) {
   }
 }
 
-ODE_Solver::Vector StationSystem::EntranceUpdate(std::vector<double> n_people) {
+ODE_Solver::Vector StationSystem::EntranceUpdateVector(std::vector<double> n_people) {
   if (this->input_segment_index.size() != n_people.size()) {
     throw std::runtime_error("Invalid input size for station system");
   }
 
-  unsigned long long len = this->input_segment_index.size();
   ODE_Solver::Vector out = ODE_Solver::Vector(this->segments.size(), 0);
-  for (int i = 0; i < len; ++i) {
+  for (int i = 0; i < n_people.size(); ++i) {
     out[this->input_segment_index[i]] += n_people[i];
+  }
+  return out;
+}
+ODE_Solver::Vector StationSystem::PlatformUpdateVector(double n_people, unsigned int platform_id) {
+  ODE_Solver::Vector out = ODE_Solver::Vector(this->segments.size(), 0);
+  if (n_people > 0) {  // People alighting from a train
+    if (platform_id >= platform_alight_segment_mapping.size())
+      throw std::runtime_error("Out of bounds platform id for station system");
+    out[this->platform_alight_segment_mapping[platform_id]] += n_people;
+  }
+  else if (n_people < 0) {  // People boarding from a platform
+    if (platform_id >= platform_board_segment_mapping.size())
+      throw std::runtime_error("Out of bounds platform id for station system");
+    out[this->platform_board_segment_mapping[platform_id]] += n_people;
   }
   return out;
 }
@@ -134,6 +172,22 @@ StationSystem::SegmentData::SegmentData(boost::json::object data) {
     }
   }
 
+  if (data.contains("adjacent")) {
+    auto &val = data.at("adjacent");
+    switch (val.kind()) {
+      case boost::json::kind::int64:
+        this->adjacent = val.as_int64();
+        break;
+      case boost::json::kind::uint64:
+        this->adjacent = val.as_uint64();
+        break;
+      default:  // Should be caught in above statement
+        throw std::runtime_error("Type mismatch corruption");
+    }
+  }
+  else
+    this->adjacent = -1;
+
   if (!data.contains("xk") || (!data.at("xk").is_number()))
     throw std::runtime_error(
       "Invalid JSON value for station segment data, missing/mistyped key [xk]");
@@ -185,40 +239,85 @@ StationSystem::SegmentData::SegmentData(boost::json::object data) {
 void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt,
                                const double /* t */) {
   for (int i = 0; i < x.size(); ++i) {
-    double in_density_factor =
-      segments[i].linked_to_area & FROM ? segments[segments[i].prev].xk : 1;
-    double out_density_factor = segments[i].linked_to_area & TO ? segments[segments[i].next].xk : 1;
-    double fct = 1 / segments[i].xk;
+    double in_density_factor = _in_density_factor(i);
+    double out_density_factor = _out_density_factor(i);
+
+    double xk = segments[i].xk;
+    if (segments[i].adjacent != -1)
+      xk += segments[segments[i].adjacent].xk;
+    double fct = 1 / xk;
 
     switch (segments[i].type) {
       case SegmentType::INVALID:
         throw std::runtime_error("Uninitialised segment in station system");
-      case SegmentType::DIRECT:
-        dxdt[i] = fct * dQe(x[segments[i].prev] / in_density_factor, x[i],
-                            x[segments[i].next] / out_density_factor);
+      case SegmentType::DIRECT: {
+        double p_inflow = x[segments[i].prev] / in_density_factor;
+        double p_outflow = x[segments[i].next] / out_density_factor;
+        double p_self = x[i];
+        double p_self_full = p_self;
+
+        if (segments[segments[i].prev].adjacent != -1)
+          p_inflow /= 2;
+        if (segments[segments[i].next].adjacent != -1)
+          // Look opposite direction
+          p_outflow = (p_outflow + x[segments[segments[i].adjacent].prev] /
+                                     _in_density_factor(segments[i].adjacent)) /
+                      2;
+        if (segments[i].adjacent != -1) {
+          p_self_full = (p_self_full + x[segments[i].adjacent]) / 2;
+
+          p_self /= 2;
+        }
+
+        dxdt[i] = fct * dQe(p_inflow, p_self_full, p_self, p_outflow);
         break;
-      case SegmentType::AREA_INFLOW:
-        dxdt[i] =
-          fmin(Qb_out(x[segments[i].prev] / in_density_factor), Qb_in(x[i] / segments[i].xk));
+      }
+      case SegmentType::AREA_INFLOW: {
+        double p_self = x[i] / segments[i].xk;
+        double p_inflow = x[segments[i].prev] / in_density_factor;
+
+        if (segments[i].adjacent != -1) {
+          p_self = (p_self + x[segments[i].adjacent] / segments[segments[i].adjacent].xk) / 2;
+        }
+        if (segments[segments[i].prev].adjacent != -1)
+          p_inflow /= 2;
+
+        dxdt[i] = fmin(Qb_out(p_inflow), Qb_in(p_self));
         break;
-      case SegmentType::AREA_OUTFLOW:
-        dxdt[i] =
-          -fmin(Qb_out(x[i] / segments[i].xk), Qb_in(x[segments[i].next] / out_density_factor));
+      }
+      case SegmentType::AREA_OUTFLOW: {
+        double p_outflow = x[segments[i].next] / out_density_factor;
+        double p_self = x[i] / segments[i].xk;
+
+        if (segments[segments[i].next].adjacent != -1) {
+          p_outflow = (p_outflow + x[segments[segments[i].next].adjacent] /
+                                     segments[segments[segments[i].next].adjacent].xk) /
+                      2;
+        }
+        if (segments[i].adjacent != -1) {
+          p_self /= 2;
+        }
+
+        // x[i] / segments[i].xk / 2
+        dxdt[i] = -fmin(Qb_out(p_self), Qb_in(p_outflow));
         break;
-      case SegmentType::SPLIT_OUTPUT:
+      }
+      case SegmentType::SPLIT_OUTPUT: {
         dxdt[i] =
           fct *
-          dQe(x[segments[i].prev] / in_density_factor, x[i],
+          dQe(x[segments[i].prev] / in_density_factor, x[i], x[i],
               (x[segments[i].next] * segments[i].split_ratio / out_density_factor) +
                 (x[segments[i].secondary] * (1 - segments[i].split_ratio) / out_density_factor));
         break;
-      case SegmentType::SPLIT_INPUT:
+      }
+      case SegmentType::SPLIT_INPUT: {
         double split_ratio = segments[segments[i].prev].next == i
                                ? segments[segments[i].prev].split_ratio
                                : 1 - segments[segments[i].prev].split_ratio;
         dxdt[i] = fct * dQe_split_in(x[segments[i].prev] / in_density_factor, x[i],
                                      x[segments[i].next] / out_density_factor, split_ratio);
         break;
+      }
     }
   }
 }

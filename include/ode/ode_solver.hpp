@@ -162,7 +162,7 @@ class Solver {
   }
 
   double LastTime() { return this->last_update_time; }
-  State LastState() { return this->last_update_state; }
+  State &LastState() { return this->last_update_state; }
 };
 
 template <class Stepper>
