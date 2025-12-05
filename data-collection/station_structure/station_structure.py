@@ -62,7 +62,9 @@ class Station_Structure:
     for node_idx in indx_copy:
       if node_idx not in self.edges["start"].values.tolist() and node_idx not in self.edges["end"].values.tolist():
         self.nodes.drop(node_idx,axis=0,inplace=True)
-    pass
+        
+  def drop_elevators(self):
+    self.edges = self.edges[self.edges["type"] != "ELEVATOR"]
 
   def create_nx_graph(self) -> tuple[nx.MultiDiGraph,list]:
     g = nx.MultiDiGraph()
@@ -83,12 +85,16 @@ class Station_Structure:
     platforms_pos = np.array([self.platforms["x"],self.platforms["y"],self.platforms["level"] * 0.5])
     platforms_ids = self.platforms["areaName"].values
 
+
     start = self.nodes.loc[self.edges["start"]]
     end = self.nodes.loc[self.edges["end"]]
 
     edge_data = {}
     for i in self.edges.index:
       edge = self.edges.loc[i]
+      # if edge["type"] == "ELEVATOR" and ignore_elevators:
+      #   continue
+
       if (edge["start"],edge["end"]) in edge_data:
         edge_data[(edge["start"],edge["end"])].append(edge["type"])
       elif (edge["end"],edge["start"]) in edge_data:

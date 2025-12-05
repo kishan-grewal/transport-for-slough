@@ -20,10 +20,11 @@ station_ids = get_station_ids("jubilee")
 # print(*station_ids,sep="\n")
 # print()
 
-stop = station_ids[9]
+stop = station_ids[11]
 print(f"{stop[0]} information ({stop[1]})\n")
 station = Station_Structure(stop[1])
 # station = Station_Structure("9400ZZLUBNK")
+station.drop_elevators()
 station.drop_disconnected()
 
 ## Visualisation
@@ -54,8 +55,11 @@ for pos, item in edge_labels.items():
    ax.text(pos[0], pos[1], pos[2], str(item),fontsize=5) #type: ignore
 
 ax.grid(False); ax.set_xticks([]); ax.set_yticks([]); ax.set_zticks([]) # type: ignore
+ax.set_title(f"{stop[0]} 3D structure")
 
 ax2 = fig.add_subplot(1,3,3)
 g,c = station.create_nx_graph()
+# nx.draw_networkx(g,ax=ax2,node_size=100,node_color=c,with_labels=False)
 nx.draw_spring(g,ax=ax2,node_size=100,node_color=c)
+ax2.set_title(f"Directed graph")
 plt.show()
