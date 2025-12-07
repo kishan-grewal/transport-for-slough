@@ -220,15 +220,9 @@ int main(int argc, char **argv) {
     odeint::runge_kutta4<ODE_Solver::Vector>(),
     StationSystem(j.as_object().at("stations").as_array().at(0).as_object()),
     GlobalStateTimeObserver(states, times));
-  station_system.SolveToTime(150, station_system.system.InputDriver());
-  // station_system.LastState() += station_system.system.PlatformUpdateVector(-10, 0);
-  // station_system.LastState() += station_system.system.PlatformUpdateVector(15, 0);
-  station_system.SolveToTime(200, station_system.system.InputDriver());
-  // ODE_Solver::Vector s = station_system.LastState();
-  // for (int i = 0; i < s.size(); ++i) {
-  //   std::cout << s[i] << " ";
-  // }
-  // std::cout << std::endl;
+  station_system.LastState() += station_system.system.PlatformUpdateVector(250, 1);
+  station_system.SolveToTime(500, station_system.system.InputDriver());
+
   for (int i = 0; i < states.size(); ++i) {
     double s = 0;
     for (int j = 0; j < states[i].size(); ++j) {
@@ -243,7 +237,7 @@ int main(int argc, char **argv) {
   }
 
   csrc::SFPlot plot(sf::Vector2f(35, 35), sf::Vector2f(700, 700), 35, font, "t", "X");
-  double y_range[2] = {0, 50};
+  double y_range[2] = {0, 175};
   SystemToPlot(plot, states, times, y_range);
 
   // Window rendering

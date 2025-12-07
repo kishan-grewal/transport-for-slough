@@ -265,7 +265,6 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
                       2;
         if (segments[i].adjacent != -1) {
           p_self_full = (p_self_full + x[segments[i].adjacent]) / 2;
-
           p_self /= 2;
         }
 
@@ -303,19 +302,92 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
         break;
       }
       case SegmentType::SPLIT_OUTPUT: {
-        dxdt[i] =
-          fct *
-          dQe(x[segments[i].prev] / in_density_factor, x[i], x[i],
-              (x[segments[i].next] * segments[i].split_ratio / out_density_factor) +
-                (x[segments[i].secondary] * (1 - segments[i].split_ratio) / out_density_factor));
+        double p_inflow = x[segments[i].prev] / in_density_factor;
+        double p_outflow1 = x[segments[i].next];  //  / out_density_factor
+        double p_outflow2 = x[segments[i].secondary];
+        double p_self = x[i];
+        double p_self_full = p_self;
+
+        if (segments[segments[i].prev].adjacent != -1)
+          p_inflow /= 2;
+        if (segments[segments[i].next].adjacent != -1)
+          p_outflow1 = (p_outflow1 + x[segments[segments[i].next].adjacent]) / 2;
+        if (segments[segments[i].secondary].adjacent != -1)
+          p_outflow2 = (p_outflow2 + x[segments[segments[i].secondary].adjacent]) / 2;
+        if (segments[i].adjacent != -1) {
+          p_self_full = (p_self_full + x[segments[i].adjacent]) / 2;
+          p_self /= 2;
+        }
+
+        double p_outflow = fmax(p_outflow1, p_outflow2);
+
+        dxdt[i] = fct * (dQe(p_inflow, p_self_full, p_self * segments[i].split_ratio, p_outflow) -
+                         fmin(Qb_out(p_self * (1 - segments[i].split_ratio)), Qb_in(p_outflow)));
         break;
       }
       case SegmentType::SPLIT_INPUT: {
-        double split_ratio = segments[segments[i].prev].next == i
-                               ? segments[segments[i].prev].split_ratio
-                               : 1 - segments[segments[i].prev].split_ratio;
-        dxdt[i] = fct * dQe_split_in(x[segments[i].prev] / in_density_factor, x[i],
-                                     x[segments[i].next] / out_density_factor, split_ratio);
+        double p_inflow1 = x[segments[i].prev] / in_density_factor;
+        double p_inflow2 = x[segments[i].secondary];
+        double p_outflow = x[segments[i].next];
+        double p_self = x[i];
+        double p_self_full = p_self;
+
+        double split_ratio1, split_ratio2;
+        double p_alternative1 = 0, p_alternative2 = 0;
+
+        if (segments[segments[i].prev].next == i) {
+          split_ratio1 = segments[segments[i].prev].split_ratio;
+
+          int alt = segments[segments[i].prev].secondary;
+          p_alternative1 = x[alt];
+          if (segments[alt].adjacent != -1) {
+            p_alternative1 = (p_alternative1 + x[segments[alt].adjacent]) / 2;
+          }
+        }
+        else {
+          split_ratio1 = 1 - segments[segments[i].prev].split_ratio;
+
+          int alt = segments[segments[i].prev].next;
+          p_alternative1 = x[alt];
+          if (segments[alt].adjacent != -1) {
+            p_alternative1 = (p_alternative1 + x[segments[alt].adjacent]) / 2;
+          }
+        }
+        if (segments[segments[i].secondary].next == i) {
+          split_ratio2 = segments[segments[i].secondary].split_ratio;
+
+          int alt = segments[segments[i].secondary].secondary;
+          p_alternative2 = x[alt];
+          if (segments[alt].adjacent != -1) {
+            p_alternative2 = (p_alternative2 + x[segments[alt].adjacent]) / 2;
+          }
+        }
+        else {
+          split_ratio2 = 1 - segments[segments[i].secondary].split_ratio;
+
+          int alt = segments[segments[i].secondary].next;
+          p_alternative2 = x[alt];
+          if (segments[alt].adjacent != -1) {
+            p_alternative2 = (p_alternative2 + x[segments[alt].adjacent]) / 2;
+          }
+        }
+
+        if (segments[segments[i].prev].adjacent != -1)
+          p_inflow1 /= 2;
+        if (segments[segments[i].secondary].adjacent != -1)
+          p_inflow2 /= 2;
+        if (segments[segments[i].next].adjacent != -1)
+          p_outflow = (p_outflow + x[segments[segments[i].next].adjacent]) / 2;
+        if (segments[i].adjacent != -1) {
+          p_self_full = (p_self_full + x[segments[i].adjacent]) / 2;
+          p_self /= 2;
+        }
+
+        p_alternative1 = fmax(p_self_full, p_alternative1);
+        p_alternative2 = fmax(p_self_full, p_alternative2);
+
+        dxdt[i] = fct * (dQe(p_inflow1 * split_ratio1, p_alternative1, p_self, p_outflow) +
+                         fmin(Qb_out(p_inflow2 * split_ratio2), Qb_out(p_alternative2)));
         break;
       }
     }

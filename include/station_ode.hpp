@@ -65,15 +65,8 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
     return v0 * p_cap * (0 <= p && p <= p_cap) +
            (1 / t_gap * (1 - p * l_eff)) * (p_cap < p && p <= p_max);
   }
-  // static double dQe(double p1, double p2, double p3) {
-  //   return fmin(Qb_out(p1), Qb_in(p2)) - fmin(Qb_out(p2), Qb_in(p3));
-  // }
   static double dQe(double p1_in, double p2_full, double p2_in, double p3_full) {
     return fmin(Qb_out(p1_in), Qb_in(p2_full)) - fmin(Qb_out(p2_in), Qb_in(p3_full));
-  }
-
-  static double dQe_split_in(double p1, double p2, double p3, double split) {
-    return fmin(Qb_out(p1) * split, Qb_in(p2)) - fmin(Qb_out(p2), Qb_in(p3));
   }
 
   inline double _in_density_factor(int i) {
@@ -108,7 +101,7 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
     // SPLIT_OUTPUT fields
     // These then get read back by SPLIT_INPUT structures in calculations, to avoid data duplication
     unsigned int secondary;
-    double split_ratio;
+    double split_ratio = 1;
 
     SegmentData();
     SegmentData(boost::json::object data);
