@@ -1,6 +1,11 @@
 *.csv
+
 build/
 compile_commands.json
+.venv/
 
 .vscode/
 .cache/
+*__pycache__/
+
+*.csv

@@ -5,7 +5,6 @@
 #include <boost/json/src.hpp>
 
 #include "event_loop.hpp"
-#include "platform.hpp"
 #include "station.hpp"
 #include "train.hpp"
 
@@ -19,6 +18,10 @@ int main(int argc, char** argv) {
       simTime = std::stoi(arg.substr(2));
     }
   }
+
+  std::ifstream inFile("test.json", std::ios_base::in);
+  boost::json::value simple_station = boost::json::parse(inFile);
+  inFile.close();
 
   State initialState;
   std::vector<std::pair<std::string, std::vector<int>>> stationNames = {
@@ -56,7 +59,8 @@ int main(int argc, char** argv) {
   initialState.stations.reserve(stationNames.size());
   for (int i = 0; i < stationNames.size(); ++i) {
     initialState.stations.emplace_back(std::get<std::string>(stationNames[i]),
-                                       std::get<std::vector<int>>(stationNames[i]));
+                                       std::get<std::vector<int>>(stationNames[i]),
+                                       simple_station.at("stations").as_array().at(0).as_object());
   }
 
   initialState.trains = std::vector<Train>();

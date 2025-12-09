@@ -39,49 +39,6 @@ class nonlinear_sys_test : ODE_Solver::CoefficientSystem {
   };
 };
 
-class dde_sys_test {
-  public:
-  std::vector<ODE_Solver::Vector> past_states;
-  int memory_ptr;
-  unsigned int memory_length;
-
-  dde_sys_test(unsigned int memory_length, const ODE_Solver::Vector initial_state)
-      : memory_length(memory_length) {
-    memory_ptr = 0;
-    past_states = std::vector<ODE_Solver::Vector>(memory_length, initial_state);
-  }
-
-  void operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt, const double t) {
-    dxdt[0] = -0.1 * x[0];
-    dxdt[1] = 0.1 * past_states[(memory_ptr + memory_length - 30) % memory_length][0];
-  };
-};
-
-class dde_sys_test_driver {
-  public:
-  double timestep = 1;
-
-  dde_sys_test_driver(std::vector<ODE_Solver::Vector> *past_states, int *past_states_ptr,
-                      unsigned int past_states_len)
-      : m_past_states(past_states),
-        m_past_states_ptr(past_states_ptr),
-        m_past_states_len(past_states_len) {
-    if (m_past_states != NULL && m_past_states->size() != past_states_len) {
-      m_past_states->resize(past_states_len);
-    }
-  }
-
-  void operator()(const ODE_Solver::Vector &x, double t) {
-    *m_past_states_ptr = (*m_past_states_ptr + 1) % m_past_states_len;
-    (*m_past_states)[*m_past_states_ptr] = x;
-  }
-
-  private:
-  std::vector<ODE_Solver::Vector> *m_past_states;
-  int *m_past_states_ptr;
-  unsigned int m_past_states_len;
-};
-
 struct StateTimeObserver {
   std::vector<ODE_Solver::Vector> &m_states;
   std::vector<double> &m_times;
@@ -255,22 +212,32 @@ int main(int argc, char **argv) {
   boost::json::value j = boost::json::parse(inFile);
   inFile.close();
 
-  StationSystem station = StationSystem(j.as_object().at("stations").as_array().at(0).as_array());
-  auto initial_state = ODE_Solver::Vector(6);
-  initial_state[0] = 50;
-
   std::vector<ODE_Solver::Vector> states;
   std::vector<double> times;
 
-  auto station_system = ODE_Solver::Solver(odeint::runge_kutta4<ODE_Solver::Vector>(), station,
-                                           initial_state, GlobalStateTimeObserver(states, times));
-  station_system.SolveToTime(200);
-  ODE_Solver::Vector s = station_system.LastState();
-  std::cout << "Ending state:" << "  " << s[0] << " " << s[1] << " " << s[2] << " " << s[3] << " "
-            << s[4] << " " << s[5] << std::endl;
+  auto station_system = ODE_Solver::Solver<odeint::runge_kutta4<ODE_Solver::Vector>, StationSystem,
+                                           ODE_Solver::Vector, GlobalStateTimeObserver>(
+    odeint::runge_kutta4<ODE_Solver::Vector>(),
+    StationSystem(j.as_object().at("stations").as_array().at(0).as_object()),
+    GlobalStateTimeObserver(states, times));
+  station_system.LastState() += station_system.system.PlatformUpdateVector(250, 1);
+  station_system.SolveToTime(500, station_system.system.InputDriver());
+
+  for (int i = 0; i < states.size(); ++i) {
+    double s = 0;
+    for (int j = 0; j < states[i].size(); ++j) {
+      std::cout << std::fixed << std::setprecision(2) << states[i][j] << " ";
+      s += states[i][j];
+
+      if (j != 0 && j != 5 && j != 6 && j != 11)
+        s += states[i][j];
+    }
+    // std::cout << "\t\t" << s << std::endl;
+    std::cout << std::endl;
+  }
 
   csrc::SFPlot plot(sf::Vector2f(35, 35), sf::Vector2f(700, 700), 35, font, "t", "X");
-  double y_range[2] = {0, 50};
+  double y_range[2] = {0, 175};
   SystemToPlot(plot, states, times, y_range);
 
   // Window rendering
