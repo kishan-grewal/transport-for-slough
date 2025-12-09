@@ -29,6 +29,8 @@ class Station_Structure:
         continue
       nodes_list.append(data)
       
+    if len(nodes_list) == 0 or len(platforms_list) == 0:
+        raise Exception("Invalid response from API")
     self.nodes = Station_Structure.__create_dataframe(nodes_list); self.platforms = Station_Structure.__create_dataframe(platforms_list)
 
     ## Build edges
@@ -71,7 +73,14 @@ class Station_Structure:
     colours = []
     for ind in self.nodes.index:
       g.add_node(ind, attr=self.nodes.loc[ind])
-      colours.append("red" if ind in self.platforms.index else "blue")
+
+      if ind in self.platforms.index:
+        colours.append("red")
+      elif not (self.nodes["areaGid"].loc(axis=0)[ind] == ''):
+        colours.append("blue")
+      else:
+        colours.append("green")
+      # colours.append("red" if ind in self.platforms.index else "blue")
     for _, edge in self.edges.iterrows():
       g.add_edge(edge["start"],edge["end"])
     g.remove_nodes_from([node for node, degree in g.degree if degree == 0]) # type: ignore
@@ -81,6 +90,13 @@ class Station_Structure:
   def get_nodes_edges_plot(self):
     tmp = self.nodes[(~self.nodes.isin(self.platforms)["level"]).values] # Select non-platform nodes
     nodes_pos = np.array([tmp["x"],tmp["y"],tmp["level"] * 0.5])
+    nodes_colours = []
+    for _, node in tmp.droplevel("area").iterrows():
+      if not (node["areaGid"] == ''):
+        nodes_colours.append("blue")
+      else:
+        nodes_colours.append("green")
+
     nodes_ids = np.array(tmp.index)
     platforms_pos = np.array([self.platforms["x"],self.platforms["y"],self.platforms["level"] * 0.5])
     platforms_ids = self.platforms["areaName"].values
@@ -114,7 +130,7 @@ class Station_Structure:
     edge_quiver = Line3DCollection(segments, colors="k", linewidths=0.5)
     
 
-    return nodes_pos,nodes_ids, platforms_pos,platforms_ids, edge_quiver, edge_labels
+    return nodes_pos,nodes_ids,nodes_colours, platforms_pos,platforms_ids, edge_quiver, edge_labels
 
   @staticmethod
   def __check_is_platform(element : ElementTree.Element):
