@@ -8,6 +8,7 @@ import requests
 import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
+import pickle
 
 import time
 
@@ -19,25 +20,21 @@ def get_station_ids(line: str) -> list[tuple[str, str, str]]:
   response = requests.get(url).json()
   keys = [' '.join(s["commonName"].split(' ')[:-2]) for s in response]
   return [(str(s["commonName"]),
+           str(s["naptanId"]),
            str(naptans[naptans["commonName"].apply(lambda x : x.__contains__(key))]["naptanID"].values[0]),
-           str(s["naptanId"]))
+           )
            for s,key in zip(response, keys)]
 
 def load_station_data(naptan):
     station = Station_Structure(naptan)
-    station.drop_elevators()
+    # station.drop_elevators()
     station.drop_disconnected()
-
-    # Deal with entrances
-
 
     return station
 
-def visualise_station(station : Station_Structure, name, label_nodes: bool = False, label_edges: bool = False):
+def visualise_station(fig, station : Station_Structure, name, label_nodes: bool = False, label_edges: bool = False):
     ## Visualisation
     nodes,ids, node_colours, plats, lines, edges, edge_labels = station.get_nodes_edges_plot()
-
-    fig = plt.figure()
 
     ax = fig.add_subplot(1,3,(1,2),projection="3d")
     # Connect event to maintain locked roll
@@ -51,7 +48,6 @@ def visualise_station(station : Station_Structure, name, label_nodes: bool = Fal
 
 
     ax.scatter(nodes[0,:],nodes[1,:],nodes[2,:],c=node_colours)
-    ax.scatter(plats[0,:],plats[1,:],plats[2,:],c="red")
     for platform,id in enumerate(lines):
       ax.text(plats[0,platform],plats[1,platform],plats[2,platform]-0.1,str(id),fontsize=7) #type: ignore
     ax.legend(["Nodes","Platforms"])
@@ -72,7 +68,6 @@ def visualise_station(station : Station_Structure, name, label_nodes: bool = Fal
     # nx.draw_networkx(g,ax=ax2,node_size=100,node_color=c,with_labels=False)
     nx.draw_spring(g,ax=ax2,node_size=100,node_color=c)
     ax2.set_title(f"Directed graph")
-    plt.show()
 
 
 
@@ -126,9 +121,16 @@ if __name__ == "__main__":
 
         print("  WARN - failed to find any station data")
 
-    # for name, station in stations.items():
-    #     visualise_station(station, name)
-    #     plt.close()
-    s = stations["Stratford Underground Station"]
-    print(s.nodes)
-    visualise_station(s, "Stratford Underground Station",label_nodes=False)
+    for name, station in stations.items():
+        fig = plt.figure()
+        visualise_station(fig, station, name, label_nodes=True)
+        plt.savefig(f"data-collection/station_structure/outputs/{name}.png")
+        plt.close()
+    # s = stations["Canada Water Underground Station"]
+    # print(s.nodes)
+    # print(s.edges)
+    # visualise_station(s, "Canada Water Underground Station",label_nodes=True, label_edges=True)
+    # plt.show()
+
+    with open("data-collection/station_structure/outputs/stations.pkl", "wb") as f:
+        pickle.dump(stations,f)

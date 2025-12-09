@@ -31,7 +31,8 @@ class Station_Structure:
       
     if len(nodes_list) == 0 or len(platforms_list) == 0:
         raise Exception("Invalid response from API")
-    self.nodes = Station_Structure.__create_dataframe(nodes_list); self.platforms = Station_Structure.__create_dataframe(platforms_list)
+    self.nodes = Station_Structure.__create_dataframe(nodes_list); 
+    platforms_df = Station_Structure.__create_dataframe(platforms_list)
 
     ## Build edges
     edges_list = []
@@ -56,8 +57,21 @@ class Station_Structure:
       # edge["attributes"] = info[0].find("./attributes").attrib # type: ignore
       edges_list.append(edge)
 
-
     self.edges = pd.DataFrame(edges_list)
+    
+
+    def check_node_type(node, edges) -> str:
+      if node.name in platforms_df.index:
+        return "platform"
+      
+      result = ""
+      if edges[edges["start"] == node.name].drop_duplicates(["start","end"]).shape[0] == 1:
+        result += "entrance "
+      if edges[edges["end"] == node.name].drop_duplicates(["start","end"]).shape[0] >= 1 and edges[edges["start"] == node.name].drop_duplicates(["start","end"]).shape[0] == 0:
+        result += "exit "
+      return result
+
+    self.nodes["nodeType"] = self.nodes.apply(lambda x : check_node_type(x, self.edges), axis=1)
 
   def drop_disconnected(self):
     indx_copy = self.nodes.index.copy()
@@ -74,13 +88,17 @@ class Station_Structure:
     for ind in self.nodes.index:
       g.add_node(ind, attr=self.nodes.loc[ind])
 
-      if ind in self.platforms.index:
+      n_type = self.nodes.loc[ind]["nodeType"]
+      if "platform" in n_type:
         colours.append("red")
-      elif not (self.nodes["areaGid"].loc(axis=0)[ind] == ''):
-        colours.append("blue")
-      else:
+      elif "entrance" in n_type and "exit" in n_type:
         colours.append("green")
-      # colours.append("red" if ind in self.platforms.index else "blue")
+      elif "entrance" in n_type:
+        colours.append("orange")
+      elif "exit" in n_type:
+        colours.append("yellow")
+      else:
+        colours.append("blue")
     for _, edge in self.edges.iterrows():
       g.add_edge(edge["start"],edge["end"])
     g.remove_nodes_from([node for node, degree in g.degree if degree == 0]) # type: ignore
@@ -88,18 +106,26 @@ class Station_Structure:
     return g, colours
 
   def get_nodes_edges_plot(self):
-    tmp = self.nodes[(~self.nodes.isin(self.platforms)["level"]).values] # Select non-platform nodes
-    nodes_pos = np.array([tmp["x"],tmp["y"],tmp["level"] * 0.5])
-    nodes_colours = []
-    for _, node in tmp.droplevel("area").iterrows():
-      if not (node["areaGid"] == ''):
-        nodes_colours.append("blue")
-      else:
-        nodes_colours.append("green")
+    platforms = self.nodes[self.nodes["nodeType"] == "platform"]
 
-    nodes_ids = np.array(tmp.index)
-    platforms_pos = np.array([self.platforms["x"],self.platforms["y"],self.platforms["level"] * 0.5])
-    platforms_ids = self.platforms["areaName"].values
+    nodes_pos = np.array([self.nodes["x"],self.nodes["y"],self.nodes["level"] * 0.5])
+    nodes_colours = []
+    for _, node in self.nodes.droplevel("area").iterrows():
+      n_type = node["nodeType"]
+      if "platform" in n_type:
+        nodes_colours.append("red")
+      elif "entrance" in n_type and "exit" in n_type:
+        nodes_colours.append("green")
+      elif "entrance" in n_type:
+        nodes_colours.append("orange")
+      elif "exit" in n_type:
+        nodes_colours.append("yellow")
+      else:
+        nodes_colours.append("blue")
+    nodes_ids = self.nodes.apply(lambda x : x.name if x["nodeType"] != "platform" else "",axis=1).to_list()
+    
+    platforms_pos = np.array([platforms["x"],platforms["y"],platforms["level"] * 0.5])
+    platforms_ids = platforms["areaName"].values
 
 
     start = self.nodes.loc[self.edges["start"]]
