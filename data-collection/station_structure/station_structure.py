@@ -8,6 +8,11 @@ from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
 class Station_Structure:
   def __init__(self, stop_id : str, ignore_busstops : bool = True):
+    if stop_id == "":
+      self.nodes = pd.DataFrame()
+      self.edges = pd.DataFrame()
+      return
+
     url = f"https://api.tfl.gov.uk/jp_public/api10/XML_STOPSTRUCTURE_REQUEST?sSStopNr={stop_id}&sSOnlyDF=1&sSInclSL=1&coordOutputFormat=WGS84[dd.ddddd]&app_key=78cbd517b8b34753a87ade64492c8699"
 
     response = requests.get(url)
