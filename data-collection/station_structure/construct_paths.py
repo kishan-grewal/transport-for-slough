@@ -1,10 +1,13 @@
 import paths
 import sys
-import pandas as pd
 import pickle
 import math
 
+import pandas as pd
+import numpy as np
+
 import json
+import networkx as nx
 
 def vincenty_sphere_distance(lat1, lon1, lat2, lon2, radius=6371008.8):
     """
@@ -47,10 +50,13 @@ SLICE_LEN = 1
 PLATFORM_LEN = 120
 
 class EdgeData:
-  def __init__(self, start, end, reversible, path_type):
+  def __init__(self, start, end, reversible, path_type, forward_flows, reverse_flows):
     self.reversible = reversible
     self.start_node = start
     self.end_node = end
+
+    self.forward_flows = forward_flows.copy()
+    self.reverse_flows = reverse_flows.copy()
     pass
 
   def matches(self, start, end):
@@ -127,7 +133,14 @@ class EdgeData:
         end_idx[1] = last_rev + idx_offset
 
     return segments, start_idx, end_idx
-  
+
+class SegmentJunction:
+  def __init__(self, outflow_edges, outflow_idxs, dir):
+    self.dir = dir
+    self.outflow_idxs = outflow_idxs.copy()
+    self.outflow_edges = outflow_edges.copy()
+    pass
+
 class EdgeManager:
   def __init__(self):
     self.edges : list[EdgeData] = []
@@ -135,11 +148,25 @@ class EdgeManager:
     self.edge_ends = []
 
     self.station_structure = []
+    self.split_nodes : dict[tuple[tuple[int],tuple[int]], SegmentJunction] = {}
 
   def register_edge(self, edge : EdgeData):
     for e in self.edges:
       # Edge already exists
       if e.matches(edge.start_node.name, edge.end_node.name):
+        e.forward_flows += edge.forward_flows
+        e.reverse_flows += edge.reverse_flows
+        # graphid : tuple = self.edge_flow_mapping[(edge.start_node.name,edge.end_node.name)]
+        # self.edge_flow_graph.get_edge_data(*graphid)["forward_flows"] += edge.forward_flows
+        # self.edge_flow_graph.get_edge_data(*graphid)["reverse_flows"] += edge.reverse_flows
+        return
+      # Reversed edge exists, and one or the other can be reversed
+      if (e.reversible or edge.reversible) and (e.matches(edge.end_node.name, edge.start_node.name)):
+        e.forward_flows += edge.reverse_flows
+        e.reverse_flows += edge.forward_flows
+        # graphid : tuple = self.edge_flow_mapping[(edge.end_node.name,edge.start_node.name)]
+        # self.edge_flow_graph.get_edge_data(*graphid)["forward_flows"] += edge.reverse_flows
+        # self.edge_flow_graph.get_edge_data(*graphid)["reverse_flows"] += edge.forward_flows
         return
     
     start = None; end = None
@@ -157,6 +184,11 @@ class EdgeManager:
       self.station_structure.extend(struc)
       self.edge_starts.append(start_idx)
       self.edge_ends.append(end_idx)
+
+      # Add to flow graph
+      # graphid = (len(self.edge_flow_graph.edges),len(self.edge_flow_graph.edges)+1)
+      # self.edge_flow_mapping[(edge.start_node.name,edge.end_node.name)] = graphid
+      # self.edge_flow_graph.add_edge(*graphid, forward_flows=edge.forward_flows, reverse_flows=edge.reverse_flows)
 
       print(f"Added edge from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure")
     if start is not None and end is None:
@@ -179,13 +211,15 @@ class EdgeManager:
           self.station_structure.extend(struc)
           self.edge_starts.append(start_idx)
           self.edge_ends.append(end_idx)
+
+          # Add to flow graph
+          # graph_end_node = self.edge_flow_mapping[(self.edges[start].start_node.name,self.edges[start].end_node.name)][1]
+          # graphid = (graph_end_node,len(self.edge_flow_graph.edges))
+          # self.edge_flow_mapping[(edge.start_node.name,edge.end_node.name)] = graphid
+          # self.edge_flow_graph.add_edge(*graphid, forward_flows=edge.forward_flows, reverse_flows=edge.reverse_flows)
+
           print(f"Linked unidirectional edge from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure")
         else: # Already has a connection, reroute
-          # if "AREA" in self.station_structure[existing_start_idx[0]]["type"]:
-          #   # Move back one level if the end is an area
-          #   existing_start_idx[0] = self.station_structure[existing_start_idx[0]]["prev"]
-
-          # self.station_structure.append({"type":"SPLIT_OUTPUT"})
           raise NotImplementedError()
       else:
         next = self.station_structure[existing_start_idx[0]]["next"]
@@ -204,6 +238,13 @@ class EdgeManager:
           self.station_structure.extend(struc)
           self.edge_starts.append(start_idx)
           self.edge_ends.append(end_idx)
+          
+          # Add to flow graph
+          # graph_end_node = self.edge_flow_mapping[(self.edges[start].start_node.name,self.edges[start].end_node.name)][1]
+          # graphid = (graph_end_node,len(self.edge_flow_graph.edges))
+          # self.edge_flow_mapping[(edge.start_node.name,edge.end_node.name)] = graphid
+          # self.edge_flow_graph.add_edge(*graphid, forward_flows=edge.forward_flows, reverse_flows=edge.reverse_flows)
+
           print(f"Linked bidirectional edge from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure")
 
         elif (next != -1) ^ (next != -1):
@@ -220,12 +261,49 @@ class EdgeManager:
 
           self.station_structure.extend([
             {"type":"SPLIT_OUTPUT","id":l,"prev":existing_start_idx[0],"next":l+2,"adjacent":l+1, "secondary":l+4,"split_ratio":0.5, "xk":SLICE_LEN},
-            {"type":"SPLIT_INPUT","id":l+1,"prev":l+3,"next":existing_start_idx[1],"adjacent":l, "secondary":l+5,"split_ratio":0.5, "xk":SLICE_LEN},
-            {"type":"SPLIT_INPUT","id":l+2,"prev":l,"next":self.station_structure[existing_start_idx[0]]["next"],"adjacent":l+3, "secondary":l+5,"split_ratio":0.5, "xk":SLICE_LEN},
+            {"type":"SPLIT_INPUT","id":l+1,"prev":l+3,"next":existing_start_idx[1],"adjacent":l, "secondary":l+5, "xk":SLICE_LEN},
+            {"type":"SPLIT_INPUT","id":l+2,"prev":l,"next":self.station_structure[existing_start_idx[0]]["next"],"adjacent":l+3, "secondary":l+5, "xk":SLICE_LEN},
             {"type":"SPLIT_OUTPUT","id":l+3,"prev":self.station_structure[existing_start_idx[1]]["prev"],"next":l+1,"adjacent":l+2, "secondary":l+4,"split_ratio":0.5, "xk":SLICE_LEN},
-            {"type":"SPLIT_INPUT","id":l+4,"prev":l,"next":-1,"adjacent":l+5, "secondary":l+3,"split_ratio":0.5, "xk":SLICE_LEN},
+            {"type":"SPLIT_INPUT","id":l+4,"prev":l,"next":-1,"adjacent":l+5, "secondary":l+3, "xk":SLICE_LEN},
             {"type":"SPLIT_OUTPUT","id":l+5,"prev":-1,"next":l+1,"adjacent":l+4, "secondary":l+2,"split_ratio":0.5, "xk":SLICE_LEN},
           ])
+
+          # ---------------------------------
+          # Add to junction list
+
+          start_edge_id_graph = self.__edges_id(start)
+          next_edge_idx = None
+          for i,e in enumerate(self.edges[:-1]):
+            if e.start_node.name == edge.start_node.name:
+              next_edge_idx = i
+              break
+          assert next_edge_idx is not None
+          next_edge_id_graph = self.__edges_id(next_edge_idx)
+          self_edge_id_graph = self.__edges_id(-1)
+
+          if start_edge_id_graph in self.split_nodes:
+            self.split_nodes[start_edge_id_graph].outflow_edges.append(self_edge_id_graph)
+            self.split_nodes[start_edge_id_graph].outflow_idxs.append(l)
+          else:
+            self.split_nodes[start_edge_id_graph] = SegmentJunction([next_edge_id_graph, self_edge_id_graph],[l],"forward_flows")
+
+          if next_edge_id_graph in self.split_nodes:
+            self.split_nodes[next_edge_id_graph].outflow_edges.append(self_edge_id_graph)
+            self.split_nodes[next_edge_id_graph].outflow_idxs.append(l+3)
+          else:
+            self.split_nodes[next_edge_id_graph] = SegmentJunction([start_edge_id_graph, self_edge_id_graph],[l+3],"reverse_flows")
+
+          ## Below should never occur?
+          #
+          # if self_edge_id_graph in self.split_nodes:
+          #   self.split_nodes[self_edge_id_graph].outflow_edges.append(next_edge_id_graph)
+          #   self.split_nodes[self_edge_id_graph].outflow_idxs.append(l+5)
+          # else:
+          self.split_nodes[self_edge_id_graph] = SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+5],"reverse_flows")
+          
+          # ---------------------------------
+
+          # Fill in linking parameters in structure
           self.station_structure[existing_start_idx[0]]["next"] = l
           self.station_structure[existing_start_idx[1]]["prev"] = l+1
 
@@ -237,10 +315,21 @@ class EdgeManager:
             raise Exception("Cannot join bi-directional edge to unidirectional edge")
           struc[start_idx[0]-l-6]["prev"] = l+4 # Change the fields so they link
           struc[start_idx[1]-l-6]["next"] = l+5
-          print(start_idx[0]-l-6, start_idx[1]-l-6, l+4, l+5)
           
           self.station_structure[l+4]["next"] = start_idx[0]
           self.station_structure[l+5]["prev"] = start_idx[1]
+
+          # next_edge = None
+          # for i,e in enumerate(self.edges):
+          #   if e.start_node.name == edge.start_node.name:
+          #     next_edge = i
+          # assert next_edge is not None
+          
+          # Add to flow graph
+          # graph_end_node = self.edge_flow_mapping[(self.edges[start].start_node.name,self.edges[start].end_node.name)][1]
+          # graphid = (graph_end_node,len(self.edge_flow_graph.edges))
+          # self.edge_flow_mapping[(edge.start_node.name,edge.end_node.name)] = graphid
+          # self.edge_flow_graph.add_edge(*graphid, forward_flows=edge.forward_flows, reverse_flows=edge.reverse_flows)
 
           self.station_structure.extend(struc)
           self.edge_starts.append(start_idx)
@@ -249,6 +338,55 @@ class EdgeManager:
           
     if end is not None and end is None:
       pass
+
+  def calculate_splits(self, split_rates : list, flow_rates : pd.DataFrame):
+    edge_flow_graph = nx.Graph()
+    for edge in self.edges:
+      edge_flow_graph.add_edge(*self.__edge_id(edge),forward_flows=edge.forward_flows,reverse_flows=edge.reverse_flows)
+
+    # print(*edge_flow_graph.edges.data(),sep="\n")
+    for id, junc in self.split_nodes.items():
+      # print("Updating split node "+str(id))
+      inflow = edge_flow_graph.get_edge_data(*id)[junc.dir]
+
+      for i in range(len(junc.outflow_idxs)):
+        primary_outflow = edge_flow_graph.get_edge_data(*junc.outflow_edges[i])[junc.dir]
+        primary_outflow = [i for i in primary_outflow if i in inflow]
+        # split = [inflow, primary_outflow]
+        # print("  Split ("+str(junc.outflow_idxs[i])+"): "+str(split))
+        
+        if len(primary_outflow) == 0:
+          self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = 0
+        elif primary_outflow == inflow:
+          self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = 1
+        else:
+          inflow_rate = np.sum(np.array([flow_rates.iloc[row,19:] for row in inflow]).astype(np.float32),axis=0)
+          outflow_rate = np.sum(np.array([flow_rates.iloc[row,19:] for row in primary_outflow]).astype(np.float32),axis=0)
+          flow_split = np.divide(outflow_rate, inflow_rate,out=np.zeros_like(outflow_rate), where=inflow_rate != 0)
+          # Log to file
+          # print(*flow_split,sep=", ",file=split_rate_f)
+          split_rates.append(flow_split)
+          self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = {"index":len(split_rates)-1}
+          
+
+
+        for x in edge_flow_graph.get_edge_data(*junc.outflow_edges[i])[junc.dir]:
+          if x in inflow:
+            inflow.remove(x)
+
+  def __edges_id(self, i : int):
+    return self.__edge_id(self.edges[i])
+  @staticmethod
+  def __edge_id(edge : EdgeData):
+    return (edge.start_node.name, edge.end_node.name)
+
+
+class JunctionInformation:
+  def __init__(self):
+    self.links = [0]*6
+
+  def update_link(self, incoming, outgoing):
+    self.links[incoming]
     
 
 if len(sys.argv) == 1:
@@ -259,6 +397,9 @@ else:
 with open(path, "rb") as f:
   stations = pickle.load(f)
 assert stations is not None
+
+station_flows = pd.read_csv("data-collection/csv_sheet/Station_Flows/NBT23FRI_filtered.csv")
+split_ratio_list = []
 
 for station_id in paths.paths.keys():
   print(f"Station ID: {station_id}")
@@ -295,7 +436,14 @@ for station_id in paths.paths.keys():
           continue
 
       # Construct the edge
-      e = EdgeData(station.nodes.loc(axis=0)[path.sequence[i]],station.nodes.loc(axis=0)[path.sequence[i+1]],path.reverse_flows is not None,path_type)
+      e = EdgeData(station.nodes.loc(axis=0)[path.sequence[i]],station.nodes.loc(axis=0)[path.sequence[i+1]],
+                   path.reverse_flows is not None,path_type, path.flow_rows,path.reverse_flows)
       station_segment_structure.register_edge(e)
-  print(json.dumps(station_segment_structure.station_structure))
-      
+
+  # print([str((e.forward_flows, e.reverse_flows)) for e in station_segment_structure.edges])
+  station_segment_structure.calculate_splits(split_ratio_list,station_flows)
+
+  with open("split_ratios.csv","w+") as f:
+    np.savetxt(f, np.array(split_ratio_list), delimiter=',')
+  with open("station_output.json","w+") as f:
+    print(json.dumps(station_segment_structure.station_structure),file=f)
