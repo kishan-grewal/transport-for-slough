@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
   if (!font.openFromFile("/mnt/c/Windows/Fonts/arial.ttf"))
     throw std::runtime_error("Failed to load font");
 
-  std::ifstream inFile("test.json", std::ios_base::in);
+  std::ifstream inFile("test2.json", std::ios_base::in);
   boost::json::value j = boost::json::parse(inFile);
   inFile.close();
 
@@ -220,10 +220,14 @@ int main(int argc, char **argv) {
     odeint::runge_kutta4<ODE_Solver::Vector>(),
     StationSystem(j.as_object().at("stations").as_array().at(0).as_object()),
     GlobalStateTimeObserver(states, times));
-  station_system.LastState() += station_system.system.PlatformUpdateVector(250, 1);
+  // station_system.LastState() += station_system.system.PlatformUpdateVector(250, 1);
+  auto test = ODE_Solver::Vector(186, 0);
+  test[149] = 20;
+  station_system.LastState() += test;
+  // station_system.system._check();
   station_system.SolveToTime(500, station_system.system.InputDriver());
 
-  for (int i = 0; i < states.size(); ++i) {
+  for (int i = states.size() - 10; i < states.size(); ++i) {
     double s = 0;
     for (int j = 0; j < states[i].size(); ++j) {
       std::cout << std::fixed << std::setprecision(2) << states[i][j] << " ";
@@ -237,7 +241,7 @@ int main(int argc, char **argv) {
   }
 
   csrc::SFPlot plot(sf::Vector2f(35, 35), sf::Vector2f(700, 700), 35, font, "t", "X");
-  double y_range[2] = {0, 175};
+  double y_range[2] = {0, 250};
   SystemToPlot(plot, states, times, y_range);
 
   // Window rendering
