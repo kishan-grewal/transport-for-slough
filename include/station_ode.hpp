@@ -34,6 +34,7 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
   }
 
   void operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt, const double /* t */);
+  void _check();
 
   // Return the state update vector which should be added to the current state
   ODE_Solver::Vector EntranceUpdateVector(std::vector<double> n_people);
@@ -95,7 +96,7 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
     SegmentType type;
     AreaLink linked_to_area;
     unsigned int prev, next;
-    unsigned int adjacent = -1;
+    int adjacent = -1;
     double xk;
 
     // SPLIT_OUTPUT fields

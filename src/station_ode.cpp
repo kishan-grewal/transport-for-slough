@@ -63,22 +63,34 @@ StationSystem::StationSystem(boost::json::object data) {
   }
 
   // Setup initial state
+  //
+  // Array initial state
   this->initial_state = ODE_Solver::Vector(len);
-  if (!data.at("initial_state").is_array())
+  if (data.at("initial_state").is_array()) {
+    auto state = data.at("initial_state").as_array();
+    if (state.size() != len)
+      throw std::runtime_error(
+        "Invalid JSON value for station data, expected array [initial_state] "
+        "to have equal length to [structure]");
+
+    for (int i = 0; i < len; ++i) {
+      if (!state.at(i).is_number()) {
+        throw std::runtime_error(
+          "Invalid JSON value for station data, expected numeric inside array [initial_state]");
+      }
+      JSON_ParseNumericToDouble(this->initial_state[i], &state.at(i));
+    }
+  }
+  // Constant initial state
+  else if (data.at("initial_state").is_number()) {
+    double val = 0;
+    JSON_ParseNumericToDouble(val, &data.at("initial_state"));
+    std::cout << "Configuring initial value " << val << std::endl;
+    this->initial_state = ODE_Solver::Vector(len, val);
+  }
+  else
     throw std::runtime_error(
       "Invalid JSON value for station data, expected array for key [initial_state]");
-  auto state = data.at("initial_state").as_array();
-  if (state.size() != len)
-    throw std::runtime_error("Invalid JSON value for station data, expected array [initial_state] "
-                             "to have equal length to [structure]");
-
-  for (int i = 0; i < len; ++i) {
-    if (!state.at(i).is_number()) {
-      throw std::runtime_error(
-        "Invalid JSON value for station data, expected numeric inside array [initial_state]");
-    }
-    JSON_ParseNumericToDouble(this->initial_state[i], &state.at(i));
-  }
 
   // Setup input driver (optional, defaults to const 0 input)
   if (data.contains("input")) {
@@ -211,7 +223,7 @@ StationSystem::SegmentData::SegmentData(boost::json::object data) {
       this->linked_to_area = AreaLink::BOTH;
   }
 
-  if (this->type == SPLIT_OUTPUT) {  // Read extra fields
+  if (this->type == SPLIT_OUTPUT || this->type == SPLIT_INPUT) {  // Read extra fields
     if (!data.contains("secondary") ||
         (!data.at("secondary").is_int64() && !data.at("secondary").is_uint64()))
       throw std::runtime_error(
@@ -237,7 +249,7 @@ StationSystem::SegmentData::SegmentData(boost::json::object data) {
 }
 
 void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt,
-                               const double /* t */) {
+                               const double t) {
   for (int i = 0; i < x.size(); ++i) {
     double in_density_factor = _in_density_factor(i);
     double out_density_factor = _out_density_factor(i);
@@ -387,9 +399,41 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
         p_alternative2 = fmax(p_self_full, p_alternative2);
 
         dxdt[i] = fct * (dQe(p_inflow1 * split_ratio1, p_alternative1, p_self, p_outflow) +
-                         fmin(Qb_out(p_inflow2 * split_ratio2), Qb_out(p_alternative2)));
+                         fmin(Qb_out(p_inflow2 * split_ratio2), Qb_in(p_alternative2)));
         break;
       }
+    }
+  }
+}
+
+void StationSystem::_check() {
+  int l = this->segments.size();
+  for (int i = 0; i < l; ++i) {
+    if (this->segments[i].adjacent >= l || this->segments[i].adjacent < -1)
+      std::cout << "Invalid adjacent value for segment " << i << " [" << this->segments[i].adjacent
+                << "]" << std::endl;
+
+    if (this->segments[i].type == SegmentType::AREA_OUTFLOW) {
+      if (this->segments[i].next >= l || this->segments[i].next < 0)
+        std::cout << "Invalid next value for segment " << i << std::endl;
+      continue;
+    }
+    if (this->segments[i].type == SegmentType::AREA_INFLOW) {
+      if (this->segments[i].prev >= l || this->segments[i].prev < 0)
+        std::cout << "Invalid prev value for segment " << i << std::endl;
+      continue;
+    }
+
+    if (this->segments[i].prev >= l || this->segments[i].prev < 0 || this->segments[i].next >= l ||
+        this->segments[i].next < 0) {
+      std::cout << "Invalid prev/next value for segment " << i << std::endl;
+      continue;
+    }
+    if ((this->segments[i].type == SegmentType::SPLIT_OUTPUT ||
+         this->segments[i].type == SegmentType::SPLIT_INPUT) &&
+        (this->segments[i].secondary >= l || this->segments[i].prev < 0)) {
+      std::cout << "Invalid secondary value for segment " << i << std::endl;
+      continue;
     }
   }
 }
