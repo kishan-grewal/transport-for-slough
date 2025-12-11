@@ -292,6 +292,8 @@ class GraphEditor(QWidget):
         delegate = DataFrameDelegate(self)
         self.edge_table.setItemDelegate(delegate)
 
+        self.local_station.drop_disconnected()
+
         # Refresh plot if you want
         self.update_plot()
 
