@@ -72,12 +72,6 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
     return fmin(Qb_out(p1_in), Qb_in(p2_full)) - fmin(Qb_out(p2_in), Qb_in(p3_full));
   }
 
-  // inline double _in_density_factor(int i) {
-  //   return segments[i].linked_to_area & AreaLink::FROM ? segments[segments[i].prev].xk : 1;
-  // }
-  // inline double _out_density_factor(int i) {
-  //   return segments[i].linked_to_area & AreaLink::TO ? segments[segments[i].next].xk : 1;
-  // }
   inline double _density_factor(int i) {
     return (segments[i].type == AREA_INFLOW || segments[i].type == AREA_OUTFLOW) ? segments[i].xk
                                                                                  : 1;
@@ -96,11 +90,9 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
     // Entrance
     AREA_OUTFLOW
   };
-  // enum AreaLink : unsigned char { NONE = 0, FROM = 1, TO = 2, BOTH = FROM | TO };
 
   struct SegmentData {
     SegmentType type;
-    // AreaLink linked_to_area;
     unsigned int prev, next;
     int adjacent = -1;
     double xk;
