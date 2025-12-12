@@ -2,12 +2,33 @@ import pandas as pd
 from pathlib import Path
 
 jubilee_stations = [
-    "Stratford", "West Ham", "Canning Town", "North Greenwich", "Canary Wharf",
-    "Canada Water", "Bermondsey", "London Bridge", "Southwark", "Waterloo",
-    "Westminster", "Green Park", "Bond Street", "Baker Street", "St. John's Wood",
-    "Swiss Cottage", "Finchley Road", "West Hampstead", "Kilburn", "Willesden Green",
-    "Dollis Hill", "Neasden", "Wembley Park", "Kingsbury", "Queensbury",
-    "Canons Park", "Stanmore"
+    "Stratford",
+    "West Ham",
+    "Canning Town",
+    "North Greenwich",
+    "Canary Wharf",
+    "Canada Water",
+    "Bermondsey",
+    "London Bridge",
+    "Southwark",
+    "Waterloo",
+    "Westminster",
+    "Green Park",
+    "Bond Street",
+    "Baker Street",
+    "St. John's Wood",
+    "Swiss Cottage",
+    "Finchley Road",
+    "West Hampstead",
+    "Kilburn",
+    "Willesden Green",
+    "Dollis Hill",
+    "Neasden",
+    "Wembley Park",
+    "Kingsbury",
+    "Queensbury",
+    "Canons Park",
+    "Stanmore",
 ]
 
 sheet_names = [
@@ -15,11 +36,11 @@ sheet_names = [
     "Station_Entries",
     "Station_Exits",
     "Station_Boarders",
-    "Station_Alighters"
+    "Station_Alighters",
 ]
 
-data_folder = Path("data")
-output_folder = Path("data_filtered")
+data_folder = Path("excel_raw")
+output_folder = Path("excel_filtered")
 output_folder.mkdir(exist_ok=True)
 
 input_files = [
@@ -27,18 +48,21 @@ input_files = [
     "NBT23TWT_outputs.xlsx",
     "NBT23FRI_outputs.xlsx",
     "NBT23SAT_outputs.xlsx",
-    "NBT23SUN_outputs.xlsx"
+    "NBT23SUN_outputs.xlsx",
 ]
 
 for file_name in input_files:
     input_path = data_folder / file_name
     print(f"Processing {input_path}...")
-    xls = pd.read_excel(input_path, sheet_name=sheet_names, header=2)  # row 0 and row 1 are junk
+    xls = pd.read_excel(
+        input_path, sheet_name=sheet_names, header=2
+    )  # row 0 and row 1 are junk
     filtered_sheets = {}
 
     df = xls["Station_Flows"]
     filtered_sheets["Station_Flows"] = df[
-        df["From Station"].isin(jubilee_stations) | df["To Station"].isin(jubilee_stations)
+        df["From Station"].isin(jubilee_stations)
+        | df["To Station"].isin(jubilee_stations)
     ]
 
     df = xls["Station_Entries"]
