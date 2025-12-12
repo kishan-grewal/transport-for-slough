@@ -1,6 +1,8 @@
 build/*
 *.csv
 compile_commands.json
-
+libs/
 .vscode/*
 .cache/*
+*.ttf
+*.ttf:Zone.Identifier

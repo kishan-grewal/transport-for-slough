@@ -7,7 +7,6 @@
 #include "station.hpp"
 #include "train.hpp"
 
-<<<<<<< HEAD
 int main(int argc, char** argv) {
     std::cout << "Hello World!" << std::endl;
     int simTime = 10000;
@@ -26,17 +25,24 @@ int main(int argc, char** argv) {
                       {"Kilburn",{1,-1}},{"Willesden Green",{1,-1}},{"Dollis Hill",{1,-1}},{"Neasden",{1,-1}},{"Wembley Park",{1,-1}},{"Kingsbury",{1,-1}},{"Queensbury",{1,-1}},
                       {"Canons Park",{1,-1}},{"Stanmore",{1,-1}},{"Turnaround point",{0,0,0}}};
 
+    std::vector<std::pair<int, int>> times = {{120,120},{60,120}, {60,60}, {60,60}, {120,60}, {60,120}, {60,60}, {60,60}, {30,60}, {60,30}, {60,60},
+                                              {60,60}, {60,60}, {120,60}, {60,120}, {30,60}, {60,30}, {60,60}, {60,60}, {60,60}, {60,60}, {120,60},
+                                              {180,120}, {60,180}, {60,60}, {120,60}, {120,120}, {120,120}};
+
     
     initialState.stations = std::vector<Station>();
     initialState.stations.reserve(stationNames.size());
     for(int i = 0; i < stationNames.size(); ++i) {
-        initialState.stations.emplace_back(std::get<std::string>(stationNames[i]), std::get<std::vector<int>>(stationNames[i]));
+        initialState.stations.emplace_back(std::get<std::string>(stationNames[i]), std::get<std::vector<int>>(stationNames[i]), times[i], 45);
     }
 
     initialState.trains = std::vector<Train>();
-    initialState.trains.reserve(26);
-    for(int i = 0; i < 25; ++i) {
+    initialState.trains.reserve(20);
+    for(int i = 0; i < 10; ++i) {
         initialState.trains.emplace_back(100, i, 10, 1);
+    }
+    for(int i = 0; i < 10; ++i) {
+        initialState.trains.emplace_back(100, initialState.stations.size()-i-1, 10, -1);
     }
     //initialState.trains.emplace_back(100, 0, 10, 1);
     EventLoop loop = EventLoop(simTime, std::move(initialState), initialState.stations.size());
@@ -51,11 +57,4 @@ int main(int argc, char** argv) {
     std::cout << "Program finished successfully." << std::endl;
 
     return 0;
-=======
-#include <boost/numeric/odeint.hpp>
-
-int main(int argc, char **argv) {
-  std::cout << "Hello World!" << std::endl;
-  return 0;
->>>>>>> 58cc8be5ed5a2f5a772f7d79d0ca06d7214177ef
 }

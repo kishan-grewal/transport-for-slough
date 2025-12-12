@@ -19,7 +19,7 @@ EventPool::EventPool(int time, int stationSize, int trainsSize, State* state) {
     this->file << "t" << std::endl;
     std::cout << state->trains.size() << state->stations.size() << std::endl;
     for (int i = 0; i < trainsSize; ++i) {
-        this->dispatch(Event(10, state->getTrain(i).getStartIndex(), i, false)); //set off the trains, choo choo
+        this->dispatch(Event(10*i, state->getTrain(i).getStartIndex(), i, false)); //set off the trains, choo choo
     }
 }
 
@@ -89,35 +89,42 @@ int EventPool::progressTime(std::barrier<>& syncPoint) {
     //start setting up next event to be dispatched
     
     int nextTarget = target;
+    int timeToTarget = 40;
 
     if(entryExit) { //if we have just left a station
     
         if(target > 0 && target < this->maxSize - 1) {
             if(direction == 1) {
                 nextTarget = target + 1;
+                timeToTarget = this->state->stations[target].getTimeForward();
             }
             else {
                 nextTarget = target -1;
+                timeToTarget = this->state->stations[target].getTimeBackward();
             }
         }
         else if(target == this->maxSize - 1) {
+            timeToTarget = this->state->stations[target].getTimeBackward();
             if(direction == 1) {
                 this->state->changeTrainDirection(trainIndex);
+                timeToTarget = this->state->stations[target].getTimeForward();
             }
             nextTarget = target - 1;
         }
         else if(target == 0) {
+            timeToTarget = this->state->stations[target].getTimeForward();
             if(direction == -1) {
                 this->state->changeTrainDirection(trainIndex);
+                timeToTarget = this->state->stations[target].getTimeBackward();
             }
             nextTarget = target + 1;
         }
         if(target != -1) {
-            this->dispatch(Event(40+this->globalTime, nextTarget, trainIndex, false)); //entry request at next station
+            this->dispatch(Event(timeToTarget+this->globalTime, nextTarget, trainIndex, false)); //entry request at next station
         }
     }
     else {
-        this->dispatch(Event(40+this->globalTime, target, trainIndex, true)); //leave request 
+        this->dispatch(Event(this->state->stations[target].getTimeToLeave()+this->globalTime, target, trainIndex, true)); //leave request 
     }
     return 0;
 }

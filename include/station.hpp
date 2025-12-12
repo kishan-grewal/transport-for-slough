@@ -21,6 +21,8 @@ private:
     int capacity;
     int population;
     int timeToLeaveRequest;
+    int timeForward;
+    int timeBackward;
 
     std::atomic<bool> running;
     std::vector<bool> platformStatus; //only edited internally
@@ -29,7 +31,7 @@ private:
     std::vector<int> platforms; //platforms with integer for direction, setup defined
 
 public:
-    Station(std::string name, std::vector<int> platforms);
+    Station(std::string name, std::vector<int> platforms, std::pair<int,int> times, int wait);
     Station(Station&& other) noexcept : name(other.getName()) {this->running.store(true);};
     Station(const Station&) = delete;
     Station& operator=(const Station&) = delete;
@@ -38,6 +40,10 @@ public:
     Event receiveEntryRequest(Event e, State* state);
     Event receiveLeaveRequest(Event e, State* state);
     std::string getName() {return this->name;}
+
+    int getTimeForward() {return this->timeForward;}
+    int getTimeBackward() {return this->timeBackward;}
+    int getTimeToLeave() {return this->timeToLeaveRequest;}
 
     void exportCurState();
     void finishExport();

@@ -6,11 +6,14 @@
 #include <barrier>
 #include <mutex>
 
-Station::Station(std::string name, std::vector<int> platforms) {
+Station::Station(std::string name, std::vector<int> platforms, std::pair<int,int> times, int wait) {
     this->name = name;
     this->running.store(true);
     this->platforms = platforms;
     this->population = 100000;
+    this->timeToLeaveRequest = wait;
+    this->timeForward = std::get<0>(times);
+    this->timeBackward = std::get<1>(times);
     for(int i = 0; i < this->platforms.size(); ++i) {
         this->platformStatus.push_back(false);
         this->leaveRequests.push_back(-1);
@@ -36,11 +39,11 @@ void Station::listen(std::barrier<>& syncPoint) {
         {std::lock_guard<std::mutex> lock(this->stationMutex);
             for (int i = 0; i < this->platforms.size(); ++i) {
                 if (this->entryRequests[i] > -1) {
-                    popEnter += 10000;
+                    popEnter += 5000;
                     this->entryRequests[i] = -1; //replace with train id
                 }
                 if (this->leaveRequests[i] > -1) {
-                    popLeave += 1000;
+                    popLeave += 5200;
                     this->leaveRequests[i] = -1;
                 }
             }
