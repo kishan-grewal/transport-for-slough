@@ -474,6 +474,7 @@ for station_id in paths.paths.keys():
   for path in station_paths:
     for i in range(len(path.sequence) - 1):
       # Find the type
+      print(path.sequence[i],path.sequence[i+1])
       types = station.edges[(station.edges["start"] == path.sequence[i]) & (station.edges["end"] == path.sequence[i+1])]["type"].to_list()
       if len(types) == 0:
         print("Fatal - could not find type")
