@@ -61,14 +61,12 @@ INPUT_FOLDER = DATA_FOLDER / "raw_excel"
 OUTPUT_FOLDER = DATA_FOLDER / "data_filtered"
 
 INPUT_FILES = [
-    "NBT23MON_outputs.xlsx",
-    "NBT23TWT_outputs.xlsx",
-    "NBT23FRI_outputs.xlsx",
-    "NBT23SAT_outputs.xlsx",
-    "NBT23SUN_outputs.xlsx",
+    ("NBT23MON_outputs.xlsx", "MON"),
+    ("NBT23TWT_outputs.xlsx", "TWT"),
+    ("NBT23FRI_outputs.xlsx", "FRI"),
+    ("NBT23SAT_outputs.xlsx", "SAT"),
+    ("NBT23SUN_outputs.xlsx", "SUN"),
 ]
-
-INPUT_FILES = [INPUT_FOLDER / file for file in INPUT_FILES]
 
 
 def normalize_station_name(name: str) -> str:
@@ -93,181 +91,105 @@ def get_time_columns(df: pd.DataFrame) -> List[str]:
     ]
 
 
-def get_boarders(
-    input_files: List[Path], output_folder: Path
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Extract boarders as TWO separate CSVs (NB and SB).
-    Each CSV: Station, Total, <time_columns>
-    One row per station.
-    """
+def get_boarders(file_path: Path, day_code: str, output_folder: Path):
+    print(f"\nProcessing {file_path.name}...")
 
-    print("EXTRACTING BOARDERS DATA (Jubilee Line Only)")
+    df = load_sheet(file_path, "Station_Boarders", header_row=2)
 
-    all_boarders = []
+    if df.empty:
+        return
 
-    for file_path in input_files:
-        if not file_path.exists():
-            print(f"Skipping {file_path.name} (not found)")
-            continue
+    jubilee_boarders = df[df["Line"] == "JUB"].copy()
+    jubilee_boarders["Station"] = jubilee_boarders["Station"].apply(
+        normalize_station_name
+    )
 
-        print(f"\nProcessing {file_path.name}...")
+    time_cols = get_time_columns(df)
+    cols_to_keep = ["Station", "Platform", "Total"] + time_cols
+    jubilee_boarders = jubilee_boarders[cols_to_keep]
 
-        df = load_sheet(file_path, "Station_Boarders", header_row=2)
+    nb_boarders = jubilee_boarders[
+        jubilee_boarders["Platform"].str.contains("NB", na=False)
+    ].copy()
+    nb_boarders["Direction"] = "NB"
+    nb_boarders = nb_boarders.drop(columns=["Platform"])
 
-        if df.empty:
-            continue
+    sb_boarders = jubilee_boarders[
+        jubilee_boarders["Platform"].str.contains("SB", na=False)
+    ].copy()
+    sb_boarders["Direction"] = "SB"
+    sb_boarders = sb_boarders.drop(columns=["Platform"])
 
-        jubilee_boarders = df[df["Line"] == "JUB"].copy()
-        jubilee_boarders["Station"] = jubilee_boarders["Station"].apply(
-            normalize_station_name
-        )
+    combined = pd.concat([nb_boarders, sb_boarders], ignore_index=True)
 
-        # Keep Platform temporarily to split, then drop it
-        cols_to_keep = ["Station", "Platform", "Total"] + get_time_columns(df)
-        jubilee_boarders = jubilee_boarders[cols_to_keep]
+    output_path = output_folder / f"{day_code}_boarders.csv"
+    combined.to_csv(output_path, index=False)
 
-        jubilee_boarders["Source"] = file_path.name
-        all_boarders.append(jubilee_boarders)
-
-        print(f"  Found {len(jubilee_boarders)} Jubilee boarder records")
-
-    if not all_boarders:
-        print("\nNo boarders data found")
-        return pd.DataFrame(), pd.DataFrame()
-
-    combined = pd.concat(all_boarders, ignore_index=True)
-
-    # Split into NB and SB
-    time_cols = get_time_columns(combined)
-
-    # Northbound
-    nb_boarders = combined[combined["Platform"].str.contains("NB", na=False)].copy()
-    nb_boarders = nb_boarders.drop(columns=["Platform", "Source"])
-
-    output_nb = output_folder / "boarders_jubilee_nb.csv"
-    nb_boarders.to_csv(output_nb, index=False)
-
-    print(f"\n Saved: {output_nb}")
-    print(f"  Stations: {len(nb_boarders)}")
-
-    # Southbound
-    sb_boarders = combined[combined["Platform"].str.contains("SB", na=False)].copy()
-    sb_boarders = sb_boarders.drop(columns=["Platform", "Source"])
-
-    output_sb = output_folder / "boarders_jubilee_sb.csv"
-    sb_boarders.to_csv(output_sb, index=False)
-
-    print(f"\n Saved: {output_sb}")
-    print(f"  Stations: {len(sb_boarders)}")
-
-    # Print top stations
-    print("\n  Top 5 boarding stations (NB):")
-    for _, row in nb_boarders.nlargest(5, "Total").iterrows():
-        print(f"    {row['Station']:25} : {row['Total']:10,.0f} passengers/day")
-
-    return nb_boarders, sb_boarders
+    print(f"  Saved: {output_path}")
+    print(f"  Records: {len(combined)}")
 
 
-def get_flows(
-    input_files: List[Path], output_folder: Path
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Extract interchange flows as TWO separate CSVs (NB and SB).
-    Each CSV: Station, Total, <time_columns>
-    Already aggregated across all origin lines.
-    """
+def get_flows(file_path: Path, day_code: str, output_folder: Path):
+    print(f"\nProcessing {file_path.name}...")
 
-    print("EXTRACTING INTERCHANGE FLOWS (To Jubilee Line)")
+    df = load_sheet(file_path, "Station_Flows", header_row=2)
 
-    all_flows = []
+    if df.empty:
+        return
 
-    for file_path in input_files:
-        if not file_path.exists():
-            print(f"Skipping {file_path.name} (not found)")
-            continue
+    interchange_to_jubilee = df[
+        (df["Movement"] == "Alight-Interchange-Board")
+        & (df["To Node"].str.contains("Jubilee", na=False))
+    ].copy()
 
-        print(f"\nProcessing {file_path.name}...")
+    interchange_to_jubilee["From Station"] = interchange_to_jubilee[
+        "From Station"
+    ].apply(normalize_station_name)
 
-        df = load_sheet(file_path, "Station_Flows", header_row=2)
+    time_cols = get_time_columns(df)
+    cols_to_keep = ["From Station", "To Node", "Total"] + time_cols
 
-        if df.empty:
-            continue
+    interchange_to_jubilee = interchange_to_jubilee[cols_to_keep]
+    interchange_to_jubilee = interchange_to_jubilee.rename(
+        columns={"From Station": "Station"}
+    )
 
-        # Filter for interchange TO Jubilee
-        interchange_to_jubilee = df[
-            (df["Movement"] == "Alight-Interchange-Board")
-            & (df["To Node"].str.contains("Jubilee", na=False))
-        ].copy()
-
-        interchange_to_jubilee["From Station"] = interchange_to_jubilee[
-            "From Station"
-        ].apply(normalize_station_name)
-
-        # Keep From Station, To Node, Total, and time columns
-        cols_to_keep = ["From Station", "To Node", "Total"] + get_time_columns(df)
-
-        interchange_to_jubilee = interchange_to_jubilee[cols_to_keep]
-        interchange_to_jubilee = interchange_to_jubilee.rename(
-            columns={"From Station": "Station"}
-        )
-
-        interchange_to_jubilee["Source"] = file_path.name
-        all_flows.append(interchange_to_jubilee)
-
-        print(f"  Found {len(interchange_to_jubilee)} interchange records")
-
-    if not all_flows:
-        print("\nNo interchange flows data found")
-        return pd.DataFrame(), pd.DataFrame()
-
-    combined = pd.concat(all_flows, ignore_index=True)
-
-    # Split into NB and SB, aggregate across all origin lines
-    time_cols = get_time_columns(combined)
-
-    # Northbound
-    nb_flows = combined[combined["To Node"].str.contains("NB", na=False)].copy()
+    nb_flows = interchange_to_jubilee[
+        interchange_to_jubilee["To Node"].str.contains("NB", na=False)
+    ].copy()
     nb_aggregated = (
         nb_flows.groupby("Station")[["Total"] + time_cols].sum().reset_index()
     )
+    nb_aggregated["Direction"] = "NB"
 
-    output_nb = output_folder / "interchange_to_jubilee_nb.csv"
-    nb_aggregated.to_csv(output_nb, index=False)
-
-    print(f"\n Saved: {output_nb}")
-    print(f"  Stations: {len(nb_aggregated)}")
-
-    # Southbound
-    sb_flows = combined[combined["To Node"].str.contains("SB", na=False)].copy()
+    sb_flows = interchange_to_jubilee[
+        interchange_to_jubilee["To Node"].str.contains("SB", na=False)
+    ].copy()
     sb_aggregated = (
         sb_flows.groupby("Station")[["Total"] + time_cols].sum().reset_index()
     )
+    sb_aggregated["Direction"] = "SB"
 
-    output_sb = output_folder / "interchange_to_jubilee_sb.csv"
-    sb_aggregated.to_csv(output_sb, index=False)
+    combined = pd.concat([nb_aggregated, sb_aggregated], ignore_index=True)
 
-    print(f"\n Saved: {output_sb}")
-    print(f"  Stations: {len(sb_aggregated)}")
+    output_path = output_folder / f"{day_code}_interchange.csv"
+    combined.to_csv(output_path, index=False)
 
-    # Print top stations
-    print("\n  Top 5 interchange stations (NB):")
-    for _, row in nb_aggregated.nlargest(5, "Total").iterrows():
-        print(f"    {row['Station']:25} : {row['Total']:10,.0f} passengers/day")
-
-    return nb_aggregated, sb_aggregated
+    print(f"  Saved: {output_path}")
+    print(f"  Records: {len(combined)}")
 
 
-def get_odmatrix(input_files: List[Path], output_folder: Path) -> Tuple[Dict, Dict]:
-    """
-    Derive O-D matrix from Link_Loads.
-    Returns two JSONs: od_matrix_nb.json and od_matrix_sb.json
-    """
-
+def get_odmatrix(
+    input_files: List[Tuple[str, str]], output_folder: Path
+) -> Tuple[Dict, Dict]:
     print("DERIVING O-D MATRIX (From Link Loads)")
 
     primary_names = {"NBT23MON_outputs.xlsx", "NBT23TWT_outputs.xlsx"}
-    primary_files = [p for p in input_files if p.name in primary_names]
+    primary_files = [
+        (INPUT_FOLDER / fname, day)
+        for fname, day in input_files
+        if fname in primary_names
+    ]
 
     if not primary_files:
         print("No weekday files found (need MON or TWT)")
@@ -275,7 +197,7 @@ def get_odmatrix(input_files: List[Path], output_folder: Path) -> Tuple[Dict, Di
 
     od_matrices = {"NB": {}, "SB": {}}
 
-    for file_path in primary_files:
+    for file_path, day_code in primary_files:
         if not file_path.exists():
             print(f"Skipping {file_path.name} (not found)")
             continue
@@ -317,7 +239,6 @@ def get_odmatrix(input_files: List[Path], output_folder: Path) -> Tuple[Dict, Di
 
             print(f"     {len(od_matrix)} origins")
 
-    # Save to JSON
     for direction, matrix in od_matrices.items():
         if not matrix:
             continue
@@ -330,7 +251,6 @@ def get_odmatrix(input_files: List[Path], output_folder: Path) -> Tuple[Dict, Di
         print(f"\n Saved: {output_path}")
         print(f"  Origins: {len(matrix)}")
 
-        # Sample
         sample_origin = list(matrix.keys())[0]
         print(f"  Sample (from {sample_origin}):")
         for dest, prob in list(matrix[sample_origin].items())[:3]:
@@ -340,7 +260,6 @@ def get_odmatrix(input_files: List[Path], output_folder: Path) -> Tuple[Dict, Di
 
 
 def build_od_matrix_from_links(link_data: pd.DataFrame) -> Dict[str, Dict[str, float]]:
-    """Build O-D probability matrix from link load data"""
     od_matrix = {}
 
     for origin_idx in range(len(link_data)):
@@ -381,7 +300,6 @@ def build_od_matrix_from_links(link_data: pd.DataFrame) -> Dict[str, Dict[str, f
 
 
 def merge_od_matrices(matrix1: Dict, matrix2: Dict) -> Dict:
-    """Average two O-D matrices"""
     merged = {}
 
     all_origins = set(matrix1.keys()) | set(matrix2.keys())
@@ -409,12 +327,13 @@ def main():
     print("\nChecking input files...")
     available_files = []
 
-    for file_path in INPUT_FILES:
+    for fname, day_code in INPUT_FILES:
+        file_path = INPUT_FOLDER / fname
         if file_path.exists():
-            print(f"   {file_path.name}")
-            available_files.append(file_path)
+            print(f"   {fname}")
+            available_files.append((file_path, day_code))
         else:
-            print(f"  ✗ {file_path.name} (not found)")
+            print(f"   {fname} (not found)")
 
     if not available_files:
         print("\n ERROR: No input files found in raw_excel/ folder!")
@@ -423,19 +342,24 @@ def main():
     print(f"\n  Found {len(available_files)} file(s) to process")
 
     try:
-        nb_boarders, sb_boarders = get_boarders(available_files, OUTPUT_FOLDER)
-        nb_flows, sb_flows = get_flows(available_files, OUTPUT_FOLDER)
-        od_nb, od_sb = get_odmatrix(available_files, OUTPUT_FOLDER)
+        print("EXTRACTING BOARDERS DATA (Jubilee Line Only)")
+        for file_path, day_code in available_files:
+            get_boarders(file_path, day_code, OUTPUT_FOLDER)
+
+        print("EXTRACTING INTERCHANGE FLOWS (To Jubilee Line)")
+        for file_path, day_code in available_files:
+            get_flows(file_path, day_code, OUTPUT_FOLDER)
+
+        od_nb, od_sb = get_odmatrix(INPUT_FILES, OUTPUT_FOLDER)
 
         print("EXTRACTION COMPLETE")
 
         print("\n Output files:")
-        print("  1. boarders_jubilee_nb.csv")
-        print("  2. boarders_jubilee_sb.csv")
-        print("  3. interchange_to_jubilee_nb.csv")
-        print("  4. interchange_to_jubilee_sb.csv")
-        print("  5. od_matrix_nb.json")
-        print("  6. od_matrix_sb.json")
+        for _, day_code in INPUT_FILES:
+            print(f"  {day_code}_boarders.csv")
+            print(f"  {day_code}_interchange.csv")
+        print("  od_matrix_nb.json")
+        print("  od_matrix_sb.json")
 
     except Exception as e:
         print(f"\n ERROR: {e}")
