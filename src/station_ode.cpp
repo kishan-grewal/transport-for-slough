@@ -206,23 +206,6 @@ StationSystem::SegmentData::SegmentData(boost::json::object data) {
   auto &val = data.at("xk");
   JSON_ParseNumericToDouble(this->xk, &val);
 
-  // if (!data.contains("linked_to_area"))
-  //   this->linked_to_area = NONE;
-  // else if (!data.at("linked_to_area").is_string())
-  //   throw std::runtime_error(
-  //     "Invalid JSON value for station segment data, missing/mistyped key [linked_to_area]");
-  // else {
-  //   str = data.at("linked_to_area").as_string();
-  //   if (str == "NONE")
-  //     this->linked_to_area = AreaLink::NONE;
-  //   else if (str == "FROM")
-  //     this->linked_to_area = AreaLink::FROM;
-  //   else if (str == "TO")
-  //     this->linked_to_area = AreaLink::TO;
-  //   else if (str == "BOTH")
-  //     this->linked_to_area = AreaLink::BOTH;
-  // }
-
   if (this->type == SPLIT_OUTPUT || this->type == SPLIT_INPUT) {  // Read extra fields
     if (!data.contains("secondary") ||
         (!data.at("secondary").is_int64() && !data.at("secondary").is_uint64()))
@@ -242,11 +225,22 @@ StationSystem::SegmentData::SegmentData(boost::json::object data) {
   }
 
   if (this->type == SPLIT_OUTPUT) {
-    if (!(data.contains("split_ratio") && data.at("split_ratio").is_number()))
+    if (!(data.contains("split_ratio")))
       throw std::runtime_error(
         "Invalid JSON value for station segment data, missing/mistyped key [split_ratio]");
-    val = data.at("split_ratio");
-    JSON_ParseNumericToDouble(this->split_ratio, &val);
+
+    if (data.at("split_ratio").is_number()) {
+      val = data.at("split_ratio");
+      JSON_ParseNumericToDouble(this->split_ratio, &val);
+      // Bounds check, and also check for failure in generation script (initialises them to -1,
+      // before calculating ratios)
+      if (this->split_ratio < 0 || this->split_ratio > 1)
+        throw std::runtime_error("Invalid JSON value for station segment data, vlaue at key "
+                                 "[split_ratio] must be >= 0 and <= 1");
+    }
+    else if (data.at("split_ratio").is_object()) {
+      throw std::runtime_error("Time-series driven split ratio not implemented yet");
+    }
   }
 }
 
