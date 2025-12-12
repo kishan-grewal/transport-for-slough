@@ -91,13 +91,13 @@ def get_time_columns(df: pd.DataFrame) -> List[str]:
     ]
 
 
-def get_boarders(file_path: Path, day_code: str, output_folder: Path):
+def get_boarders(file_path: Path, day_code: str) -> pd.DataFrame:
     print(f"\nProcessing {file_path.name}...")
 
     df = load_sheet(file_path, "Station_Boarders", header_row=2)
 
     if df.empty:
-        return
+        return pd.DataFrame()
 
     jubilee_boarders = df[df["Line"] == "JUB"].copy()
     jubilee_boarders["Station"] = jubilee_boarders["Station"].apply(
@@ -111,31 +111,31 @@ def get_boarders(file_path: Path, day_code: str, output_folder: Path):
     nb_boarders = jubilee_boarders[
         jubilee_boarders["Platform"].str.contains("NB", na=False)
     ].copy()
-    nb_boarders["Direction"] = "NB"
+    nb_boarders.insert(1, "Direction", "NB")
+    nb_boarders.insert(2, "Day", day_code)
     nb_boarders = nb_boarders.drop(columns=["Platform"])
 
     sb_boarders = jubilee_boarders[
         jubilee_boarders["Platform"].str.contains("SB", na=False)
     ].copy()
-    sb_boarders["Direction"] = "SB"
+    sb_boarders.insert(1, "Direction", "SB")
+    sb_boarders.insert(2, "Day", day_code)
     sb_boarders = sb_boarders.drop(columns=["Platform"])
 
     combined = pd.concat([nb_boarders, sb_boarders], ignore_index=True)
 
-    output_path = output_folder / f"{day_code}_boarders.csv"
-    combined.to_csv(output_path, index=False)
-
-    print(f"  Saved: {output_path}")
     print(f"  Records: {len(combined)}")
 
+    return combined
 
-def get_flows(file_path: Path, day_code: str, output_folder: Path):
+
+def get_flows(file_path: Path, day_code: str) -> pd.DataFrame:
     print(f"\nProcessing {file_path.name}...")
 
     df = load_sheet(file_path, "Station_Flows", header_row=2)
 
     if df.empty:
-        return
+        return pd.DataFrame()
 
     interchange_to_jubilee = df[
         (df["Movement"] == "Alight-Interchange-Board")
@@ -160,7 +160,8 @@ def get_flows(file_path: Path, day_code: str, output_folder: Path):
     nb_aggregated = (
         nb_flows.groupby("Station")[["Total"] + time_cols].sum().reset_index()
     )
-    nb_aggregated["Direction"] = "NB"
+    nb_aggregated.insert(1, "Direction", "NB")
+    nb_aggregated.insert(2, "Day", day_code)
 
     sb_flows = interchange_to_jubilee[
         interchange_to_jubilee["To Node"].str.contains("SB", na=False)
@@ -168,20 +169,17 @@ def get_flows(file_path: Path, day_code: str, output_folder: Path):
     sb_aggregated = (
         sb_flows.groupby("Station")[["Total"] + time_cols].sum().reset_index()
     )
-    sb_aggregated["Direction"] = "SB"
+    sb_aggregated.insert(1, "Direction", "SB")
+    sb_aggregated.insert(2, "Day", day_code)
 
     combined = pd.concat([nb_aggregated, sb_aggregated], ignore_index=True)
 
-    output_path = output_folder / f"{day_code}_interchange.csv"
-    combined.to_csv(output_path, index=False)
-
-    print(f"  Saved: {output_path}")
     print(f"  Records: {len(combined)}")
 
+    return combined
 
-def get_odmatrix(
-    input_files: List[Tuple[str, str]], output_folder: Path
-) -> Tuple[Dict, Dict]:
+
+def get_odmatrix(input_files: List[Tuple[str, str]]) -> Dict:
     print("DERIVING O-D MATRIX (From Link Loads)")
 
     primary_names = {"NBT23MON_outputs.xlsx", "NBT23TWT_outputs.xlsx"}
@@ -193,7 +191,7 @@ def get_odmatrix(
 
     if not primary_files:
         print("No weekday files found (need MON or TWT)")
-        return {}, {}
+        return {}
 
     od_matrices = {"NB": {}, "SB": {}}
 
@@ -239,24 +237,7 @@ def get_odmatrix(
 
             print(f"     {len(od_matrix)} origins")
 
-    for direction, matrix in od_matrices.items():
-        if not matrix:
-            continue
-
-        output_path = output_folder / f"od_matrix_{direction.lower()}.json"
-
-        with open(output_path, "w") as f:
-            json.dump(matrix, f, indent=2)
-
-        print(f"\n Saved: {output_path}")
-        print(f"  Origins: {len(matrix)}")
-
-        sample_origin = list(matrix.keys())[0]
-        print(f"  Sample (from {sample_origin}):")
-        for dest, prob in list(matrix[sample_origin].items())[:3]:
-            print(f"    -> {dest:25} : {prob:6.2%}")
-
-    return od_matrices["NB"], od_matrices["SB"]
+    return od_matrices
 
 
 def build_od_matrix_from_links(link_data: pd.DataFrame) -> Dict[str, Dict[str, float]]:
@@ -343,23 +324,49 @@ def main():
 
     try:
         print("EXTRACTING BOARDERS DATA (Jubilee Line Only)")
+        all_boarders = []
         for file_path, day_code in available_files:
-            get_boarders(file_path, day_code, OUTPUT_FOLDER)
+            df = get_boarders(file_path, day_code)
+            if not df.empty:
+                all_boarders.append(df)
+
+        if all_boarders:
+            boarders_combined = pd.concat(all_boarders, ignore_index=True)
+            output_path = OUTPUT_FOLDER / "boarders.csv"
+            boarders_combined.to_csv(output_path, index=False)
+            print(f"\n Saved: {output_path}")
+            print(f"  Total records: {len(boarders_combined)}")
 
         print("EXTRACTING INTERCHANGE FLOWS (To Jubilee Line)")
+        all_interchange = []
         for file_path, day_code in available_files:
-            get_flows(file_path, day_code, OUTPUT_FOLDER)
+            df = get_flows(file_path, day_code)
+            if not df.empty:
+                all_interchange.append(df)
 
-        od_nb, od_sb = get_odmatrix(INPUT_FILES, OUTPUT_FOLDER)
+        if all_interchange:
+            interchange_combined = pd.concat(all_interchange, ignore_index=True)
+            output_path = OUTPUT_FOLDER / "interchange.csv"
+            interchange_combined.to_csv(output_path, index=False)
+            print(f"\n Saved: {output_path}")
+            print(f"  Total records: {len(interchange_combined)}")
+
+        od_matrix = get_odmatrix(INPUT_FILES)
+
+        if od_matrix:
+            output_path = OUTPUT_FOLDER / "od_matrix.json"
+            with open(output_path, "w") as f:
+                json.dump(od_matrix, f, indent=2)
+            print(f"\n Saved: {output_path}")
+            print(f"  NB origins: {len(od_matrix.get('NB', {}))}")
+            print(f"  SB origins: {len(od_matrix.get('SB', {}))}")
 
         print("EXTRACTION COMPLETE")
 
         print("\n Output files:")
-        for _, day_code in INPUT_FILES:
-            print(f"  {day_code}_boarders.csv")
-            print(f"  {day_code}_interchange.csv")
-        print("  od_matrix_nb.json")
-        print("  od_matrix_sb.json")
+        print("  boarders.csv")
+        print("  interchange.csv")
+        print("  od_matrix.json")
 
     except Exception as e:
         print(f"\n ERROR: {e}")
