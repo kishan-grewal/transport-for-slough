@@ -91,6 +91,7 @@ class EdgeData:
     
     distance = vincenty_sphere_distance(float(self.start_node["x"]),float(self.start_node["y"]),float(self.end_node["x"]),float(self.end_node["y"]))
     n_slices = max(1,math.ceil(distance / SLICE_LEN)) # Ensure there is always one segment, even for negligible length regions
+    n_slices = 1
 
     for _ in range(n_slices):
       if last_fwd != -1: segments[last_fwd]["next"] = len(segments) + idx_offset
@@ -412,7 +413,7 @@ class EdgeManager:
         primary_outflow = [*set(i for i in primary_outflow if i in inflow)]
         # primary_outflow = [i for i in primary_outflow if i in inflow]
         split = [inflow, primary_outflow]
-        # print("  Split ("+str(junc.outflow_idxs[i])+"): "+str(split))
+        print("  Split ("+str(junc.outflow_idxs[i])+"): "+str(split))
         
         if len(primary_outflow) == 0:
           self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = 0
@@ -427,6 +428,9 @@ class EdgeManager:
             else row[1]*flow_rates.iloc[row[0] - 2,19:] 
             for row in primary_outflow]).astype(np.float32),axis=0)
           flow_split = np.divide(outflow_rate, inflow_rate,out=np.zeros_like(outflow_rate), where=inflow_rate != 0)
+          if np.all(flow_split == flow_split[0]):
+            self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = float(flow_split[0])
+            continue
           # Log to file
           # print(*flow_split,sep=", ",file=split_rate_f)
           split_rates.append(flow_split)
