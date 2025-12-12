@@ -1,5 +1,5 @@
 class StationPath:
-  def __init__(self, sequence : list[tuple[int, int]], flow_rows : list[int], reverse_flows: list[int] = []):
+  def __init__(self, sequence : list[tuple[int, int]], flow_rows : list[int | tuple[int,float]], reverse_flows: list[int | tuple[int,float]] = []):
     self.sequence = sequence
     self.flow_rows = flow_rows
     self.reverse_flows = reverse_flows
@@ -17,10 +17,10 @@ paths = {
     # StationPath([(1000039,5),(1000039,15)],[474,479,488],[468,469,470,471]), # Missing data?
   ],
   "Canons Park Underground Station": [
-    StationPath([(1000041,2),(1000041,4),(1000041,3)],[64],[66]),
-    StationPath([(1000041,2),(1000041,4),(1000041,6)],[65],[67]),
-    StationPath([(1000041,5),(1000041,4),(1000041,3)],[64],[66]),
-    StationPath([(1000041,5),(1000041,4),(1000041,6)],[65],[67]),
+    StationPath([(1000041,2),(1000041,4),(1000041,3)],[(64,0.5)],[(66,0.5)]),
+    StationPath([(1000041,2),(1000041,4),(1000041,6)],[(65,0.5)],[(67,0.5)]),
+    StationPath([(1000041,5),(1000041,4),(1000041,3)],[(64,0.5)],[(66,0.5)]),
+    StationPath([(1000041,5),(1000041,4),(1000041,6)],[(65,0.5)],[(67,0.5)]),
   ],
   "Dollis Hill Underground Station": [
     StationPath([(1000061,3),(1000061,5),(1000061,4)],[68],[70]), # Entrance1 -> JubNB

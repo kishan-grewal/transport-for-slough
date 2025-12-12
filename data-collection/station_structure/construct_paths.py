@@ -403,7 +403,8 @@ class EdgeManager:
       for i in range(len(junc.outflow_idxs)):
         primary_outflow = edge_flow_graph.get_edge_data(*junc.outflow_edges[i])[junc.dir]
         primary_outflow = [*set(i for i in primary_outflow if i in inflow)]
-        # split = [inflow, primary_outflow]
+        # primary_outflow = [i for i in primary_outflow if i in inflow]
+        split = [inflow, primary_outflow]
         # print("  Split ("+str(junc.outflow_idxs[i])+"): "+str(split))
         
         if len(primary_outflow) == 0:
@@ -411,8 +412,13 @@ class EdgeManager:
         elif primary_outflow == inflow:
           self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = 1
         else:
-          inflow_rate = np.sum(np.array([flow_rates.iloc[row,19:] for row in inflow]).astype(np.float32),axis=0)
-          outflow_rate = np.sum(np.array([flow_rates.iloc[row,19:] for row in primary_outflow]).astype(np.float32),axis=0)
+          inflow_rate = np.sum(np.array([
+            flow_rates.iloc[row,19:] if isinstance(row, int) 
+            else row[1]*flow_rates.iloc[row[0],19:] 
+            for row in inflow]).astype(np.float32),axis=0)
+          outflow_rate = np.sum(np.array([flow_rates.iloc[row,19:] if isinstance(row, int) 
+            else row[1]*flow_rates.iloc[row[0],19:] 
+            for row in primary_outflow]).astype(np.float32),axis=0)
           flow_split = np.divide(outflow_rate, inflow_rate,out=np.zeros_like(outflow_rate), where=inflow_rate != 0)
           # Log to file
           # print(*flow_split,sep=", ",file=split_rate_f)
