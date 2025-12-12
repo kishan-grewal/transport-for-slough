@@ -25,6 +25,15 @@ class LinearSystem {
   Vector B;
 };
 
+template <class T>
+class InitialStateSystem {
+  public:
+  T get_initialised_state() { return this->initial_state; }
+
+  protected:
+  Vector initial_state;
+};
+
 class CoefficientSystem {
   public:
   double input;

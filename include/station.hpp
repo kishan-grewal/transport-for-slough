@@ -1,8 +1,6 @@
 #ifndef STATION_HPP
 #define STATION_HPP
 
-#include <atomic>
-#include <memory>
 #include <string>
 #include <mutex>
 #include <barrier>
@@ -10,44 +8,55 @@
 #include <fstream>
 #include "event.hpp"
 
+#include <boost/json.hpp>
+#include <boost/numeric/odeint.hpp>
+#include "ode/ode_solver.hpp"
+#include "station_ode.hpp"
+
 class State;
 
+namespace odeint = boost::numeric::odeint;
+
 class Station {
-private:
-    std::mutex stationMutex;
+  private:
+  std::mutex stationMutex;
 
-    std::string name;
-    std::ofstream file;
-    int capacity;
-    int population;
-    int timeToLeaveRequest;
-    int timeForward;
-    int timeBackward;
+  std::string name;
+  std::ofstream file;
+  int capacity;
+  int timeToLeaveRequest;
 
-    std::atomic<bool> running;
-    std::vector<bool> platformStatus; //only edited internally
-    std::vector<int> leaveRequests; //train index/id
-    std::vector<int> entryRequests; //train index/id
-    std::vector<int> platforms; //platforms with integer for direction, setup defined
+  ODE_Solver::Solver<odeint::runge_kutta_dopri5<ODE_Solver::Vector>, StationSystem,
+                     ODE_Solver::Vector>
+    station_ode_system;
 
-public:
-    Station(std::string name, std::vector<int> platforms, std::pair<int,int> times, int wait);
-    Station(Station&& other) noexcept : name(other.getName()) {this->running.store(true);};
-    Station(const Station&) = delete;
-    Station& operator=(const Station&) = delete;
-    void listen(std::barrier<>& syncPoint);
-    void stop();
-    Event receiveEntryRequest(Event e, State* state);
-    Event receiveLeaveRequest(Event e, State* state);
-    std::string getName() {return this->name;}
+  std::atomic<bool> running;
+  std::vector<bool> platformStatus;  // only edited internally
+  std::vector<int> leaveRequests;    // train index/id
+  std::vector<double> leaveRequestTimestamps;
+  std::vector<int> entryRequests;  // train index/id
+  std::vector<double> entryRequestTimestamps;
+  std::vector<int> platforms;  // platforms with integer for direction, setup defined
 
-    int getTimeForward() {return this->timeForward;}
-    int getTimeBackward() {return this->timeBackward;}
-    int getTimeToLeave() {return this->timeToLeaveRequest;}
+  public:
+  Station(std::string name, std::vector<int> platforms, boost::json::object json_definition);
+  Station(Station&& other) noexcept
+      : name(other.getName()), station_ode_system(other.station_ode_system) {
+    this->running.store(true);
+  };
+  Station(const Station&) = delete;
 
-    void exportCurState();
-    void finishExport();
-    ~Station();
+  Station& operator=(const Station&) = delete;
+
+  void listen(std::barrier<>& syncPoint, State& state);
+  void stop();
+  Event receiveEntryRequest(Event e, State* state);
+  Event receiveLeaveRequest(Event e, State* state);
+  std::string getName() { return this->name; }
+
+  void exportCurState();
+  void finishExport();
+  ~Station();
 };
 
 #endif

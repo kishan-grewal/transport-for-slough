@@ -1,47 +1,185 @@
 {
-  "equations": [
+  "stations": [
     {
-      "size": 2,
-      "A": [
+      "id": "",
+      "initial_state": [
+        100,
         0,
-        1,
-        -1,
-        -0.15
-      ],
-      "B": [
         0,
-        1
-      ],
-      "initial": [
-        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
         0
       ],
-      "stepper": {
-        "abs_err": 1.0e-10,
-        "rel_err": 1.0e-7,
-        "a_x": 1.0,
-        "a_dxdt": 1.0
-      }
-    },
-    {
-      "size": 4,
-      "A": [
-         0,    1,   0,   0,
-        -0.35, 0,   0.2, 0,
-         0,    0,   0,   1,
-         0.2,  0,  -0.2, 0
+      "structure": [
+        {
+          "type": "AREA_OUTFLOW",
+          "next": 2,
+          "xk": 5,
+          "is_entrance": true
+        },
+        {
+          "type": "AREA_INFLOW",
+          "prev": 3,
+          "xk": 2147483647
+        },
+        {
+          "type": "DIRECT",
+          "prev": 0,
+          "next": 4,
+          "adjacent": 3,
+          "xk": 1,
+          "linked_to_area": "FROM"
+        },
+        {
+          "type": "DIRECT",
+          "prev": 5,
+          "next": 1,
+          "adjacent": 2,
+          "xk": 1,
+          "linked_to_area": "TO"
+        },
+        {
+          "type": "DIRECT",
+          "prev": 2,
+          "next": 6,
+          "adjacent": 5,
+          "xk": 1
+        },
+        {
+          "type": "DIRECT",
+          "prev": 7,
+          "next": 3,
+          "adjacent": 4,
+          "xk": 1
+        },
+        {
+          "type": "SPLIT_OUTPUT",
+          "prev": 4,
+          "next": 8,
+          "secondary": 14,
+          "split_ratio": 0.5,
+          "adjacent": 7,
+          "xk": 1
+        },
+        {
+          "type": "SPLIT_INPUT",
+          "prev": 9,
+          "next": 5,
+          "secondary": 15,
+          "adjacent": 6,
+          "xk": 1
+        },
+
+        {
+          "type": "SPLIT_INPUT",
+          "prev": 6,
+          "next": 10,
+          "secondary": 15,
+          "adjacent": 9,
+          "xk": 1
+        },
+        {
+          "type": "SPLIT_OUTPUT",
+          "prev": 11,
+          "next": 7,
+          "secondary": 14,
+          "split_ratio": 1,
+          "adjacent": 8,
+          "xk": 1
+        },
+        {
+          "type": "DIRECT",
+          "prev": 8,
+          "next": 12,
+          "adjacent": 11,
+          "xk": 1,
+          "linked_to_area": "TO"
+        },
+        {
+          "type": "DIRECT",
+          "prev": 13,
+          "next": 9,
+          "adjacent": 10,
+          "xk": 1,
+          "linked_to_area": "FROM"
+        },
+        {
+          "type": "AREA_INFLOW",
+          "prev": 10,
+          "adjacent": 13,
+          "xk": 20,
+          "platform_id": 0
+        },
+        {
+          "type": "AREA_OUTFLOW",
+          "next": 11,
+          "adjacent": 12,
+          "xk": 20,
+          "platform_id": 0
+        },
+
+        
+        {
+          "type": "SPLIT_INPUT",
+          "prev": 6,
+          "next": 16,
+          "secondary": 9,
+          "adjacent": 15,
+          "xk": 1
+        },
+        {
+          "type": "SPLIT_OUTPUT",
+          "prev": 17,
+          "next": 7,
+          "secondary": 8,
+          "split_ratio": 1,
+          "adjacent": 14,
+          "xk": 1
+        },
+        {
+          "type": "DIRECT",
+          "prev": 14,
+          "next": 18,
+          "adjacent": 17,
+          "xk": 1,
+          "linked_to_area": "TO"
+        },
+        {
+          "type": "DIRECT",
+          "prev": 19,
+          "next": 15,
+          "adjacent": 16,
+          "xk": 1,
+          "linked_to_area": "FROM"
+        },
+        {
+          "type": "AREA_INFLOW",
+          "prev": 16,
+          "xk": 20,
+          "platform_id": 1
+        },
+        {
+          "type": "AREA_OUTFLOW",
+          "next": 17,
+          "xk": 20,
+          "platform_id": 1
+        }
       ],
-      "B": [
-        0,-1,0,-1
-      ],
-      "initial": [
-        1,0,2,0
-      ]
+      "input": 0
     }
-  ],
-  "coefficients":[
-    [
-      0.1,2
-    ]
   ]
 }

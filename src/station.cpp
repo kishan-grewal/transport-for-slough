@@ -6,115 +6,128 @@
 #include <barrier>
 #include <mutex>
 
-Station::Station(std::string name, std::vector<int> platforms, std::pair<int,int> times, int wait) {
-    this->name = name;
-    this->running.store(true);
-    this->platforms = platforms;
-    this->population = 100000;
-    this->timeToLeaveRequest = wait;
-    this->timeForward = std::get<0>(times);
-    this->timeBackward = std::get<1>(times);
-    for(int i = 0; i < this->platforms.size(); ++i) {
-        this->platformStatus.push_back(false);
-        this->leaveRequests.push_back(-1);
-        this->entryRequests.push_back(-1); //consider using ints instead of fixed size requests
-    }
-    std::cout << platforms[0] << std::endl;
+Station::Station(std::string name, std::vector<int> platforms, boost::json::object json_definition)
+    : station_ode_system(odeint::runge_kutta_dopri5<ODE_Solver::Vector>(),
+                         StationSystem(json_definition)) {
+  this->name = name;
+  this->running.store(true);
 
-    std::string fname = "out/" + name + ".csv";
-    this->file = std::ofstream(fname);
-    std::string cols = "population";
-    for(int i = 0; i < this->platforms.size(); ++i) {
-        cols += ",platform " + std::to_string(i);
-    }
-    this->file << cols << std::endl;
+  this->platforms = platforms;
+  // if (this->platforms.size() != station_ode_system.system.platform_count())
+  //   throw std::runtime_error("Mismatched station definition and platform vector");
+
+  for (int i = 0; i < this->platforms.size(); ++i) {
+    this->platformStatus.push_back(false);
+    this->leaveRequests.push_back(-1);
+    this->leaveRequestTimestamps.push_back(-1);
+    this->entryRequests.push_back(-1);  // consider using ints instead of fixed size requests
+    this->entryRequestTimestamps.push_back(-1);
+  }
+
+  std::string fname = "out/" + name + ".csv";
+  this->file = std::ofstream(fname);
+  std::string cols = "population";
+  for (int i = 0; i < this->platforms.size(); ++i) {
+    cols += ",platform " + std::to_string(i);
+  }
+  this->file << cols << std::endl;
 }
 
-void Station::listen(std::barrier<>& syncPoint) {
-    //listen for events from event pool
-    int popEnter = 0;
-    int popLeave = 0;
-    while (this->running.load()) {
-        //for each step in time we recalculate populations
-        {std::lock_guard<std::mutex> lock(this->stationMutex);
-            for (int i = 0; i < this->platforms.size(); ++i) {
-                if (this->entryRequests[i] > -1) {
-                    popEnter += 5000;
-                    this->entryRequests[i] = -1; //replace with train id
-                }
-                if (this->leaveRequests[i] > -1) {
-                    popLeave += 5200;
-                    this->leaveRequests[i] = -1;
-                }
-            }
+void Station::listen(std::barrier<>& syncPoint, State& state) {
+  // listen for events from event pool
+  int popEnter = 0;
+  int popLeave = 0;
+  while (this->running.load()) {
+    // for each step in time we recalculate populations
+    {
+      std::lock_guard<std::mutex> lock(this->stationMutex);
+      for (int platform_i = 0; platform_i < this->platforms.size(); ++platform_i) {
+        if (this->entryRequests[platform_i] > -1) {  // Arrival
+          popEnter += 10000;
+          int train_id = this->entryRequests[platform_i];
+          double timestamp = this->entryRequestTimestamps[platform_i];
+          this->entryRequests[platform_i] = -1;  // replace with train id
+
+          // std::cout << "Train arrived with "
+          //           << state.getTrain(this->entryRequests[platform_i]).passenger_count << "on
+          //           board"
+          //           << std::endl;
+          this->station_ode_system.SolveToTime(this->entryRequestTimestamps[platform_i],
+                                               this->station_ode_system.system.InputDriver());
+          try {
+            this->station_ode_system.LastState() +=
+              this->station_ode_system.system.PlatformUpdateVector(20, platform_i);
+          } catch (std::runtime_error err) {
+            std::cout << "WARN - invalid station platform id " << platform_i << " for solver"
+                      << std::endl;
+          }
         }
-
-        syncPoint.arrive_and_wait();
-
-        //population calculations
-        this->population += popEnter;
-        this->population -= popLeave;
-        popEnter = 0;
-        popLeave = 0;
-
-        std::cout << this->name << " population: " << this->population << std::endl;
-        this->exportCurState();
-
-        syncPoint.arrive_and_wait();
+        if (this->leaveRequests[platform_i] > -1) {  // Departure
+          this->leaveRequests[platform_i] = -1;
+        }
+      }
     }
+
+    syncPoint.arrive_and_wait();
+
+    // std::cout << this->name << " population: " << this->population << std::endl;
+    this->exportCurState();
+
+    syncPoint.arrive_and_wait();
+  }
 }
 
-void Station::stop() {
-    this->running.store(false);
-}
+void Station::stop() { this->running.store(false); }
 
 Event Station::receiveEntryRequest(Event e, State* state) {
-    std::lock_guard<std::mutex> lock(this->stationMutex);
+  std::lock_guard<std::mutex> lock(this->stationMutex);
 
-    std::cout << "Entry request received at " << this->name << std::endl;
-    std::this_thread::sleep_for(std::chrono::microseconds(1));
-    for(int i = 0; i < this->platforms.size(); ++i) {
-        if((this->platforms[i] == state->getTrain(e.getTrainIndex()).getDirection() || !(this->platforms[i])) && this->platformStatus[i] == false) {
-            this->platformStatus[i] = true; //make busy
-            this->entryRequests[i] = e.getTrainIndex();
-            return Event(0,-1,-1,false);
-        }
+  // std::cout << "Entry request received at " << this->name << std::endl;
+  std::this_thread::sleep_for(std::chrono::microseconds(1));
+  for (int i = 0; i < this->platforms.size(); ++i) {
+    if ((this->platforms[i] == state->getTrain(e.getTrainIndex()).getDirection() ||
+         !(this->platforms[i])) &&
+        this->platformStatus[i] == false) {
+      this->platformStatus[i] = true;  // make busy
+      this->entryRequests[i] = e.getTrainIndex();
+      this->entryRequestTimestamps[i] = e.getTime();
+      return Event(0, -1, -1, false);
     }
-    //add time to current event and return to be re added to event pool
-    e.propogate(40);
-    return e;
+  }
+  // add time to current event and return to be re added to event pool
+  e.propogate(40);
+  return e;
 }
 
 Event Station::receiveLeaveRequest(Event e, State* state) {
-    std::lock_guard<std::mutex> lock(this->stationMutex);
+  std::lock_guard<std::mutex> lock(this->stationMutex);
 
-    std::cout << "Leave request received at " << this->name << std::endl;
-    std::this_thread::sleep_for(std::chrono::microseconds(1));
-    for(int i = 0; i < this->platforms.size(); ++i) {
-        if((this->platforms[i] == state->getTrain(e.getTrainIndex()).getDirection() || !(this->platforms[i])) && this->platformStatus[i] == true) {
-            this->platformStatus[i] = false; //make free
-            this->leaveRequests[i] = e.getTrainIndex();
-            return Event(0,-1,-1,false); //empty event signals no new event to add
-        }
+  // std::cout << "Leave request received at " << this->name << std::endl;
+  std::this_thread::sleep_for(std::chrono::microseconds(1));
+  for (int i = 0; i < this->platforms.size(); ++i) {
+    if ((this->platforms[i] == state->getTrain(e.getTrainIndex()).getDirection() ||
+         !(this->platforms[i])) &&
+        this->platformStatus[i] == true) {
+      this->platformStatus[i] = false;  // make free
+      this->leaveRequests[i] = e.getTrainIndex();
+      this->leaveRequestTimestamps[i] = e.getTime();
+      return Event(0, -1, -1, false);  // empty event signals no new event to add
     }
-    //add time to current event and return to be re added to event pool
+  }
+  // add time to current event and return to be re added to event pool
 
-    e.propogate(40);
-    return e;
+  e.propogate(40);
+  return e;
 }
 
 void Station::exportCurState() {
-    std::string status = "";
-    for(int i = 0; i < this->platformStatus.size(); ++i) {
-        status += "," + std::to_string(this->platformStatus[i]);
-    }
-    this->file << this->population << status << std::endl;
+  std::string status = "";
+  for (int i = 0; i < this->platformStatus.size(); ++i) {
+    status += "," + std::to_string(this->platformStatus[i]);
+  }
+  // this->file << this->population << status << std::endl;
 }
 
-void Station::finishExport() {
-    this->file.close();
-}
+void Station::finishExport() { this->file.close(); }
 
-Station::~Station() {
-    this->name = "";
-}
+Station::~Station() { this->name = ""; }
