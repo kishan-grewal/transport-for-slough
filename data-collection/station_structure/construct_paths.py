@@ -91,7 +91,6 @@ class EdgeData:
     
     distance = vincenty_sphere_distance(float(self.start_node["x"]),float(self.start_node["y"]),float(self.end_node["x"]),float(self.end_node["y"]))
     n_slices = max(1,math.ceil(distance / SLICE_LEN)) # Ensure there is always one segment, even for negligible length regions
-    n_slices = 2
 
     for _ in range(n_slices):
       if last_fwd != -1: segments[last_fwd]["next"] = len(segments) + idx_offset
