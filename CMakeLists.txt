@@ -42,11 +42,11 @@ add_executable(${PROJECT_NAME}
   src/station_ode.cpp
 )
 
-add_executable(${PROJECT_NAME}_visualiser
-  src/vis/main.cpp
-  src/vis/data.cpp)
+#add_executable(${PROJECT_NAME}_visualiser
+#  src/vis/main.cpp
+#  src/vis/data.cpp)
 
-target_include_directories(${PROJECT_NAME}_visualiser PUBLIC include/)
+#target_include_directories(${PROJECT_NAME}_visualiser PUBLIC include/)
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 target_include_directories(${PROJECT_NAME} PUBLIC libs/boost/include/ libs/SFGraphing/include/)
 

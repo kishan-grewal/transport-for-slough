@@ -6,23 +6,6 @@
 #include <barrier>
 
 EventPool::EventPool(int time, int stationSize, int trainsSize, State* state) {
-<<<<<<< HEAD
-    this->pool = std::multiset<Event>();
-    this->globalTime = 0;
-    this->tOffset = 0;
-    this->maxTime = time;
-    this->target = {-1};
-    this->targetInfo = {Event(0,-1,-1,false)};
-    this->maxSize = stationSize;
-    this->trainsSize = trainsSize;
-    this->state = state;
-    this->file = std::ofstream("out/time.csv");
-    this->file << "t" << std::endl;
-    std::cout << state->trains.size() << state->stations.size() << std::endl;
-    for (int i = 0; i < trainsSize; ++i) {
-        this->dispatch(Event(10*i, state->getTrain(i).getStartIndex(), i, false)); //set off the trains, choo choo
-    }
-=======
   this->pool = std::multiset<Event>();
   this->globalTime = 0;
   this->tOffset = 0;
@@ -40,7 +23,6 @@ EventPool::EventPool(int time, int stationSize, int trainsSize, State* state) {
     this->dispatch(
       Event(10, state->getTrain(i).getStartIndex(), i, false));  // set off the trains, choo choo
   }
->>>>>>> d92cc2f8d04ed0a050282ec608d48c8d0b81c5be
 }
 
 int EventPool::progressTime(std::barrier<>& syncPoint) {
@@ -103,47 +85,6 @@ int EventPool::progressTime(std::barrier<>& syncPoint) {
     return -2;
   }
 
-<<<<<<< HEAD
-    //start setting up next event to be dispatched
-    
-    int nextTarget = target;
-    int timeToTarget = 40;
-
-    if(entryExit) { //if we have just left a station
-    
-        if(target > 0 && target < this->maxSize - 1) {
-            if(direction == 1) {
-                nextTarget = target + 1;
-                timeToTarget = this->state->stations[target].getTimeForward();
-            }
-            else {
-                nextTarget = target -1;
-                timeToTarget = this->state->stations[target].getTimeBackward();
-            }
-        }
-        else if(target == this->maxSize - 1) {
-            timeToTarget = this->state->stations[target].getTimeBackward();
-            if(direction == 1) {
-                this->state->changeTrainDirection(trainIndex);
-                timeToTarget = this->state->stations[target].getTimeForward();
-            }
-            nextTarget = target - 1;
-        }
-        else if(target == 0) {
-            timeToTarget = this->state->stations[target].getTimeForward();
-            if(direction == -1) {
-                this->state->changeTrainDirection(trainIndex);
-                timeToTarget = this->state->stations[target].getTimeBackward();
-            }
-            nextTarget = target + 1;
-        }
-        if(target != -1) {
-            this->dispatch(Event(timeToTarget+this->globalTime, nextTarget, trainIndex, false)); //entry request at next station
-        }
-    }
-    else {
-        this->dispatch(Event(this->state->stations[target].getTimeToLeave()+this->globalTime, target, trainIndex, true)); //leave request 
-=======
   // set up next target
   Train thisTrain = this->state->getTrain(trainIndex);
   int direction = thisTrain.getDirection();
@@ -170,7 +111,6 @@ int EventPool::progressTime(std::barrier<>& syncPoint) {
         this->state->changeTrainDirection(trainIndex);
       }
       nextTarget = target - 1;
->>>>>>> d92cc2f8d04ed0a050282ec608d48c8d0b81c5be
     }
     else if (target == 0) {
       if (direction == -1) {
