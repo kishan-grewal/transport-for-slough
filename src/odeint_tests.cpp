@@ -218,16 +218,13 @@ int main(int argc, char **argv) {
   auto station_system = ODE_Solver::Solver<odeint::runge_kutta4<ODE_Solver::Vector>, StationSystem,
                                            ODE_Solver::Vector, GlobalStateTimeObserver>(
     odeint::runge_kutta4<ODE_Solver::Vector>(),
-    StationSystem(j.as_object().at("stations").as_array().at(0).as_object()),
+    StationSystem(j.as_object().at("Canons Park Underground Station").as_object()),
     GlobalStateTimeObserver(states, times));
-  // station_system.LastState() += station_system.system.PlatformUpdateVector(250, 1);
-  auto test = ODE_Solver::Vector(186, 0);
-  test[149] = 20;
-  station_system.LastState() += test;
+  station_system.LastState() += station_system.system.PlatformUpdateVector(50, 0);
   // station_system.system._check();
-  station_system.SolveToTime(500, station_system.system.InputDriver());
+  station_system.SolveToTime(2000, station_system.system.InputDriver());
 
-  for (int i = states.size() - 10; i < states.size(); ++i) {
+  for (int i = states.size() - 5; i < states.size(); ++i) {
     double s = 0;
     for (int j = 0; j < states[i].size(); ++j) {
       std::cout << std::fixed << std::setprecision(2) << states[i][j] << " ";

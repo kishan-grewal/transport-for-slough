@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.10)
 
 project(tfs VERSION 0.1.0)
 
+set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
+set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall")
+
 # Create compile_commands.json symlink for IDE to use
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 if (PROJECT_IS_TOP_LEVEL AND UNIX)
