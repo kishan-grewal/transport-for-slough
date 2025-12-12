@@ -110,8 +110,13 @@ class EdgeData:
 
     if "platform" in self.end_node["nodeType"]:
       if last_fwd != -1: segments[last_fwd]["next"] = len(segments) + idx_offset
+
+      platform_id = "NONE"
+      splt = self.end_node["nodeType"].split(' ')
+      if len(splt) > 1:
+        platform_id = int(splt[1])
       
-      segments.append({"type":"AREA_INFLOW","prev":last_fwd + idx_offset,"xk":PLATFORM_LEN, "platform_id":"NONE"})
+      segments.append({"type":"AREA_INFLOW","prev":last_fwd + idx_offset,"xk":PLATFORM_LEN, "platform_id":platform_id})
       last_fwd = len(segments) - 1
       end_idx[0] = last_fwd + idx_offset
 
@@ -120,7 +125,7 @@ class EdgeData:
         if last_rev != -1: segments[last_rev]["prev"] = len(segments) + idx_offset
         
         adj_i = len(segments)-1
-        segments.append({"type":"AREA_OUTFLOW","next":last_rev + idx_offset,"xk":PLATFORM_LEN,"adjacent":adj_i + idx_offset, "platform_id":"NONE"})
+        segments.append({"type":"AREA_OUTFLOW","next":last_rev + idx_offset,"xk":PLATFORM_LEN,"adjacent":adj_i + idx_offset, "platform_id":platform_id})
         segments[adj_i]["adjacent"] = len(segments)-1 + idx_offset
         last_rev = len(segments) - 1
         end_idx[1] = last_rev + idx_offset
@@ -173,7 +178,7 @@ class EdgeManager:
       self.edge_ends.append(end_idx)
 
       print(f"  Added edge from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure")
-    if start is not None and end is None:
+    elif start is not None and end is None:
       # Update the node that this wants to connect to
       existing_start_idx = self.edge_ends[start]
       
@@ -389,6 +394,8 @@ class EdgeManager:
           self.edge_starts.append(start_idx)
           self.edge_ends.append(end_idx)
           print(f"  Linked bidirectional edge as junction from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure")
+    else:
+      raise Exception(f"{start} {end}")
 
   def calculate_splits(self, split_rates : list, flow_rates : pd.DataFrame):
     edge_flow_graph = nx.Graph()
@@ -412,12 +419,12 @@ class EdgeManager:
         elif primary_outflow == inflow:
           self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = 1
         else:
-          inflow_rate = np.sum(np.array([
-            flow_rates.iloc[row,19:] if isinstance(row, int) 
-            else row[1]*flow_rates.iloc[row[0],19:] 
+          # Offset indexes by -2 for direct translation from excel rows (1 for 0 indexing, 1 for column headers)
+          inflow_rate = np.sum(np.array([flow_rates.iloc[row - 2,19:] if isinstance(row, int) 
+            else row[1]*flow_rates.iloc[row[0] - 2,19:] 
             for row in inflow]).astype(np.float32),axis=0)
-          outflow_rate = np.sum(np.array([flow_rates.iloc[row,19:] if isinstance(row, int) 
-            else row[1]*flow_rates.iloc[row[0],19:] 
+          outflow_rate = np.sum(np.array([flow_rates.iloc[row - 2,19:] if isinstance(row, int) 
+            else row[1]*flow_rates.iloc[row[0] - 2,19:] 
             for row in primary_outflow]).astype(np.float32),axis=0)
           flow_split = np.divide(outflow_rate, inflow_rate,out=np.zeros_like(outflow_rate), where=inflow_rate != 0)
           # Log to file
@@ -474,7 +481,7 @@ for station_id in paths.paths.keys():
   for path in station_paths:
     for i in range(len(path.sequence) - 1):
       # Find the type
-      print(path.sequence[i],path.sequence[i+1])
+      # print((path.sequence[i], path.sequence[i+1]))
       types = station.edges[(station.edges["start"] == path.sequence[i]) & (station.edges["end"] == path.sequence[i+1])]["type"].to_list()
       if len(types) == 0:
         print("Fatal - could not find type")
@@ -505,6 +512,7 @@ for station_id in paths.paths.keys():
   station_segment_structure.calculate_splits(split_ratio_list,station_flows)
   station_structures[station_id] = {"initial_state":0}
   station_structures[station_id]["structure"] = copy.deepcopy(station_segment_structure.station_structure)
+  print(f"  {len(station_structures[station_id]["structure"])} segments")
 
 with open("split_ratios.csv","w+") as f:
   np.savetxt(f, np.array(split_ratio_list), delimiter=',',fmt="%.6f")

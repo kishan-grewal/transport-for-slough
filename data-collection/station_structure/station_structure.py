@@ -111,7 +111,7 @@ class Station_Structure:
     return g, colours
 
   def get_nodes_edges_plot(self):
-    platforms = self.nodes[self.nodes["nodeType"] == "platform"]
+    platforms = self.nodes[self.nodes["nodeType"].apply(lambda x : True if "platform" in x else False)]
 
     nodes_pos = np.array([self.nodes["x"],self.nodes["y"],self.nodes["level"] * 0.5])
     nodes_colours = []
@@ -127,7 +127,7 @@ class Station_Structure:
         nodes_colours.append("yellow")
       else:
         nodes_colours.append("blue")
-    nodes_ids = self.nodes.apply(lambda x : x.name if x["nodeType"] != "platform" else "",axis=1).to_list()
+    nodes_ids = self.nodes.apply(lambda x : x.name if "platform" not in x["nodeType"] else "",axis=1).to_list()
     
     platforms_pos = np.array([platforms["x"],platforms["y"],platforms["level"] * 0.5])
     platforms_ids = platforms["areaName"].values
