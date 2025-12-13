@@ -2,14 +2,22 @@
 #define STATE_HPP
 
 #include <vector>
+#include <memory>
 #include "station.hpp"
 #include "train.hpp"
+#include "data_loader.hpp"
 
 class State {
 public:
-    std::vector<Station> stations; //maybe make these into a separate "state" or "state manager" class to avoid unwanted access
+    std::vector<Station> stations;
     std::vector<Train> trains;
+    std::shared_ptr<SimulationData> sim_data;
+    
     const Train& getTrain(int index) const {
+        return this->trains[index];
+    }
+    
+    Train& getTrainMutable(int index) {
         return this->trains[index];
     }
 

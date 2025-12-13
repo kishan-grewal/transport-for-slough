@@ -29,6 +29,7 @@ add_executable(${PROJECT_NAME}
   src/station.cpp 
   src/train.cpp 
   src/event_loop.cpp
+  src/data_loader.cpp
   
   src/ode/ode_solver.cpp
   src/station_ode.cpp

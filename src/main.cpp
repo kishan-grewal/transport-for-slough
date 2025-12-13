@@ -7,6 +7,7 @@
 #include "event_loop.hpp"
 #include "station.hpp"
 #include "train.hpp"
+#include "data_loader.hpp"
 
 int main(int argc, char** argv) {
   std::cout << "Hello World!" << std::endl;
@@ -24,6 +25,18 @@ int main(int argc, char** argv) {
   inFile.close();
 
   State initialState;
+  
+  // Extract station names for data loader (excluding turnaround point)
+  std::vector<std::string> station_names_only = {
+    "Stratford", "West Ham", "Canning Town", "North Greenwich",
+    "Canary Wharf", "Canada Water", "Bermondsey", "London Bridge",
+    "Southwark", "Waterloo", "Westminster", "Green Park",
+    "Bond Street", "Baker Street", "St John's Wood", "Swiss Cottage",
+    "Finchley Road", "West Hampstead", "Kilburn", "Willesden Green",
+    "Dollis Hill", "Neasden", "Wembley Park", "Kingsbury",
+    "Queensbury", "Canons Park", "Stanmore"
+  };
+  
   std::vector<std::pair<std::string, std::vector<int>>> stationNames = {
     {"Stratford",        {0, 0, 0}  },
     {"West Ham",         {1, -1}    },
@@ -68,6 +81,22 @@ int main(int argc, char** argv) {
   for (int i = 0; i < 26; ++i) {
     initialState.trains.emplace_back(100, i, 10, 1);
   }
+  
+  // Load simulation data (NUMBAT ridership data)
+  try {
+    initialState.sim_data = std::make_shared<SimulationData>(
+        "data/data_filtered/od_matrix.json",
+        "data/data_filtered/boarders.csv",
+        "data/data_filtered/interchange.csv",
+        station_names_only
+    );
+    std::cout << "Simulation data loaded successfully" << std::endl;
+  } catch (const std::exception& e) {
+    std::cerr << "Error loading simulation data: " << e.what() << std::endl;
+    std::cerr << "Make sure data files exist in data/data_filtered/" << std::endl;
+    return 1;
+  }
+  
   // initialState.trains.emplace_back(100, 0, 10, 1);
   EventLoop loop = EventLoop(simTime, std::move(initialState), initialState.stations.size());
   auto simStart = std::chrono::system_clock::now();
