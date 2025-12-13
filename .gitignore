@@ -1,7 +1,13 @@
-build/*
 
-.vscode/*
 
-libs/*
+build/
+compile_commands.json
+.venv/
+
+.vscode/
+.cache/
+*__pycache__/
+
+data/json_corr/
 
 .venv/

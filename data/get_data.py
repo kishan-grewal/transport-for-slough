@@ -55,7 +55,7 @@ STATION_NAME_MAPPING = {
 BASE_DIR = Path(__file__).resolve().parent
 DATA_FOLDER = BASE_DIR
 INPUT_FOLDER = DATA_FOLDER / "raw_excel"
-OUTPUT_FOLDER = DATA_FOLDER
+OUTPUT_FOLDER = DATA_FOLDER / "data_output"
 
 INPUT_FILES = [
     ("NBT23MON_outputs.xlsx", "MON"),
