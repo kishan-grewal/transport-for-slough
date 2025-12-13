@@ -5,5 +5,3 @@ build/*
 libs/*
 
 .venv/
-
-data/od_json/
