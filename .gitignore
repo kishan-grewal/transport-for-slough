@@ -1,4 +1,4 @@
-*.csv
+
 
 build/
 compile_commands.json
@@ -8,4 +8,6 @@ compile_commands.json
 .cache/
 *__pycache__/
 
-*.csv
+data/json_corr/
+
+.venv/
