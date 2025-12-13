@@ -2,12 +2,9 @@
 NUMBAT Data Extraction for Jubilee Line Simulation
 
 Extracts:
-1. boarders_jubilee_nb.csv - Boarders per station (Northbound)
-2. boarders_jubilee_sb.csv - Boarders per station (Southbound)
-3. interchange_to_jubilee_nb.csv - Aggregated interchange to Jubilee NB
-4. interchange_to_jubilee_sb.csv - Aggregated interchange to Jubilee SB
-5. od_matrix_nb.json - O-D probabilities northbound
-6. od_matrix_sb.json - O-D probabilities southbound
+1. boarders.csv - Boarders per station (all days and directions)
+2. interchange.csv - Aggregated interchange to Jubilee (all days and directions)
+3. od_matrix.json - O-D probabilities (Direction -> Day -> Origin -> Destinations)
 """
 
 import pandas as pd
@@ -182,25 +179,16 @@ def get_flows(file_path: Path, day_code: str) -> pd.DataFrame:
 def get_odmatrix(input_files: List[Tuple[str, str]]) -> Dict:
     print("DERIVING O-D MATRIX (From Link Loads)")
 
-    primary_names = {"NBT23MON_outputs.xlsx", "NBT23TWT_outputs.xlsx"}
-    primary_files = [
-        (INPUT_FOLDER / fname, day)
-        for fname, day in input_files
-        if fname in primary_names
-    ]
-
-    if not primary_files:
-        print("No weekday files found (need MON or TWT)")
-        return {}
-
     od_matrices = {"NB": {}, "SB": {}}
 
-    for file_path, day_code in primary_files:
+    for fname, day_code in input_files:
+        file_path = INPUT_FOLDER / fname
+
         if not file_path.exists():
-            print(f"Skipping {file_path.name} (not found)")
+            print(f"Skipping {fname} (not found)")
             continue
 
-        print(f"\nProcessing {file_path.name}...")
+        print(f"\nProcessing {fname}...")
 
         df = load_sheet(file_path, "Link_Loads", header_row=2)
 
@@ -228,12 +216,10 @@ def get_odmatrix(input_files: List[Tuple[str, str]]) -> Dict:
 
             od_matrix = build_od_matrix_from_links(dir_data)
 
-            if not od_matrices[direction]:
-                od_matrices[direction] = od_matrix
-            else:
-                od_matrices[direction] = merge_od_matrices(
-                    od_matrices[direction], od_matrix
-                )
+            if day_code not in od_matrices[direction]:
+                od_matrices[direction][day_code] = {}
+
+            od_matrices[direction][day_code] = od_matrix
 
             print(f"     {len(od_matrix)} origins")
 
@@ -278,25 +264,6 @@ def build_od_matrix_from_links(link_data: pd.DataFrame) -> Dict[str, Dict[str, f
         od_matrix[origin] = destinations
 
     return od_matrix
-
-
-def merge_od_matrices(matrix1: Dict, matrix2: Dict) -> Dict:
-    merged = {}
-
-    all_origins = set(matrix1.keys()) | set(matrix2.keys())
-
-    for origin in all_origins:
-        merged[origin] = {}
-
-        dests1 = matrix1.get(origin, {})
-        dests2 = matrix2.get(origin, {})
-
-        all_dests = set(dests1.keys()) | set(dests2.keys())
-
-        for dest in all_dests:
-            merged[origin][dest] = (dests1.get(dest, 0) + dests2.get(dest, 0)) / 2
-
-    return merged
 
 
 def main():
@@ -358,8 +325,8 @@ def main():
             with open(output_path, "w") as f:
                 json.dump(od_matrix, f, indent=2)
             print(f"\n Saved: {output_path}")
-            print(f"  NB origins: {len(od_matrix.get('NB', {}))}")
-            print(f"  SB origins: {len(od_matrix.get('SB', {}))}")
+            print(f"  NB days: {len(od_matrix.get('NB', {}))}")
+            print(f"  SB days: {len(od_matrix.get('SB', {}))}")
 
         print("EXTRACTION COMPLETE")
 
