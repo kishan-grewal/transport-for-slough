@@ -28,10 +28,10 @@ void SimulationData::load_od_matrix(const std::string& path) {
                       std::istreambuf_iterator<char>());
   file.close();
 
-  boost::json::error_code ec;
-  od_matrix_json = boost::json::parse(content, ec);
-  if (ec) {
-    throw std::runtime_error("Failed to parse OD matrix JSON: " + ec.message());
+  try {
+    od_matrix_json = boost::json::parse(content);
+  } catch (const std::exception& e) {
+    throw std::runtime_error("Failed to parse OD matrix JSON: " + std::string(e.what()));
   }
 
   std::cout << "Loaded OD matrix from " << path << std::endl;

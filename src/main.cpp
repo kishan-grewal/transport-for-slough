@@ -85,15 +85,15 @@ int main(int argc, char** argv) {
   // Load simulation data (NUMBAT ridership data)
   try {
     initialState.sim_data = std::make_shared<SimulationData>(
-        "data/data_filtered/od_matrix.json",
-        "data/data_filtered/boarders.csv",
-        "data/data_filtered/interchange.csv",
+        "data/data_output/od_matrix.json",
+        "data/data_output/boarders.csv",
+        "data/data_output/interchange.csv",
         station_names_only
     );
     std::cout << "Simulation data loaded successfully" << std::endl;
   } catch (const std::exception& e) {
     std::cerr << "Error loading simulation data: " << e.what() << std::endl;
-    std::cerr << "Make sure data files exist in data/data_filtered/" << std::endl;
+    std::cerr << "Make sure data files exist in data/data_output/" << std::endl;
     return 1;
   }
   
