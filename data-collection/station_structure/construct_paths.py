@@ -91,7 +91,6 @@ class EdgeData:
     
     distance = vincenty_sphere_distance(float(self.start_node["x"]),float(self.start_node["y"]),float(self.end_node["x"]),float(self.end_node["y"]))
     n_slices = max(1,math.ceil(distance / SLICE_LEN)) # Ensure there is always one segment, even for negligible length regions
-    n_slices = 1
 
     for _ in range(n_slices):
       if last_fwd != -1: segments[last_fwd]["next"] = len(segments) + idx_offset
@@ -134,10 +133,11 @@ class EdgeData:
     return segments, start_idx, end_idx
 
 class SegmentJunction:
-  def __init__(self, outflow_edges, outflow_idxs, dir):
+  def __init__(self, outflow_edges, outflow_idxs, dir, outflow_dirs):
     self.dir = dir
     self.outflow_idxs = outflow_idxs.copy()
     self.outflow_edges = outflow_edges.copy()
+    self.outflow_dirs = outflow_dirs.copy()
     pass
 
 class EdgeManager:
@@ -260,22 +260,25 @@ class EdgeManager:
           if start_edge_id_graph in self.split_nodes:
             self.split_nodes[start_edge_id_graph].outflow_edges.append(self_edge_id_graph)
             self.split_nodes[start_edge_id_graph].outflow_idxs.append(l)
+            self.split_nodes[start_edge_id_graph].outflow_dirs.append("forward_flows")
+            print(f"1. Added {l} to {start_edge_id_graph} (reverse)")
           else:
-            self.split_nodes[start_edge_id_graph] = SegmentJunction([next_edge_id_graph, self_edge_id_graph],[l],"forward_flows")
+            self.split_nodes[start_edge_id_graph] = SegmentJunction([next_edge_id_graph, self_edge_id_graph],[l],"forward_flows",["forward_flows","forward_flows"])
 
           if next_edge_id_graph in self.split_nodes:
             self.split_nodes[next_edge_id_graph].outflow_edges.append(self_edge_id_graph)
             self.split_nodes[next_edge_id_graph].outflow_idxs.append(l+3)
+            self.split_nodes[next_edge_id_graph].outflow_dirs.append("forward_flows" if self.split_nodes[next_edge_id_graph].dir == "reverse_flows" else "reverse_flows")
+            print(f"2. Added {l+3} to {next_edge_id_graph} ({self.split_nodes[next_edge_id_graph].outflow_dirs[-1]})")
           else:
-            self.split_nodes[next_edge_id_graph] = SegmentJunction([start_edge_id_graph, self_edge_id_graph],[l+3],"reverse_flows")
+            self.split_nodes[next_edge_id_graph] = SegmentJunction([start_edge_id_graph, self_edge_id_graph],[l+3],"reverse_flows",["reverse_flows","forward_flows"])
 
           ## Below should never occur?
           #
-          # if self_edge_id_graph in self.split_nodes:
-          #   self.split_nodes[self_edge_id_graph].outflow_edges.append(next_edge_id_graph)
-          #   self.split_nodes[self_edge_id_graph].outflow_idxs.append(l+5)
-          # else:
-          self.split_nodes[self_edge_id_graph] = SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+5],"reverse_flows")
+          if self_edge_id_graph in self.split_nodes:
+            raise Exception()
+          else:
+            self.split_nodes[self_edge_id_graph] = SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+5],"reverse_flows",["reverse_flows","forward_flows"])
           
           # ---------------------------------
 
@@ -351,24 +354,27 @@ class EdgeManager:
           self_edge_id_graph = self.__edges_id(-1)
 
           if start_edge_id_graph in self.split_nodes:
-            self.split_nodes[start_edge_id_graph].outflow_edges.append(self_edge_id_graph)
-            self.split_nodes[start_edge_id_graph].outflow_idxs.append(l)
+            self.split_nodes[start_edge_id_graph].outflow_edges.insert(0, self_edge_id_graph)
+            self.split_nodes[start_edge_id_graph].outflow_idxs.insert(0, l+3)
+            self.split_nodes[start_edge_id_graph].outflow_dirs.insert(0, self.split_nodes[start_edge_id_graph].dir)
+            print(f"3. Added {l+3} to {start_edge_id_graph} ({self.split_nodes[start_edge_id_graph].outflow_dirs[-1]})")
           else:
-            self.split_nodes[start_edge_id_graph] = SegmentJunction([next_edge_id_graph, self_edge_id_graph],[l],"forward_flows")
+            self.split_nodes[start_edge_id_graph] = SegmentJunction([next_edge_id_graph, self_edge_id_graph],[l],"forward_flows",["forward_flows","forward_flows"])
 
           if next_edge_id_graph in self.split_nodes:
             self.split_nodes[next_edge_id_graph].outflow_edges.append(self_edge_id_graph)
-            self.split_nodes[next_edge_id_graph].outflow_idxs.append(l+3)
+            self.split_nodes[next_edge_id_graph].outflow_idxs.append(l)
+            self.split_nodes[next_edge_id_graph].outflow_dirs.append("reverse_flows")
+            print(f"4. Added {l} to {next_edge_id_graph} (reverse)")
           else:
-            self.split_nodes[next_edge_id_graph] = SegmentJunction([start_edge_id_graph, self_edge_id_graph],[l+3],"reverse_flows")
+            self.split_nodes[next_edge_id_graph] = SegmentJunction([start_edge_id_graph, self_edge_id_graph],[l+3],"reverse_flows",["reverse_flows","reverse_flows"])
 
           ## Below should never occur?
           #
-          # if self_edge_id_graph in self.split_nodes:
-          #   self.split_nodes[self_edge_id_graph].outflow_edges.append(next_edge_id_graph)
-          #   self.split_nodes[self_edge_id_graph].outflow_idxs.append(l+5)
-          # else:
-          self.split_nodes[self_edge_id_graph] = SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+5],"reverse_flows")
+          if self_edge_id_graph in self.split_nodes:
+            raise Exception()
+          else:
+            self.split_nodes[self_edge_id_graph] = SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+5],"forward_flows",["reverse_flows","forward_flows"])
           
           # ---------------------------------
 
@@ -399,27 +405,28 @@ class EdgeManager:
       raise Exception(f"{start} {end}")
 
   def calculate_splits(self, split_rates : list, flow_rates : pd.DataFrame):
-    edge_flow_graph = nx.Graph()
+    edge_flow_graph = nx.DiGraph()
     for edge in self.edges:
       edge_flow_graph.add_edge(*self.__edge_id(edge),forward_flows=edge.forward_flows,reverse_flows=edge.reverse_flows)
 
     # print(*edge_flow_graph.edges.data(),sep="\n")
     for id, junc in self.split_nodes.items():
       # print("Updating split node "+str(id))
-      inflow = edge_flow_graph.get_edge_data(*id)[junc.dir]
+      inflow = edge_flow_graph.get_edge_data(*id)[junc.dir]#.copy()
 
       for i in range(len(junc.outflow_idxs)):
-        primary_outflow = edge_flow_graph.get_edge_data(*junc.outflow_edges[i])[junc.dir]
-        primary_outflow = [*set(i for i in primary_outflow if i in inflow)]
-        # primary_outflow = [i for i in primary_outflow if i in inflow]
+        primary_outflow = edge_flow_graph.get_edge_data(*junc.outflow_edges[i]).copy()
+        # print(primary_outflow, junc.outflow_dirs[i])
+        primary_outflow = [*set(n for n in primary_outflow[junc.outflow_dirs[i]] if n in inflow)]
         split = [inflow, primary_outflow]
-        print("  Split ("+str(junc.outflow_idxs[i])+"): "+str(split))
+        # print("  Split ("+str(junc.outflow_idxs[i])+"): "+str(split))
         
         if len(primary_outflow) == 0:
-          self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = 0
+          self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = 0# if junc.dir != "reverse_flows" else 1
         elif primary_outflow == inflow:
-          self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = 1
+          self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = 1# if junc.dir != "reverse_flows" else 0
         else:
+          # [print(f"    {flow_rates.iloc[row - 2,[4,5,8,9]]}") if isinstance(row, int) else print(f"    {flow_rates.iloc[row[0] - 2,[4,5,8,9]]}") for row in inflow]
           # Offset indexes by -2 for direct translation from excel rows (1 for 0 indexing, 1 for column headers)
           inflow_rate = np.sum(np.array([flow_rates.iloc[row - 2,19:] if isinstance(row, int) 
             else row[1]*flow_rates.iloc[row[0] - 2,19:] 
@@ -427,20 +434,30 @@ class EdgeManager:
           outflow_rate = np.sum(np.array([flow_rates.iloc[row - 2,19:] if isinstance(row, int) 
             else row[1]*flow_rates.iloc[row[0] - 2,19:] 
             for row in primary_outflow]).astype(np.float32),axis=0)
+          
           flow_split = np.divide(outflow_rate, inflow_rate,out=np.zeros_like(outflow_rate), where=inflow_rate != 0)
+          # if junc.dir == "reverse_flows":
+          #   flow_split = np.abs(1 - flow_split) # Clean up -0 values
+
           if np.all(flow_split == flow_split[0]):
             self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = float(flow_split[0])
-            continue
-          # Log to file
-          # print(*flow_split,sep=", ",file=split_rate_f)
-          split_rates.append(flow_split)
-          self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = {"index":len(split_rates)-1}
+          else:
+            # Log to file
+            # print(*flow_split,sep=", ",file=split_rate_f)
+            split_rates.append(flow_split)
+            self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = {"index":len(split_rates)-1}
           
 
 
-        for x in edge_flow_graph.get_edge_data(*junc.outflow_edges[i])[junc.dir]:
+        # for x, rev_x in zip(edge_flow_graph.get_edge_data(*junc.outflow_edges[i])[junc.outflow_dirs[i]],
+        #   edge_flow_graph.get_edge_data(*junc.outflow_edges[i])["reverse_flows" if junc.outflow_dirs[i] == "forward_flows" else "forward_flows"]):
+        #   if x in inflow:
+        #     inflow.append(rev_x)
+        #     inflow.remove(x)
+        for x,rev_x in zip(primary_outflow,edge_flow_graph.get_edge_data(*junc.outflow_edges[i])["reverse_flows" if junc.outflow_dirs[i] == "forward_flows" else "forward_flows"]):
           if x in inflow:
             inflow.remove(x)
+            inflow.append(rev_x)
 
   def __edges_id(self, i : int):
     return self.__edge_id(self.edges[i])
@@ -518,7 +535,7 @@ for station_id in paths.paths.keys():
   station_structures[station_id]["structure"] = copy.deepcopy(station_segment_structure.station_structure)
   print(f"  {len(station_structures[station_id]["structure"])} segments")
 
-with open("split_ratios.csv","w+") as f:
+with open("station_split_ratios.csv","w+") as f:
   np.savetxt(f, np.array(split_ratio_list), delimiter=',',fmt="%.6f")
-with open("station_output.json","w+") as f:
+with open("station_structures.json","w+") as f:
   print(json.dumps(station_structures),file=f)
