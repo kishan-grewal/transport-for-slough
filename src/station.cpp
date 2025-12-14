@@ -6,6 +6,26 @@
 #include <barrier>
 #include <mutex>
 
+//! Station conststructor
+/*!
+Station constructor
+\param name string argument denoting symbolic name
+\param platforms int vector argument denoting platform directions (1 west, -1 east, 0 both directions/turnaround)
+\param json_definition boost::json::object json object defining the station layout
+
+Sets the following fields
+ - name
+ - running (atomic)
+ - platforms
+ - leaveRequests
+ - entryRequests
+ - leaveRequestTimestamps
+ - entryRequestTimestamps
+ - platformStatus
+ - file (name)
+
+Writes csv headers for logging output to the file with the station name
+*/
 Station::Station(std::string name, std::vector<int> platforms, boost::json::object json_definition)
     : station_ode_system(odeint::runge_kutta_dopri5<ODE_Solver::Vector>(),
                          StationSystem(json_definition)) {
@@ -33,6 +53,20 @@ Station::Station(std::string name, std::vector<int> platforms, boost::json::obje
   this->file << cols << std::endl;
 }
 
+//! Station listener
+/*!
+Listens for events while program is still running
+\param syncPoint std::barrier<>& the barrier for lockstep execution between all stations and event loop thread
+\param state State& reference to the global state
+
+Function checks for arrivals and departures:
+ - Iterate over all platforms to check for entry or exit
+ - On entry fetch train id of entry
+ - Fetch timestep of entry request
+ - Reset entryRequests for the platform to acknowledge entry is being dealt with
+ - ODE solve from previous timestep to current time
+ - Attempt instantaneous alight/boarding calculations
+*/
 void Station::listen(std::barrier<>& syncPoint, State& state) {
   // listen for events from event pool
   int popEnter = 0;

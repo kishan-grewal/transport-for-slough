@@ -50,12 +50,16 @@ class Station {
 
   void listen(std::barrier<>& syncPoint, State& state);
   void stop();
+
   Event receiveEntryRequest(Event e, State* state);
+
   Event receiveLeaveRequest(Event e, State* state);
+
   std::string getName() { return this->name; }
 
   void exportCurState();
   void finishExport();
+
   ~Station();
 };
 
