@@ -13,7 +13,7 @@ struct StationSystemInput {
   double input_n;
 
   StationSystemInput(const StationSystemInput &cpy, StationSystem *override = NULL)
-      : system(cpy.system), input_n(cpy.input_n) {
+      : system(cpy.system), input_n(cpy.input_n), timestep(cpy.timestep) {
     if (override != NULL)
       this->system = override;
   }
@@ -75,9 +75,17 @@ struct StationFileObserver : ODE_Solver::GlobalTimeObserverTemplate {
   }
   StationFileObserver(StationFileObserver &cpy) : cache(cpy.cache) {
     this->timestep = cpy.timestep;
+    this->skip_next = cpy.skip_next;
   };
 
-  void operator()(const ODE_Solver::Vector &x, double t) { cache->push(x); };
+  void operator()(const ODE_Solver::Vector &x, double t) {
+    if (this->skip_next) {
+      this->skip_next = false;
+      return;
+    }
+    std::cout << t << std::endl;
+    cache->push(x);
+  };
   void finalise() { cache->finalise(); }
 
   private:
@@ -86,7 +94,7 @@ struct StationFileObserver : ODE_Solver::GlobalTimeObserverTemplate {
 
 class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> {
   public:
-  StationSystem(boost::json::object data, std::ifstream &split_ratios);
+  StationSystem(boost::json::object data, std::ifstream &split_ratios, double input_timestep = 1);
   // Override copy constructor to make sure the input system pointer updates correctly
   StationSystem(const StationSystem &cpy)
       : segments(cpy.segments),

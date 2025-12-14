@@ -14,7 +14,8 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
   //  ...
 }
 
-StationSystem::StationSystem(boost::json::object data, std::ifstream &split_ratios)
+StationSystem::StationSystem(boost::json::object data, std::ifstream &split_ratios,
+                             double input_timestep)
     : split_ratios(split_ratios) {
   // Setup internal equation structure
   if (!data.at("structure").is_array())
@@ -105,6 +106,7 @@ StationSystem::StationSystem(boost::json::object data, std::ifstream &split_rati
   if (this->platform_alight_segment_mapping.size() != this->platform_board_segment_mapping.size())
     throw std::runtime_error("Mismatched board and alight mapping size - all platform ids must "
                              "have both board and alight segments");
+  this->input_driver.timestep = input_timestep;
 }
 
 ODE_Solver::Vector StationSystem::EntranceUpdateVector(std::vector<double> n_people) {

@@ -1,6 +1,8 @@
 {
   "stations": [
     {
+      "id": "",
+      "input": 0,
       "initial_state": [
         100,
         0,
@@ -8,7 +10,7 @@
         0,
         0,
         0,
-        100,
+        0,
         0,
         0,
         0,
@@ -19,7 +21,7 @@
         {
           "type": "AREA_OUTFLOW",
           "next": 1,
-          "xk": 5,
+          "xk": 10,
           "is_entrance": true
         },
         {
@@ -27,8 +29,7 @@
           "prev": 0,
           "next": 2,
           "adjacent": 10,
-          "xk": 1,
-          "linked_to_area": "FROM"
+          "xk": 1
         },
         {
           "type": "DIRECT",
@@ -49,14 +50,13 @@
           "prev": 3,
           "next": 5,
           "adjacent": 7,
-          "xk": 1,
-          "linked_to_area": "TO"
+          "xk": 1
         },
         {
           "type": "AREA_INFLOW",
           "prev": 4,
           "adjacent": 6,
-          "xk": 5,
+          "xk": 10,
           "platform_id": 0
         },
 
@@ -64,7 +64,7 @@
           "type": "AREA_OUTFLOW",
           "next": 7,
           "adjacent": 5,
-          "xk": 5,
+          "xk": 10,
           "platform_id": 0
         },
         {
@@ -72,8 +72,7 @@
           "prev": 6,
           "next": 8,
           "adjacent": 4,
-          "xk": 1,
-          "linked_to_area": "FROM"
+          "xk": 1
         },
         {
           "type": "DIRECT",
@@ -94,16 +93,14 @@
           "prev": 9,
           "next": 11,
           "adjacent": 1,
-          "xk": 1,
-          "linked_to_area": "TO"
+          "xk": 1
         },
         {
           "type": "AREA_INFLOW",
           "prev": 10,
-          "xk":  5
+          "xk":  10
         }
-      ],
-      "input": 0
+      ]
     }
   ]
 }
