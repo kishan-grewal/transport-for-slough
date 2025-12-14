@@ -74,8 +74,8 @@ void SystemToPlot(csrc::SFPlot &plot, std::vector<ODE_Solver::Vector> &states,
   plot.GenerateVertices();
 }
 
+namespace odeint = boost::numeric::odeint;
 int main(int argc, char **argv) {
-  /*
   std::ifstream station_config_f("config/station_structures.json", std::ios_base::in);
   assert(station_config_f.is_open());
   boost::json::value j = boost::json::parse(station_config_f);
@@ -92,12 +92,14 @@ int main(int argc, char **argv) {
     odeint::runge_kutta4<ODE_Solver::Vector>(),
     StationSystem(j.as_object().at("Canons Park Underground Station").as_object(), station_flows_f),
     StationFileObserver("out/stations/Canons Park Underground Station.csv"));
-  station_system.SolveToTime(1000, station_system.system.InputDriver());
+
+  station_system.LastState() += station_system.system.PlatformUpdateVector(50, 0);
+  station_system.SolveToTime(1000);  // , station_system.system.InputDriver()
   station_system.GetGlobalObserver().finalise();
 
   station_flows_f.close();
-  */
 
+  /*
   typedef boost::numeric::odeint::runge_kutta_dopri5<ODE_Solver::Vector> error_stepper_type;
   typedef boost::numeric::odeint::controlled_runge_kutta<error_stepper_type>
     controlled_stepper_type;
@@ -135,6 +137,7 @@ int main(int argc, char **argv) {
   std::cout << std::endl;
 
   station_flows_f.close();
+*/
 }
 
 // sf::RenderWindow window(sf::VideoMode({800, 800}), "ODEint Testing");
