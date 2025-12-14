@@ -20,6 +20,7 @@ jubilee_stations = [
     "Swiss Cottage",
     "Finchley Road",
     "West Hampstead",
+    "West Hampstead LU",
     "Kilburn",
     "Willesden Green",
     "Dollis Hill",
