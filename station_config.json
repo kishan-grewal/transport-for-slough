@@ -1,1 +1,42 @@
-{"Canons Park Underground Station": {"0": [6, 7], "1": [16, 17]}, "Canning Town Underground Station": {"0": [6, 7], "1": [16, 17]}}
+{
+  "Canons Park Underground Station": {
+    "0": [
+      6,
+      7
+    ],
+    "1": [
+      16,
+      17
+    ]
+  },
+  "Canning Town Underground Station": {
+    "0": [
+      6,
+      7
+    ],
+    "1": [
+      16,
+      17
+    ]
+  },
+  "Bond Street Underground Station": {
+    "0": [
+      8,
+      9
+    ],
+    "1": [
+      18,
+      19
+    ],
+    "NONE": [
+      58,
+      59,
+      68,
+      69,
+      80,
+      81,
+      90,
+      91
+    ]
+  }
+}

@@ -1,12 +1,14 @@
 import json
 import networkx as nx
 import matplotlib.pyplot as plt
+import sys
 
 with open("station_structures.json","rb") as f:
   s = json.load(f)
 assert s is not None
 
-struc = s["Canning Town Underground Station"]["structure"]
+key = list(s.keys())[int(sys.argv[1])]
+struc = s[key]["structure"]
 
 def add_node(g, struc, id, reverse=False):
   elem = struc[id]

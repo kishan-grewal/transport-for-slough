@@ -50,6 +50,7 @@ def vincenty_sphere_distance(lat1, lon1, lat2, lon2, radius=6371008.8):
 
 SLICE_LEN = 1
 PLATFORM_LEN = 120
+SPLIT_R = -2
 
 class EdgeData:
   def __init__(self, start, end, reversible, path_type, forward_flows, reverse_flows):
@@ -64,7 +65,7 @@ class EdgeData:
   def matches(self, start, end):
     return self.start_node.name == start and self.end_node.name == end
 
-  def to_dict(self, idx_offset = 0, ignore_platform_end : bool = False):
+  def to_dict(self, idx_offset = 0, ignore_entrance : bool = False, ignore_platform : bool = False):
     segments = []
     start_idx = []
     end_idx = []
@@ -73,7 +74,7 @@ class EdgeData:
     last_fwd = -1
     last_rev = -1
 
-    if "entrance" in self.start_node["nodeType"]:
+    if not ignore_entrance and "entrance" in self.start_node["nodeType"]:
       segments.append({"id":len(segments)+idx_offset,"type":"AREA_OUTFLOW","next":-1,"xk":1,"is_entrance":True})
       last_fwd = len(segments)-1
       start_idx.append(last_fwd + idx_offset)
@@ -111,7 +112,7 @@ class EdgeData:
         last_rev = len(segments) - 1
         end_idx[1] = last_rev + idx_offset
 
-    if "platform" in self.end_node["nodeType"] and not ignore_platform_end:
+    if "platform" in self.end_node["nodeType"] and not ignore_platform:
       if last_fwd != -1: segments[last_fwd]["next"] = len(segments) + idx_offset
 
       platform_id = "NONE"
@@ -220,7 +221,7 @@ class EdgeManager:
         next = i
       
     self.edges.append(edge)
-    print(f"\tS: {start} | E: {end} | P: {prev} | N: {next} | ({edge.start_node.name} - {edge.end_node.name})")
+    # print(f"\tS: {start} | E: {end} | P: {prev} | N: {next} | ({edge.start_node.name} - {edge.end_node.name})")
     if prev is None and start is None and end is None: # No connections needed
       l = len(self.station_structure)
       struc, start_idx, end_idx, platforms = edge.to_dict(l)
@@ -294,12 +295,12 @@ class EdgeManager:
       l = len(self.station_structure)
 
       self.station_structure.extend([
-        {"type":"SPLIT_OUTPUT","id":l,"prev":existing_start_idx[0],"next":l+2,"adjacent":l+1, "secondary":l+4,"split_ratio":-1, "xk":SLICE_LEN},
+        {"type":"SPLIT_OUTPUT","id":l,"prev":existing_start_idx[0],"next":l+2,"adjacent":l+1, "secondary":l+4,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+1,"prev":l+3,"next":existing_start_idx[1],"adjacent":l, "secondary":l+5, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+2,"prev":l,"next":self.station_structure[existing_start_idx[0]]["next"],"adjacent":l+3, "secondary":l+5, "xk":SLICE_LEN},
-        {"type":"SPLIT_OUTPUT","id":l+3,"prev":self.station_structure[existing_start_idx[1]]["prev"],"next":l+1,"adjacent":l+2, "secondary":l+4,"split_ratio":-1, "xk":SLICE_LEN},
+        {"type":"SPLIT_OUTPUT","id":l+3,"prev":self.station_structure[existing_start_idx[1]]["prev"],"next":l+1,"adjacent":l+2, "secondary":l+4,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+4,"prev":l,"next":-1,"adjacent":l+5, "secondary":l+3, "xk":SLICE_LEN},
-        {"type":"SPLIT_OUTPUT","id":l+5,"prev":-1,"next":l+1,"adjacent":l+4, "secondary":l+2,"split_ratio":-1, "xk":SLICE_LEN},
+        {"type":"SPLIT_OUTPUT","id":l+5,"prev":-1,"next":l+1,"adjacent":l+4, "secondary":l+2,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
       ])
 
       # ---------------------------------
@@ -332,12 +333,6 @@ class EdgeManager:
       self.station_structure[existing_start_idx[0]]["next"] = l
       self.station_structure[existing_start_idx[1]]["prev"] = l+1
 
-      # Update to the new node for future joints
-      # if next is not None:
-      #   self.edge_ends[next] = existing_start_idx = [l+2,l+3] 
-      # else:
-      #   self.edge_starts[start] = existing_start_idx = [l+2,l+3]
-
       struc, start_idx, end_idx,platforms = edge.to_dict(l+6)
       edge_platforms.update(platforms)
       
@@ -352,8 +347,9 @@ class EdgeManager:
       self.station_structure.extend(struc)
       self.edge_starts.append(start_idx)
       self.edge_ends.append(end_idx)
-      print(f"  Linked bidirectional edge as ending junction from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure [{prev}]")
+      print(f"  Linked bidirectional edge as ending junction from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure [{prev} {next}]")
           
+    # Has a common ending node
     elif start is None and end is not None:
       # Update the node that this wants to connect to
       if next is not None:
@@ -373,17 +369,15 @@ class EdgeManager:
         tmp_end_idx = self.edge_ends[prev]
         self.station_structure[tmp_end_idx[0]]["next"] = l
         self.station_structure[tmp_end_idx[1]]["prev"] = l+1
-        print(tmp_end_idx)
-
 
       # print(self.station_structure[existing_end_idx[0]]["prev"],self.station_structure[existing_end_idx[1]]["next"])
       self.station_structure.extend([
-        {"type":"SPLIT_OUTPUT","id":l,"prev":existing_end_idx[0],"next":l+2,"adjacent":l+1, "secondary":l+4,"split_ratio":-1, "xk":SLICE_LEN},
+        {"type":"SPLIT_OUTPUT","id":l,"prev":existing_end_idx[0],"next":l+2,"adjacent":l+1, "secondary":l+4,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+1,"prev":l+3,"next":existing_end_idx[1],"adjacent":l, "secondary":l+5, "xk":SLICE_LEN},
-        {"type":"SPLIT_INPUT","id":l+2,"prev":l,"next":self.station_structure[existing_end_idx[0]]["next" if next is not None else "prev"],"adjacent":l+3, "secondary":l+5, "xk":SLICE_LEN},
-        {"type":"SPLIT_OUTPUT","id":l+3,"prev":self.station_structure[existing_end_idx[1]]["prev" if next is not None else "next"],"next":l+1,"adjacent":l+2, "secondary":l+4,"split_ratio":-1, "xk":SLICE_LEN},
+        {"type":"SPLIT_INPUT","id":l+2,"prev":l,"next":self.station_structure[existing_end_idx[0]]["next"],"adjacent":l+3, "secondary":l+5, "xk":SLICE_LEN},
+        {"type":"SPLIT_OUTPUT","id":l+3,"prev":self.station_structure[existing_end_idx[1]]["prev"],"next":l+1,"adjacent":l+2, "secondary":l+4,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+4,"prev":l,"next":-1,"adjacent":l+5, "secondary":l+3, "xk":SLICE_LEN},
-        {"type":"SPLIT_OUTPUT","id":l+5,"prev":-1,"next":l+1,"adjacent":l+4, "secondary":l+2,"split_ratio":-1, "xk":SLICE_LEN},
+        {"type":"SPLIT_OUTPUT","id":l+5,"prev":-1,"next":l+1,"adjacent":l+4, "secondary":l+2,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
       ])
       
       # ---------------------------------
@@ -409,26 +403,26 @@ class EdgeManager:
 
       # ---------------------------------
 
-      
       # Fill in linking parameters in structure
       self.station_structure[self.station_structure[existing_end_idx[0]]["next"]]["prev"] = l+2
       self.station_structure[self.station_structure[existing_end_idx[1]]["prev"]]["next"] = l+3
       self.station_structure[existing_end_idx[0]]["next"] = l
       self.station_structure[existing_end_idx[1]]["prev"] = l+1
 
-      # Update to the new node for future joints
-      if next is not None:
-        self.edge_ends[next] = existing_start_idx = [l+4,l+5] 
-      else:
-        self.edge_starts[end] = existing_start_idx = [l+4,l+5]
-
-      struc, start_idx, end_idx,platforms = edge.to_dict(l+6, ignore_platform_end=True)
+      struc, start_idx, end_idx,platforms = edge.to_dict(l+6, ignore_entrance=prev is not None, ignore_platform=True)
       edge_platforms.update(platforms)
       
-      if len(start_idx) != len(existing_start_idx):
+      if len(start_idx) != len(existing_end_idx):
         raise Exception("Cannot join bi-directional edge to unidirectional edge")
+      
       struc[end_idx[0]-l-6]["next"] = l+5
       struc[end_idx[1]-l-6]["prev"] = l+4
+      if prev is not None: # Connect to prev (i.e disconnect old connection)
+        struc[end_idx[0]-l-6]["prev"] = self.edge_ends[prev][0]
+        struc[end_idx[1]-l-6]["next"] = self.edge_ends[prev][1]
+
+        self.station_structure[self.edge_ends[prev][0]]["next"] = l+6
+        self.station_structure[self.edge_ends[prev][1]]["prev"] = l+7
       
       self.station_structure[l+4]["next"] = end_idx[1]
       self.station_structure[l+5]["prev"] = end_idx[0]
@@ -438,6 +432,7 @@ class EdgeManager:
       self.edge_ends.append(end_idx)
       print(f"  Linked bidirectional edge as starting junction from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure [{prev} {next}]")
 
+    # Joins a pair of nodes
     elif start is not None and end is not None:
       l = len(self.station_structure)
 
@@ -473,19 +468,19 @@ class EdgeManager:
       # print(self.station_structure[existing_start_idx[0]],self.station_structure[existing_start_idx[1]], prev)
       # print(self.station_structure[existing_end_idx[0]],self.station_structure[existing_end_idx[1]],next)
       self.station_structure.extend([
-        {"type":"SPLIT_OUTPUT","id":l,"prev":existing_start_idx[0],"next":l+2,"adjacent":l+1, "secondary":l+4,"split_ratio":-1, "xk":SLICE_LEN},
+        {"type":"SPLIT_OUTPUT","id":l,"prev":existing_start_idx[0],"next":l+2,"adjacent":l+1, "secondary":l+4,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+1,"prev":l+3,"next":existing_start_idx[1],"adjacent":l, "secondary":l+5, "xk":SLICE_LEN},
-        {"type":"SPLIT_INPUT","id":l+2,"prev":l,"next":self.station_structure[existing_start_idx[0]]["next"],"adjacent":l+3, "secondary":l+5, "xk":SLICE_LEN},
-        {"type":"SPLIT_OUTPUT","id":l+3,"prev":self.station_structure[existing_start_idx[1]]["prev"],"next":l+1,"adjacent":l+2, "secondary":l+4,"split_ratio":-1, "xk":SLICE_LEN},
+        {"type":"SPLIT_INPUT","id":l+2,"prev":l,"next":self.station_structure[existing_start_idx[0]]["prev"],"adjacent":l+3, "secondary":l+5, "xk":SLICE_LEN},
+        {"type":"SPLIT_OUTPUT","id":l+3,"prev":self.station_structure[existing_start_idx[1]]["next"],"next":l+1,"adjacent":l+2, "secondary":l+4,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+4,"prev":l,"next":-1,"adjacent":l+5, "secondary":l+3, "xk":SLICE_LEN},
-        {"type":"SPLIT_OUTPUT","id":l+5,"prev":-1,"next":l+1,"adjacent":l+4, "secondary":l+2,"split_ratio":-1, "xk":SLICE_LEN},
+        {"type":"SPLIT_OUTPUT","id":l+5,"prev":-1,"next":l+1,"adjacent":l+4, "secondary":l+2,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         
-        {"type":"SPLIT_OUTPUT","id":l+6,"prev":existing_end_idx[0],"next":l+8,"adjacent":l+7, "secondary":l+10,"split_ratio":-1, "xk":SLICE_LEN},
+        {"type":"SPLIT_OUTPUT","id":l+6,"prev":existing_end_idx[0],"next":l+8,"adjacent":l+7, "secondary":l+10,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+7,"prev":l+9,"next":existing_end_idx[1],"adjacent":l+6, "secondary":l+11, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+8,"prev":l+6,"next":self.station_structure[existing_end_idx[0]]["next"],"adjacent":l+9, "secondary":l+11, "xk":SLICE_LEN},
-        {"type":"SPLIT_OUTPUT","id":l+9,"prev":self.station_structure[existing_end_idx[1]]["prev"],"next":l+7,"adjacent":l+8, "secondary":l+10,"split_ratio":-1, "xk":SLICE_LEN},
+        {"type":"SPLIT_OUTPUT","id":l+9,"prev":self.station_structure[existing_end_idx[1]]["prev"],"next":l+7,"adjacent":l+8, "secondary":l+10,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+10,"prev":l+6,"next":-1,"adjacent":l+11, "secondary":l+9, "xk":SLICE_LEN},
-        {"type":"SPLIT_OUTPUT","id":l+11,"prev":-1,"next":l+7,"adjacent":l+4, "secondary":l+8,"split_ratio":-1, "xk":SLICE_LEN},
+        {"type":"SPLIT_OUTPUT","id":l+11,"prev":-1,"next":l+7,"adjacent":l+4, "secondary":l+8,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
       ])
 
       
@@ -493,7 +488,6 @@ class EdgeManager:
       # Add to junction list
 
       ## Start
-
       start_edge_id_graph = self.__edges_id(prev if prev is not None else start)
       next_edge_idx = None
       for i,e in enumerate(self.edges[:-1]):
@@ -527,16 +521,10 @@ class EdgeManager:
 
 
       # Fill in linking parameters in structure
-      self.station_structure[self.station_structure[existing_start_idx[0]]["next"]]["prev"] = l+2
-      self.station_structure[self.station_structure[existing_start_idx[1]]["prev"]]["next"] = l+3
-      self.station_structure[existing_start_idx[0]]["next"] = l
-      self.station_structure[existing_start_idx[1]]["prev"] = l+1
-
-      # Update to the new node for future joints
-      # if next is not None:
-      #   self.edge_ends[next] = existing_start_idx = [l+2,l+3] 
-      # else:
-      #   self.edge_starts[start] = existing_start_idx = [l+2,l+3]
+      self.station_structure[self.station_structure[existing_start_idx[0]]["prev"]]["next"] = l+2
+      self.station_structure[self.station_structure[existing_start_idx[1]]["next"]]["prev"] = l+3
+      self.station_structure[existing_start_idx[0]]["prev"] = l
+      self.station_structure[existing_start_idx[1]]["next"] = l+1
 
       # Fill in linking parameters in structure
       self.station_structure[self.station_structure[existing_end_idx[0]]["next"]]["prev"] = l+8
@@ -544,21 +532,13 @@ class EdgeManager:
       self.station_structure[existing_end_idx[0]]["next"] = l+6
       self.station_structure[existing_end_idx[1]]["prev"] = l+7
 
-      # Update to the new node for future joints
-      # if next is not None:
-      #   self.edge_ends[next] = existing_start_idx = [l+4,l+5] 
-      # else:
-      #   self.edge_starts[end] = existing_start_idx = [l+4,l+5]
-
-      struc, start_idx, end_idx,platforms = edge.to_dict(l+12, ignore_platform_end=True)
+      struc, start_idx, end_idx,platforms = edge.to_dict(l+12, ignore_entrance=prev is None, ignore_platform=next is None)
       edge_platforms.update(platforms)
       
       if len(start_idx) != len(existing_start_idx):
         raise Exception("Cannot join bi-directional edge to unidirectional edge")
       
       ## Start
-      print(struc[start_idx[0]-l-12], struc[start_idx[1]-l-12])
-      print(struc[end_idx[0]-l-12], struc[end_idx[1]-l-12])
       struc[start_idx[0]-l-12]["prev"] = l+4 # Change the fields so they link
       struc[start_idx[1]-l-12]["next"] = l+5
       
@@ -576,17 +556,7 @@ class EdgeManager:
       self.edge_starts.append(start_idx)
       self.edge_ends.append(end_idx)
       print(f"  Linked bidirectional edge between junctions from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure [{prev} {next}]")
-            
-      print(self.station_structure[self.edge_starts[start][0]])
-      print(self.station_structure[self.edge_starts[start][1]])
-      print(self.station_structure[self.edge_ends[start][0]])
-      print(self.station_structure[self.edge_ends[start][1]])
-      print()
-      print(self.station_structure[self.edge_starts[end][0]])
-      print(self.station_structure[self.edge_starts[end][1]])
-      print(self.station_structure[self.edge_ends[end][0]])
-      print(self.station_structure[self.edge_ends[end][1]])
-      print()
+    
     return edge_platforms
   
   def __update_junction_nodes(self, edge_flow_graph, id, junc : SegmentJunction, split_rates : list, flow_rates : pd.DataFrame):
@@ -673,7 +643,7 @@ split_ratio_list = []
 station_structures = {}
 station_platforms = {}
 
-for station_id in ["Canons Park Underground Station","Canning Town Underground Station"]: # paths.paths.keys()
+for station_id in ["Canons Park Underground Station","Canning Town Underground Station", "Bond Street Underground Station"]: # paths.paths.keys()
   print(f"Station ID: {station_id}")
 
   station_paths = paths.paths[station_id]
@@ -719,7 +689,7 @@ for station_id in ["Canons Park Underground Station","Canning Town Underground S
 
 
   # Store JSON 
-  station_segment_structure.calculate_splits(split_ratio_list,station_flows)
+  # station_segment_structure.calculate_splits(split_ratio_list,station_flows)
   station_structures[station_id] = {"initial_state":0}
   station_structures[station_id]["structure"] = copy.deepcopy(station_segment_structure.station_structure)
   station_platforms[station_id] = platforms
