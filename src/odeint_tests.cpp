@@ -12,8 +12,6 @@
 #include "ode/ode_solver.hpp"
 #include "station_ode.hpp"
 
-namespace odeint = boost::numeric::odeint;
-
 // rhs_class
 /* The rhs of x' = f(x) defined as a class */
 class harm_osc {
@@ -77,11 +75,7 @@ void SystemToPlot(csrc::SFPlot &plot, std::vector<ODE_Solver::Vector> &states,
 }
 
 int main(int argc, char **argv) {
-  // sf::RenderWindow window(sf::VideoMode({800, 800}), "ODEint Testing");
-  // sf::Font font;
-  // if (!font.openFromFile("/mnt/c/Windows/Fonts/arial.ttf"))
-  //   throw std::runtime_error("Failed to load font");
-
+  /*
   std::ifstream station_config_f("config/station_structures.json", std::ios_base::in);
   assert(station_config_f.is_open());
   boost::json::value j = boost::json::parse(station_config_f);
@@ -101,21 +95,60 @@ int main(int argc, char **argv) {
   station_system.SolveToTime(1000, station_system.system.InputDriver());
   station_system.GetGlobalObserver().finalise();
 
-  // csrc::SFPlot plot(sf::Vector2f(35, 35), sf::Vector2f(700, 700), 35, font, "t", "X");
-  // double y_range[2] = {0, 50};
-  // SystemToPlot(plot, states, times, y_range);
+  station_flows_f.close();
+  */
 
-  // Window rendering
-  // while (window.isOpen()) {
-  //   while (const std::optional<sf::Event> event = window.pollEvent()) {
-  //     if (event->is<sf::Event::Closed>()) {
-  //       window.close();
-  //     }
-  //   }
-  //   window.clear();
-  //   window.draw(plot);
-  //   window.display();
-  // }
+  typedef boost::numeric::odeint::runge_kutta_cash_karp54<ODE_Solver::Vector> error_stepper_type;
+  typedef boost::numeric::odeint::controlled_runge_kutta<error_stepper_type>
+    controlled_stepper_type;
+  double abs_err = 1.0e-10, rel_err = 1.0e-8, a_x = 0.1, a_dxdt = 0.1;
+  controlled_stepper_type controlled_stepper(
+    boost::numeric::odeint::default_error_checker<double,
+                                                  boost::numeric::odeint::vector_space_algebra,
+                                                  boost::numeric::odeint::default_operations>(
+      abs_err, rel_err, a_x, a_dxdt));
+
+  std::ifstream station_config_f("test_straight.json", std::ios_base::in);
+  assert(station_config_f.is_open());
+  boost::json::value j = boost::json::parse(station_config_f);
+  station_config_f.close();
+
+  std::basic_ifstream<char> station_flows_f("config/station_split_ratios.csv", std::ios_base::in);
+  assert(station_flows_f.is_open());
+
+  std::vector<ODE_Solver::Vector> states;
+  std::vector<double> times;
+
+  auto station_system = ODE_Solver::Solver<controlled_stepper_type, StationSystem,
+                                           ODE_Solver::Vector, StationFileObserver>(
+    controlled_stepper,
+    StationSystem(j.as_object().at("stations").as_array().at(0).as_object(), station_flows_f, 15),
+    StationFileObserver("out/stations/test.csv"));
+  std::cout << "Input: " << station_system.system.InputDriver().timestep
+            << " Observer: " << station_system.GetGlobalObserver().timestep << std::endl;
+  station_system.SolveToTime(100, station_system.system.InputDriver());
+  station_system.GetGlobalObserver().finalise();
 
   station_flows_f.close();
 }
+
+// sf::RenderWindow window(sf::VideoMode({800, 800}), "ODEint Testing");
+// sf::Font font;
+// if (!font.openFromFile("/mnt/c/Windows/Fonts/arial.ttf"))
+//   throw std::runtime_error("Failed to load font");
+
+// csrc::SFPlot plot(sf::Vector2f(35, 35), sf::Vector2f(700, 700), 35, font, "t", "X");
+// double y_range[2] = {0, 50};
+// SystemToPlot(plot, states, times, y_range);
+
+// Window rendering
+// while (window.isOpen()) {
+//   while (const std::optional<sf::Event> event = window.pollEvent()) {
+//     if (event->is<sf::Event::Closed>()) {
+//       window.close();
+//     }
+//   }
+//   window.clear();
+//   window.draw(plot);
+//   window.display();
+// }

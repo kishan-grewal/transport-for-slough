@@ -14,7 +14,8 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
   //  ...
 }
 
-StationSystem::StationSystem(boost::json::object data, std::ifstream &split_ratios)
+StationSystem::StationSystem(boost::json::object data, std::ifstream &split_ratios,
+                             double input_timestep)
     : split_ratios(split_ratios) {
   // Setup internal equation structure
   if (!data.at("structure").is_array())
@@ -100,6 +101,7 @@ StationSystem::StationSystem(boost::json::object data, std::ifstream &split_rati
     else {
     }
   }
+  this->input_driver.timestep = input_timestep;
 }
 
 ODE_Solver::Vector StationSystem::EntranceUpdateVector(std::vector<double> n_people) {
