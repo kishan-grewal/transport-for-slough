@@ -94,7 +94,6 @@ class EdgeData:
     
     distance = vincenty_sphere_distance(float(self.start_node["x"]),float(self.start_node["y"]),float(self.end_node["x"]),float(self.end_node["y"]))
     n_slices = max(1,math.ceil(distance / SLICE_LEN)) # Ensure there is always one segment, even for negligible length regions
-    n_slices = 1
 
     for _ in range(n_slices):
       if last_fwd != -1: segments[last_fwd]["next"] = len(segments) + idx_offset
@@ -643,7 +642,7 @@ split_ratio_list = []
 station_structures = {}
 station_platforms = {}
 
-for station_id in ["Canons Park Underground Station","Canning Town Underground Station", "Bond Street Underground Station"]: # paths.paths.keys()
+for station_id in paths.paths.keys(): # 
   print(f"Station ID: {station_id}")
 
   station_paths = paths.paths[station_id]
@@ -689,7 +688,7 @@ for station_id in ["Canons Park Underground Station","Canning Town Underground S
 
 
   # Store JSON 
-  # station_segment_structure.calculate_splits(split_ratio_list,station_flows)
+  station_segment_structure.calculate_splits(split_ratio_list,station_flows)
   station_structures[station_id] = {"initial_state":0}
   station_structures[station_id]["structure"] = copy.deepcopy(station_segment_structure.station_structure)
   station_platforms[station_id] = platforms
