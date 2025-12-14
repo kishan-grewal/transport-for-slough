@@ -1,0 +1,72 @@
+\doxysection{station.\+hpp}
+\hypertarget{station_8hpp_source}{}\label{station_8hpp_source}\index{include/station.hpp@{include/station.hpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ STATION\_HPP}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ STATION\_HPP}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ <mutex>}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ <barrier>}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <vector>}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <fstream>}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ "{}event.hpp"{}}}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ <boost/json.hpp>}}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#include\ <boost/numeric/odeint.hpp>}}
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#include\ "{}ode/ode\_solver.hpp"{}}}
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#include\ "{}station\_ode.hpp"{}}}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classState}{State}};}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00018\ \textcolor{keyword}{namespace\ }odeint\ =\ boost::numeric::odeint;}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classStation_ab08bfd825567db4bce17345583f9137b}{Station}}\ \{}
+\DoxyCodeLine{00021\ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00022\ \ \ std::mutex\ stationMutex;}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00024\ \ \ std::string\ name;}
+\DoxyCodeLine{00025\ \ \ std::ofstream\ file;}
+\DoxyCodeLine{00026\ \ \ \textcolor{keywordtype}{int}\ capacity;}
+\DoxyCodeLine{00027\ \ \ \textcolor{keywordtype}{int}\ timeToLeaveRequest;}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \ \ \mbox{\hyperlink{classODE__Solver_1_1Solver}{ODE\_Solver::Solver<odeint::runge\_kutta\_dopri5<ODE\_Solver::Vector>}},\ \mbox{\hyperlink{classStationSystem}{StationSystem}},}
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ODE\_Solver::Vector>}
+\DoxyCodeLine{00031\ \ \ \ \ station\_ode\_system;}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \ \ std::atomic<bool>\ running;}
+\DoxyCodeLine{00034\ \ \ std::vector<bool>\ platformStatus;\ \ \textcolor{comment}{//\ only\ edited\ internally}}
+\DoxyCodeLine{00035\ \ \ std::vector<int>\ leaveRequests;\ \ \ \ \textcolor{comment}{//\ train\ index/id}}
+\DoxyCodeLine{00036\ \ \ std::vector<double>\ leaveRequestTimestamps;}
+\DoxyCodeLine{00037\ \ \ std::vector<int>\ entryRequests;\ \ \textcolor{comment}{//\ train\ index/id}}
+\DoxyCodeLine{00038\ \ \ std::vector<double>\ entryRequestTimestamps;}
+\DoxyCodeLine{00039\ \ \ std::vector<int>\ platforms;\ \ \textcolor{comment}{//\ platforms\ with\ integer\ for\ direction,\ setup\ defined}}
+\DoxyCodeLine{00040\ }
+\DoxyCodeLine{00041\ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00042\ \ \ \mbox{\hyperlink{classStation_ab08bfd825567db4bce17345583f9137b}{Station}}(std::string\ name,\ std::vector<int>\ platforms,\ boost::json::object\ json\_definition);}
+\DoxyCodeLine{00043\ \ \ \mbox{\hyperlink{classStation_ab08bfd825567db4bce17345583f9137b}{Station}}(\mbox{\hyperlink{classStation_ab08bfd825567db4bce17345583f9137b}{Station}}\&\&\ other)\ noexcept}
+\DoxyCodeLine{00044\ \ \ \ \ \ \ :\ name(other.getName()),\ station\_ode\_system(other.station\_ode\_system)\ \{}
+\DoxyCodeLine{00045\ \ \ \ \ this-\/>running.store(\textcolor{keyword}{true});}
+\DoxyCodeLine{00046\ \ \ \};}
+\DoxyCodeLine{00047\ \ \ \mbox{\hyperlink{classStation_ab08bfd825567db4bce17345583f9137b}{Station}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classStation_ab08bfd825567db4bce17345583f9137b}{Station}}\&)\ =\ \textcolor{keyword}{delete};}
+\DoxyCodeLine{00048\ }
+\DoxyCodeLine{00049\ \ \ \mbox{\hyperlink{classStation_ab08bfd825567db4bce17345583f9137b}{Station}}\&\ operator=(\textcolor{keyword}{const}\ \mbox{\hyperlink{classStation_ab08bfd825567db4bce17345583f9137b}{Station}}\&)\ =\ \textcolor{keyword}{delete};}
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00051\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classStation_a750251cf4eeb0e871b3b693003c0c092}{listen}}(std::barrier<>\&\ syncPoint,\ \mbox{\hyperlink{classState}{State}}\&\ state);}
+\DoxyCodeLine{00052\ \ \ \textcolor{keywordtype}{void}\ stop();}
+\DoxyCodeLine{00053\ }
+\DoxyCodeLine{00054\ \ \ \mbox{\hyperlink{classEvent}{Event}}\ receiveEntryRequest(\mbox{\hyperlink{classEvent}{Event}}\ e,\ \mbox{\hyperlink{classState}{State}}*\ state);}
+\DoxyCodeLine{00055\ }
+\DoxyCodeLine{00056\ \ \ \mbox{\hyperlink{classEvent}{Event}}\ receiveLeaveRequest(\mbox{\hyperlink{classEvent}{Event}}\ e,\ \mbox{\hyperlink{classState}{State}}*\ state);}
+\DoxyCodeLine{00057\ }
+\DoxyCodeLine{00058\ \ \ std::string\ getName()\ \{\ \textcolor{keywordflow}{return}\ this-\/>name;\ \}}
+\DoxyCodeLine{00059\ }
+\DoxyCodeLine{00060\ \ \ \textcolor{keywordtype}{void}\ exportCurState();}
+\DoxyCodeLine{00061\ \ \ \textcolor{keywordtype}{void}\ finishExport();}
+\DoxyCodeLine{00062\ }
+\DoxyCodeLine{00063\ \ \ \mbox{\hyperlink{classStation_ab08bfd825567db4bce17345583f9137b}{\string~Station}}();}
+\DoxyCodeLine{00064\ \};}
+\DoxyCodeLine{00065\ }
+\DoxyCodeLine{00066\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

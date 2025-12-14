@@ -1,0 +1,50 @@
+\doxysection{Global\+State\+Time\+Observer Struct Reference}
+\hypertarget{structGlobalStateTimeObserver}{}\label{structGlobalStateTimeObserver}\index{GlobalStateTimeObserver@{GlobalStateTimeObserver}}
+Inheritance diagram for Global\+State\+Time\+Observer\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{structGlobalStateTimeObserver}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structGlobalStateTimeObserver_a50e9bc4018765fc30b73b747f624c968}\label{structGlobalStateTimeObserver_a50e9bc4018765fc30b73b747f624c968} 
+{\bfseries Global\+State\+Time\+Observer} (std\+::vector$<$ ODE\+\_\+\+Solver\+::\+Vector $>$ \&states, std\+::vector$<$ double $>$ \&times, double timestep=1)
+\item 
+virtual void \mbox{\hyperlink{structGlobalStateTimeObserver_aabacd98eb12e47cf1ab93407f65b4941}{operator()}} (const ODE\+\_\+\+Solver\+::\+Vector \&x, double t)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structGlobalStateTimeObserver_a9ef32d2f47718d7510d21493a30a91c1}\label{structGlobalStateTimeObserver_a9ef32d2f47718d7510d21493a30a91c1} 
+std\+::vector$<$ ODE\+\_\+\+Solver\+::\+Vector $>$ \& {\bfseries m\+\_\+states}
+\item 
+\Hypertarget{structGlobalStateTimeObserver_a84314d177efcacc456fc394c2b32ce17}\label{structGlobalStateTimeObserver_a84314d177efcacc456fc394c2b32ce17} 
+std\+::vector$<$ double $>$ \& {\bfseries m\+\_\+times}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{classODE__Solver_1_1GlobalTimeObserverTemplate}{ODE\+\_\+\+Solver\+::\+Global\+Time\+Observer\+Template}}}
+\begin{DoxyCompactItemize}
+\item 
+double {\bfseries timestep}
+\end{DoxyCompactItemize}
+
+
+\label{doc-func-members}
+\Hypertarget{structGlobalStateTimeObserver_doc-func-members}
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structGlobalStateTimeObserver_aabacd98eb12e47cf1ab93407f65b4941}\index{GlobalStateTimeObserver@{GlobalStateTimeObserver}!operator()@{operator()}}
+\index{operator()@{operator()}!GlobalStateTimeObserver@{GlobalStateTimeObserver}}
+\doxysubsubsection{\texorpdfstring{operator()()}{operator()()}}
+{\footnotesize\ttfamily \label{structGlobalStateTimeObserver_aabacd98eb12e47cf1ab93407f65b4941} 
+virtual void Global\+State\+Time\+Observer\+::operator() (\begin{DoxyParamCaption}\item[{const ODE\+\_\+\+Solver\+::\+Vector \&}]{x}{, }\item[{double}]{t}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classODE__Solver_1_1GlobalTimeObserverTemplate}{ODE\+\_\+\+Solver\+::\+Global\+Time\+Observer\+Template}}.
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/odeint\+\_\+tests.\+cpp\end{DoxyCompactItemize}

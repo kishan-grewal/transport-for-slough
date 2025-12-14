@@ -1,0 +1,29 @@
+\doxysection{event.\+hpp}
+\hypertarget{event_8hpp_source}{}\label{event_8hpp_source}\index{include/event.hpp@{include/event.hpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ EVENT\_HPP}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ EVENT\_HPP}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{keyword}{class\ }Event\ \{}
+\DoxyCodeLine{00005\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00006\ \ \ \ \ \textcolor{keywordtype}{int}\ time;\ \textcolor{comment}{//in\ seconds\ <timestep>\ to\ request\ trigger}}
+\DoxyCodeLine{00007\ \ \ \ \ \textcolor{keywordtype}{int}\ targetIndex;\ \textcolor{comment}{//index\ to\ target\ of\ request\ being\ dispatched}}
+\DoxyCodeLine{00008\ \ \ \ \ \textcolor{keywordtype}{int}\ trainIndex;}
+\DoxyCodeLine{00009\ \ \ \ \ \textcolor{keywordtype}{bool}\ entryExit;}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00012\ \ \ \ \ Event(\textcolor{keywordtype}{int}\ t,\ \textcolor{keywordtype}{int}\ index,\ \textcolor{keywordtype}{int}\ trainIndex,\ \textcolor{keywordtype}{bool}\ entryExit);}
+\DoxyCodeLine{00013\ \ \ \ \ \textcolor{keywordtype}{int}\ getTime()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00014\ \ \ \ \ \textcolor{keywordtype}{int}\ getTarget()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00015\ \ \ \ \ \textcolor{keywordtype}{int}\ getTrainIndex()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00016\ \ \ \ \ \textcolor{keywordtype}{bool}\ getEntryExit()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00017\ \ \ \ \ \textcolor{keywordtype}{void}\ propogate(\textcolor{keywordtype}{int}\ addition);}
+\DoxyCodeLine{00018\ \ \ \ \ \string~Event();}
+\DoxyCodeLine{00019\ \};}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \textcolor{keywordtype}{bool}\ operator<(\mbox{\hyperlink{classEvent}{Event}}\ lhs,\ \mbox{\hyperlink{classEvent}{Event}}\ rhs);}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

@@ -1,0 +1,128 @@
+{
+  "Bermondsey Underground Station": {
+    "0": [
+      180,
+      181
+    ],
+    "1": [
+      318,
+      319
+    ]
+  },
+  "Bond Street Underground Station": {
+    "0": [
+      280,
+      281
+    ],
+    "1": [
+      474,
+      475
+    ],
+    "NONE": [
+      1348,
+      1349,
+      1436,
+      1437,
+      1970,
+      1971,
+      2356,
+      2357
+    ]
+  },
+  "Canning Town Underground Station": {
+    "0": [
+      268,
+      269
+    ],
+    "1": [
+      538,
+      539
+    ]
+  },
+  "Canons Park Underground Station": {
+    "0": [
+      146,
+      147
+    ],
+    "1": [
+      230,
+      231
+    ]
+  },
+  "Dollis Hill Underground Station": {
+    "0": [
+      184,
+      185
+    ],
+    "1": [
+      252,
+      253
+    ]
+  },
+  "Kilburn Underground Station": {
+    "0": [
+      190,
+      191
+    ],
+    "1": [
+      356,
+      357
+    ]
+  },
+  "Kingsbury Underground Station": {
+    "0": [
+      142,
+      143
+    ],
+    "1": [
+      184,
+      185
+    ]
+  },
+  "Neasden Underground Station": {
+    "0": [
+      148,
+      149
+    ],
+    "1": [
+      308,
+      309
+    ]
+  },
+  "Queensbury Underground Station": {
+    "0": [
+      106,
+      107
+    ],
+    "1": [
+      148,
+      149
+    ]
+  },
+  "St. John's Wood Underground Station": {
+    "0": [
+      132,
+      133
+    ],
+    "1": [
+      260,
+      261
+    ]
+  },
+  "Stanmore Underground Station": {
+    "0": [
+      144,
+      145
+    ]
+  },
+  "Willesden Green Underground Station": {
+    "0": [
+      182,
+      183
+    ],
+    "1": [
+      344,
+      345
+    ]
+  }
+}

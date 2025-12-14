@@ -10,8 +10,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "ode/ode_solver.hpp"
-
-namespace odeint = boost::numeric::odeint;
+#include "station_ode.hpp"
 
 // rhs_class
 /* The rhs of x' = f(x) defined as a class */
@@ -38,49 +37,6 @@ class nonlinear_sys_test : ODE_Solver::CoefficientSystem {
   };
 };
 
-class dde_sys_test {
-  public:
-  std::vector<ODE_Solver::Vector> past_states;
-  int memory_ptr;
-  unsigned int memory_length;
-
-  dde_sys_test(unsigned int memory_length, const ODE_Solver::Vector initial_state)
-      : memory_length(memory_length) {
-    memory_ptr = 0;
-    past_states = std::vector<ODE_Solver::Vector>(memory_length, initial_state);
-  }
-
-  void operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt, const double t) {
-    dxdt[0] = -0.1 * x[0];
-    dxdt[1] = 0.1 * past_states[(memory_ptr + memory_length - 30) % memory_length][0];
-  };
-};
-
-class dde_sys_test_driver {
-  public:
-  double timestep = 1;
-
-  dde_sys_test_driver(std::vector<ODE_Solver::Vector> *past_states, int *past_states_ptr,
-                      unsigned int past_states_len)
-      : m_past_states(past_states),
-        m_past_states_ptr(past_states_ptr),
-        m_past_states_len(past_states_len) {
-    if (m_past_states != NULL && m_past_states->size() != past_states_len) {
-      m_past_states->resize(past_states_len);
-    }
-  }
-
-  void operator()(const ODE_Solver::Vector &x, double t) {
-    *m_past_states_ptr = (*m_past_states_ptr + 1) % m_past_states_len;
-    (*m_past_states)[*m_past_states_ptr] = x;
-  }
-
-  private:
-  std::vector<ODE_Solver::Vector> *m_past_states;
-  int *m_past_states_ptr;
-  unsigned int m_past_states_len;
-};
-
 struct StateTimeObserver {
   std::vector<ODE_Solver::Vector> &m_states;
   std::vector<double> &m_times;
@@ -102,141 +58,102 @@ struct LinearSystemInput {
   void operator()(ODE_Solver::Vector /*x*/, double t) { system.input = t / 10; };
 };
 
-struct GlobalStateTimeObserver : ODE_Solver::GlobalTimeObserverTemplate {
-  std::vector<ODE_Solver::Vector> &m_states;
-  std::vector<double> &m_times;
-
-  GlobalStateTimeObserver(std::vector<ODE_Solver::Vector> &states, std::vector<double> &times,
-                          double timestep = 1)
-      : m_states(states), m_times(times) {
-    this->timestep = timestep;
-  }
-
-  virtual void operator()(const ODE_Solver::Vector &x, double t) {
-    // std::cout << "Step " << t << std::endl;
-    m_states.push_back(x);
-    m_times.push_back(t);
-  };
-};
-
 const double t = 50;
 void SystemToPlot(csrc::SFPlot &plot, std::vector<ODE_Solver::Vector> &states,
-                  std::vector<double> &times, sf::Color colour = sf::Color::Green,
-                  std::string label = "") {
+                  std::vector<double> &times, const double y_range[2] = (double[2]){-1, 1},
+                  sf::Color colour = sf::Color::Green, std::string label = "") {
   auto sets = csrc::PlotDataSet::MultiPlotDatSet(times, states, colour, csrc::PlottingType::LINE,
                                                  {"x1", "x2"});
   for (auto set = sets.begin(); set != sets.end(); ++set)
     plot.AddDataSet(*set);
 
   auto minmax = std::minmax_element(times.begin(), times.end());
-  plot.SetupAxes(*minmax.first, *minmax.second, -5, 10, (*minmax.second - *minmax.first) / 10, 0.5,
+  plot.SetupAxes(*minmax.first, *minmax.second, y_range[0], y_range[1],
+                 (*minmax.second - *minmax.first) / 10, (y_range[1] - y_range[0]) / 10,
                  sf::Color::White);
   plot.GenerateVertices();
 }
 
 int main(int argc, char **argv) {
-  sf::RenderWindow window(sf::VideoMode({800, 800}), "ODEint Testing");
-  sf::Font font;
-  if (!font.openFromFile("/mnt/c/Windows/Fonts/arial.ttf"))
-    throw std::runtime_error("Failed to load font");
+  /*
+  std::ifstream station_config_f("config/station_structures.json", std::ios_base::in);
+  assert(station_config_f.is_open());
+  boost::json::value j = boost::json::parse(station_config_f);
+  station_config_f.close();
 
-  //
-  // Manual equation definition
-  //
+  std::basic_ifstream<char> station_flows_f("config/station_split_ratios.csv", std::ios_base::in);
+  assert(station_flows_f.is_open());
 
-  // state_initialization
-  ODE_Solver::Vector x(2);
-  x[0] = 1.0, x[1] = 0.0;  // start at x=1.0, p=0.0
-
-  // Custom class solver
-  auto ode_system =
-    ODE_Solver::Solver(odeint::runge_kutta4<ODE_Solver::Vector>(), harm_osc(0.15), x);
-  ode_system.SolveToTime(3.6745);
-  ode_system.SolveToTime(t);
-  ODE_Solver::Vector s = ode_system.LastState();
-  std::cout << "Harmonic Osc. ending state:" << ode_system.LastTime() << "  " << s[0] << " " << s[1]
-            << std::endl;
-
-  //
-  // JSON equation defintion
-  //
-  std::ifstream inFile("test.json", std::ios_base::in);
-  boost::json::value j = boost::json::parse(inFile);
-  inFile.close();
-
-  // --------------------------------------
-  // Solver class testing
-  // --------------------------------------
-  auto const &equation_definition_array = j.at("equations").as_array();
-
-  auto ss = ODE_Solver::LinearSysFromJSON(odeint::runge_kutta_dopri5<ODE_Solver::Vector>(),
-                                          equation_definition_array.at(0));
-  auto ss2 = ODE_Solver::LinearSysFromJSON(equation_definition_array.at(1));
-  ss2.system.input = 0.05;
-
-  // Solving
   std::vector<ODE_Solver::Vector> states;
   std::vector<double> times;
 
-  ss.SolveToTime(t, StateTimeObserver(states, times), -1, LinearSystemInput(ss.system));
-  csrc::SFPlot plot1(sf::Vector2f(0, 0), sf::Vector2f(375, 700), 35, font, "t", "X");
-  SystemToPlot(plot1, states, times);
-  states.clear(), times.clear();
+  auto station_system = ODE_Solver::Solver<odeint::runge_kutta4<ODE_Solver::Vector>, StationSystem,
+                                           ODE_Solver::Vector, StationFileObserver>(
+    odeint::runge_kutta4<ODE_Solver::Vector>(),
+    StationSystem(j.as_object().at("Canons Park Underground Station").as_object(), station_flows_f),
+    StationFileObserver("out/stations/Canons Park Underground Station.csv"));
+  station_system.SolveToTime(1000, station_system.system.InputDriver());
+  station_system.GetGlobalObserver().finalise();
 
-  ss2.SolveToTime(t, StateTimeObserver(states, times), -1);
-  csrc::SFPlot plot2(sf::Vector2f(400, 0), sf::Vector2f(375, 700), 35, font, "t", "X");
-  SystemToPlot(plot2, states, times, sf::Color::Blue);
-  states.clear(), times.clear();
+  station_flows_f.close();
+  */
 
-  //
-  // Nonlinear equation defintion (JSON coefficients)
-  //
-  auto nonlinear_state = ODE_Solver::Vector(1);
-  nonlinear_state[0] = 5;
-  auto nonlinear = ODE_Solver::Solver<
-    odeint::controlled_runge_kutta<odeint::runge_kutta_dopri5<ODE_Solver::Vector>>,
-    nonlinear_sys_test, ODE_Solver::Vector>(
-    odeint::controlled_runge_kutta<odeint::runge_kutta_dopri5<ODE_Solver::Vector>>(),
-    nonlinear_sys_test(j.at("coefficients").as_array().at(0)), nonlinear_state);
-  nonlinear.SolveToTime(t, StateTimeObserver(states, times), 0.1);
-  csrc::SFPlot plot3(sf::Vector2f(0, 0), sf::Vector2f(700, 700), 35, font, "t", "X");
-  SystemToPlot(plot3, states, times, sf::Color::Blue);
-  states.clear(), times.clear();
+  typedef boost::numeric::odeint::runge_kutta_dopri5<ODE_Solver::Vector> error_stepper_type;
+  typedef boost::numeric::odeint::controlled_runge_kutta<error_stepper_type>
+    controlled_stepper_type;
+  double abs_err = 1.0e-10, rel_err = 1.0e-8, a_x = 0.1, a_dxdt = 0.1;
+  controlled_stepper_type controlled_stepper(
+    boost::numeric::odeint::default_error_checker<double,
+                                                  boost::numeric::odeint::vector_space_algebra,
+                                                  boost::numeric::odeint::default_operations>(
+      abs_err, rel_err, a_x, a_dxdt));
 
-  //
-  // Faking a DDE with the ODE solver
-  //
-  auto dde_state = ODE_Solver::Vector(2);
-  dde_state[0] = 0, dde_state[1] = 0;
-  auto dde_sys = dde_sys_test(60, dde_state);
-  dde_state[0] = 10, dde_state[1] = 0;
+  std::ifstream station_config_f("test_straight.json", std::ios_base::in);
+  assert(station_config_f.is_open());
+  boost::json::value j = boost::json::parse(station_config_f);
+  station_config_f.close();
 
-  auto dde = ODE_Solver::Solver<
-    odeint::controlled_runge_kutta<odeint::runge_kutta_dopri5<ODE_Solver::Vector>>, dde_sys_test,
-    ODE_Solver::Vector, GlobalStateTimeObserver>(
-    odeint::controlled_runge_kutta<odeint::runge_kutta_dopri5<ODE_Solver::Vector>>(), dde_sys,
-    dde_state, GlobalStateTimeObserver(states, times));
-  auto dde_driver = dde_sys_test_driver(&dde.system.past_states, &dde.system.memory_ptr, 60);
-  dde.SolveToTime(100, dde_driver);
-  csrc::SFPlot plot4(sf::Vector2f(0, 0), sf::Vector2f(700, 700), 35, font, "t", "X");
-  SystemToPlot(plot4, states, times, sf::Color::Blue);
-  states.clear(), times.clear();
-  std::cout << dde.system.memory_ptr << std::endl;
+  std::basic_ifstream<char> station_flows_f("config/station_split_ratios.csv", std::ios_base::in);
+  assert(station_flows_f.is_open());
 
-  // Window rendering
-  while (window.isOpen()) {
-    while (const std::optional<sf::Event> event = window.pollEvent()) {
-      if (event->is<sf::Event::Closed>()) {
-        window.close();
-      }
-    }
-    window.clear();
-    // window.draw(plot1);
-    // window.draw(plot2);
+  std::vector<ODE_Solver::Vector> states;
+  std::vector<double> times;
 
-    // window.draw(plot3);
+  auto station_system = ODE_Solver::Solver<controlled_stepper_type, StationSystem,
+                                           ODE_Solver::Vector, StationFileObserver>(
+    controlled_stepper,
+    StationSystem(j.as_object().at("stations").as_array().at(0).as_object(), station_flows_f, 1),
+    StationFileObserver("out/stations/test.csv"));
+  std::cout << "Input: " << station_system.system.InputDriver().timestep
+            << " Observer: " << station_system.GetGlobalObserver().timestep << std::endl;
+  station_system.SolveToTime(100, station_system.system.InputDriver());
+  station_system.GetGlobalObserver().finalise();
 
-    window.draw(plot4);
-    window.display();
-  }
+  auto vec = station_system.LastState();
+  for (auto i = vec.begin(); i != vec.end(); ++i)
+    std::cout << *i << ",";
+  std::cout << std::endl;
+
+  station_flows_f.close();
 }
+
+// sf::RenderWindow window(sf::VideoMode({800, 800}), "ODEint Testing");
+// sf::Font font;
+// if (!font.openFromFile("/mnt/c/Windows/Fonts/arial.ttf"))
+//   throw std::runtime_error("Failed to load font");
+
+// csrc::SFPlot plot(sf::Vector2f(35, 35), sf::Vector2f(700, 700), 35, font, "t", "X");
+// double y_range[2] = {0, 50};
+// SystemToPlot(plot, states, times, y_range);
+
+// Window rendering
+// while (window.isOpen()) {
+//   while (const std::optional<sf::Event> event = window.pollEvent()) {
+//     if (event->is<sf::Event::Closed>()) {
+//       window.close();
+//     }
+//   }
+//   window.clear();
+//   window.draw(plot);
+//   window.display();
+// }

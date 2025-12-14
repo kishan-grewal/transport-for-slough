@@ -1,0 +1,35 @@
+\doxysection{Event\+Pool Class Reference}
+\hypertarget{classEventPool}{}\label{classEventPool}\index{EventPool@{EventPool}}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classEventPool_a3e5d20af3dea352de9b49192702cd81b}\label{classEventPool_a3e5d20af3dea352de9b49192702cd81b} 
+{\bfseries Event\+Pool} (int time, int station\+Size, int trains\+Size, \mbox{\hyperlink{classState}{State}} \texorpdfstring{$\ast$}{*}loop)
+\item 
+\Hypertarget{classEventPool_a769ee166f88e2af7cf53eac3ac76b64b}\label{classEventPool_a769ee166f88e2af7cf53eac3ac76b64b} 
+int {\bfseries dispatch} (\mbox{\hyperlink{classEvent}{Event}} e)
+\item 
+\Hypertarget{classEventPool_ae03580ba2a9e62c1d534a6340ecbdc19}\label{classEventPool_ae03580ba2a9e62c1d534a6340ecbdc19} 
+int {\bfseries get\+Global\+Time} ()
+\item 
+\Hypertarget{classEventPool_a3928d9c2ef22bc55da3d0227275943e0}\label{classEventPool_a3928d9c2ef22bc55da3d0227275943e0} 
+std\+::vector$<$ int $>$ {\bfseries get\+Targets} ()
+\item 
+\Hypertarget{classEventPool_a2a87f713c94ea3d6efb23bd5849cf2eb}\label{classEventPool_a2a87f713c94ea3d6efb23bd5849cf2eb} 
+std\+::vector$<$ \mbox{\hyperlink{classEvent}{Event}} $>$ {\bfseries get\+Target\+Info} ()
+\item 
+\Hypertarget{classEventPool_a3eca0ac2dc6ba93c00c94e83e2cf6bef}\label{classEventPool_a3eca0ac2dc6ba93c00c94e83e2cf6bef} 
+void {\bfseries empty\+Targets} ()
+\item 
+\Hypertarget{classEventPool_a11e028dac785812d58c6f66ded873a97}\label{classEventPool_a11e028dac785812d58c6f66ded873a97} 
+int {\bfseries progress\+Time} (std\+::barrier$<$$>$ \&sync\+Point)
+\item 
+\Hypertarget{classEventPool_aab6f6366d5b84bf300a3fb2fae11120c}\label{classEventPool_aab6f6366d5b84bf300a3fb2fae11120c} 
+int {\bfseries get\+Pool\+Empty} ()
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+include/event\+\_\+pool.\+hpp\item 
+src/event\+\_\+pool.\+cpp\end{DoxyCompactItemize}

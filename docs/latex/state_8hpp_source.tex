@@ -1,0 +1,29 @@
+\doxysection{state.\+hpp}
+\hypertarget{state_8hpp_source}{}\label{state_8hpp_source}\index{include/state.hpp@{include/state.hpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ STATE\_HPP}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ STATE\_HPP}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <vector>}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ "{}station.hpp"{}}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ "{}train.hpp"{}}}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classState}{State}}\ \{}
+\DoxyCodeLine{00009\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00010\ \ \ \ \ std::vector<Station>\ stations;\ \textcolor{comment}{//maybe\ make\ these\ into\ a\ separate\ "{}state"{}\ or\ "{}state\ manager"{}\ class\ to\ avoid\ unwanted\ access}}
+\DoxyCodeLine{00011\ \ \ \ \ std::vector<Train>\ trains;}
+\DoxyCodeLine{00012\ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classTrain}{Train}}\&\ getTrain(\textcolor{keywordtype}{int}\ index)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00013\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ this-\/>trains[index];}
+\DoxyCodeLine{00014\ \ \ \ \ \}}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \ \ \ \ \textcolor{keywordtype}{void}\ changeTrainDirection(\textcolor{keywordtype}{int}\ index)\ \{}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ cur\ =\ this-\/>trains[index].getDirection();}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ this-\/>trains[index].setDirection(-\/cur);}
+\DoxyCodeLine{00019\ \ \ \ \ \}}
+\DoxyCodeLine{00020\ \ \ \ \ }
+\DoxyCodeLine{00021\ \};}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

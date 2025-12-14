@@ -1,0 +1,44 @@
+\doxysection{event\+\_\+loop.\+hpp}
+\hypertarget{event__loop_8hpp_source}{}\label{event__loop_8hpp_source}\index{include/event\_loop.hpp@{include/event\_loop.hpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ EVENT\_LOOP\_HPP}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ EVENT\_LOOP\_HPP}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ <vector>}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <thread>}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ <atomic>}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ <memory>}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <barrier>}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ "{}station.hpp"{}}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ "{}train.hpp"{}}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ "{}event\_pool.hpp"{}}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ "{}state.hpp"{}}}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{comment}{//spawn\ a\ thread\ for\ eventpool\ to\ run\ on}}
+\DoxyCodeLine{00014\ \textcolor{comment}{//spawn\ threads\ for\ the\ stations\ to\ run\ on}}
+\DoxyCodeLine{00015\ \textcolor{comment}{//move\ global\ time\ to\ event\ loop}}
+\DoxyCodeLine{00016\ \textcolor{comment}{//progress\ time\ and\ dispatch\ request\ to\ station\ thread}}
+\DoxyCodeLine{00017\ \textcolor{comment}{//station\ progresses\ state\ and\ dispatches\ new\ event\ to\ loop}}
+\DoxyCodeLine{00018\ \textcolor{comment}{//alternatively\ if\ failed\ request,\ modify\ time\ of\ the\ request\ that\ called\ to\ repeat\ later}}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \textcolor{comment}{//we\ want\ to\ just\ pass\ a\ bunch\ of\ trains\ and\ stations,\ and\ the\ event\ loop\ automatically\ manages\ them}}
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00022\ \textcolor{keyword}{class\ }EventLoop\ \{}
+\DoxyCodeLine{00023\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00024\ \ \ \ \ std::atomic<std::shared\_ptr<EventPool>>\ events;}
+\DoxyCodeLine{00025\ \ \ \ \ std::vector<std::thread>\ stationThreads\{\};}
+\DoxyCodeLine{00026\ \ \ \ \ std::shared\_ptr<std::thread>\ runThread;}
+\DoxyCodeLine{00027\ \ \ \ \ std::barrier<>\ barrier;}
+\DoxyCodeLine{00028\ \ \ \ \ std::atomic<bool>\ running\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00029\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00030\ \ \ \ \ EventLoop(\textcolor{keywordtype}{int}\ time,\ \mbox{\hyperlink{classState}{State}}\ initState,\ \textcolor{keywordtype}{int}\ stationSize);}
+\DoxyCodeLine{00031\ \ \ \ \ \mbox{\hyperlink{classState}{State}}\ state;\ \textcolor{comment}{//for\ now\ global\ state\ is\ public}}
+\DoxyCodeLine{00032\ \ \ \ \ \textcolor{keywordtype}{void}\ start();\ \textcolor{comment}{//spawn\ thread\ for\ EventPool\ operations}}
+\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keywordtype}{void}\ run();}
+\DoxyCodeLine{00034\ \ \ \ \ \textcolor{keywordtype}{void}\ waitBarrier();}
+\DoxyCodeLine{00035\ \ \ \ \ \string~EventLoop();}
+\DoxyCodeLine{00036\ \};}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00038\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

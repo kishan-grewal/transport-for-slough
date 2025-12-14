@@ -1,0 +1,54 @@
+\doxysection{ODE\+\_\+\+Solver\+::Solver\texorpdfstring{$<$}{<} Stepper, System, State, Global\+Observer \texorpdfstring{$>$}{>} Class Template Reference}
+\hypertarget{classODE__Solver_1_1Solver}{}\label{classODE__Solver_1_1Solver}\index{ODE\_Solver::Solver$<$ Stepper, System, State, GlobalObserver $>$@{ODE\_Solver::Solver$<$ Stepper, System, State, GlobalObserver $>$}}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classODE__Solver_1_1Solver_abb15a60caba7f061e45bc93f4bbfb04c}\label{classODE__Solver_1_1Solver_abb15a60caba7f061e45bc93f4bbfb04c} 
+{\bfseries Solver} (Stepper stepper, System \&\&system, Global\+Observer observer=\mbox{\hyperlink{classODE__Solver_1_1EmptyObserver}{Empty\+Observer}}())
+\item 
+\Hypertarget{classODE__Solver_1_1Solver_a81301e55fe41add6982702991175c54b}\label{classODE__Solver_1_1Solver_a81301e55fe41add6982702991175c54b} 
+{\bfseries Solver} (Stepper stepper, System \&\&system, \mbox{\hyperlink{classState}{State}} state, Global\+Observer observer=\mbox{\hyperlink{classODE__Solver_1_1EmptyObserver}{Empty\+Observer}}())
+\item 
+{\footnotesize template$<$class Observer$>$ }\\void \mbox{\hyperlink{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}{Solve\+To\+Time}} (double t, Observer observer, double observer\+\_\+timestep)
+\item 
+\Hypertarget{classODE__Solver_1_1Solver_a1a606dff04bfeb7ad3ee9c2a8d7f737c}\label{classODE__Solver_1_1Solver_a1a606dff04bfeb7ad3ee9c2a8d7f737c} 
+void {\bfseries Solve\+To\+Time} (double t)
+\item 
+\Hypertarget{classODE__Solver_1_1Solver_abe8bf0c99500ea85c367df484a51ba7d}\label{classODE__Solver_1_1Solver_abe8bf0c99500ea85c367df484a51ba7d} 
+{\footnotesize template$<$class Observer, class Input\+Driver$>$ }\\void {\bfseries Solve\+To\+Time} (double t, Observer observer, double observer\+\_\+timestep, Input\+Driver input)
+\item 
+\Hypertarget{classODE__Solver_1_1Solver_ab68f6c70637d7998f56ffd3486cf9ea0}\label{classODE__Solver_1_1Solver_ab68f6c70637d7998f56ffd3486cf9ea0} 
+{\footnotesize template$<$class Input\+Driver$>$ }\\void {\bfseries Solve\+To\+Time} (double t, Input\+Driver input)
+\item 
+\Hypertarget{classODE__Solver_1_1Solver_aa735ba2f8ecb9419435954aa65887e3c}\label{classODE__Solver_1_1Solver_aa735ba2f8ecb9419435954aa65887e3c} 
+double {\bfseries Last\+Time} ()
+\item 
+\Hypertarget{classODE__Solver_1_1Solver_a7a919565a924e3f8d1758d3ceba79515}\label{classODE__Solver_1_1Solver_a7a919565a924e3f8d1758d3ceba79515} 
+\mbox{\hyperlink{classState}{State}} \& {\bfseries Last\+State} ()
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classODE__Solver_1_1Solver_a56903db8887066e546f014ee1d1ed126}\label{classODE__Solver_1_1Solver_a56903db8887066e546f014ee1d1ed126} 
+System {\bfseries system}
+\end{DoxyCompactItemize}
+
+
+\label{doc-func-members}
+\Hypertarget{classODE__Solver_1_1Solver_doc-func-members}
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}\index{ODE\_Solver::Solver$<$ Stepper, System, State, GlobalObserver $>$@{ODE\_Solver::Solver$<$ Stepper, System, State, GlobalObserver $>$}!SolveToTime@{SolveToTime}}
+\index{SolveToTime@{SolveToTime}!ODE\_Solver::Solver$<$ Stepper, System, State, GlobalObserver $>$@{ODE\_Solver::Solver$<$ Stepper, System, State, GlobalObserver $>$}}
+\doxysubsubsection{\texorpdfstring{SolveToTime()}{SolveToTime()}}
+{\footnotesize\ttfamily \label{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1} 
+template$<$class Stepper, class System, class \mbox{\hyperlink{classState}{State}}, class Global\+Observer = Empty\+Observer$>$ \\
+template$<$class Observer$>$ \\
+void \mbox{\hyperlink{classODE__Solver_1_1Solver}{ODE\+\_\+\+Solver\+::\+Solver}}$<$ Stepper, System, \mbox{\hyperlink{classState}{State}}, Global\+Observer $>$\+::\+Solve\+To\+Time (\begin{DoxyParamCaption}\item[{double}]{t}{, }\item[{Observer}]{observer}{, }\item[{double}]{observer\+\_\+timestep}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\doxylink{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}{Solve\+To\+Time(double t, Observer observer, double observer\+\_\+timestep)}\+: Attempts to solve the system up to the given time t, starting from the stored last\+\_\+time
+
+No observer If the system has a defined stepper controller, it will accelerate/decelerate as needed, otherwise it will stick to the base timestep of 0.\+1 Observer, no (positive) timestep\+: Will run the observer at each timestep dt As with prev., if there is a controller, this may lead to varying timesteps between observer calls Observer, (positive) timestep\+: Will run the observer at the provided timestep Between these steps, the base timestep of 0.\+1 will be used (clamped to the provided step if it is shorter). Again, if there is a controller, this will contract/expand this base step as deemed viable by the controller metrics. However, the observer is guaranteed to run at the given timestep 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/ode/ode\+\_\+solver.\+hpp\end{DoxyCompactItemize}
