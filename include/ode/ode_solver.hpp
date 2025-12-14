@@ -34,7 +34,7 @@ class Solver {
   // Using std::forward<T> to allow use of both lvalues and rvalues in the constructure for the
   // system - this means you can both directly instantiate the system in the constructor, OR use a
   // reference to it (where a standard copy constructor would then break the reference)
-  explicit Solver(Stepper stepper, System &&system, GlobalObserver observer = EmptyObserver())
+  explicit Solver(Stepper stepper, System &&system, GlobalObserver &&observer = EmptyObserver())
       : system_stepper(stepper),
         system(std::forward<System>(system)),
         last_update_state(system.get_initialised_state()),
@@ -163,6 +163,7 @@ class Solver {
 
   double LastTime() { return this->last_update_time; }
   State &LastState() { return this->last_update_state; }
+  inline GlobalObserver GetGlobalObserver() { return global_time_observer; }
 };
 
 template <class Stepper>
