@@ -28,7 +28,7 @@ paths = {
     StationPath([(1000039,13),(1000039,14),(1000039,15)], [457], [467]),
     ###### REWORK CANNING TOWN TO FLAG SECOND ENTRANCE THE DLR CONNECTION
     StationPath([(1000039,5),(1000039,1)],[473,478,483,487],[463,464,465,466]),
-    StationPath([(1000039,5),(1000039,15)],[474,479,488],[468,469,470,471]), # Missing data?
+    # StationPath([(1000039,5),(1000039,15)],[474,479,488],[468,469,470,471]), # Missing data?
   ],
   "Canons Park Underground Station": [
     StationPath([(1000041,2),(1000041,4),(1000041,3)],[(64,0.5)],[(66,0.5)]),
