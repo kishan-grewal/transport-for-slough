@@ -12,6 +12,19 @@ import pickle
 import sys
 import copy
 
+import ast
+
+def parse_tuple(value: str):
+    try:
+        parsed = ast.literal_eval(value)
+        if isinstance(parsed, tuple):
+            return parsed
+    except Exception:
+        print("Failed to parse to tuple")
+        pass
+    return value  # fallback: leave unchanged
+
+
 if len(sys.argv) == 1:
   path = "data-collection/station_structure/outputs/stations.pkl"
 else:
@@ -118,7 +131,6 @@ class PandasModel(QAbstractTableModel):
 
         return Qt.ItemFlag(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
 
-    # ----------- Set Data (Write-back to DataFrame) -----------
     def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
         if role != Qt.ItemDataRole.EditRole:
             return False
@@ -128,16 +140,20 @@ class PandasModel(QAbstractTableModel):
 
         row = index.row()
         col = index.column() - 1  # adjust for index column
+        column_name = self._df.columns[col]
 
-        # Update DataFrame
+        # ---- Type conversion for edge tuple columns ----
+        if column_name in ("start", "end"):
+            value = parse_tuple(value)
+
         self._df.iat[row, col] = value
         self._dirty_cells.add((row, index.column()))
 
-        # Emit signal — must include correct topLeft/bottomRight
-        self.dataChanged.emit(index, index, [Qt.ItemDataRole.DisplayRole,
-                                            Qt.ItemDataRole.BackgroundRole])
+        self.dataChanged.emit(
+            index, index,
+            [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.BackgroundRole]
+        )
         return True
-
 
 
     # ----------- Utility -----------
@@ -177,12 +193,14 @@ class GraphEditor(QWidget):
         self.node_table.setItemDelegate(delegate)
         self.edge_table.setItemDelegate(delegate)
 
-        self.node_delete_button = QPushButton("Delete Node Row")
+        self.node_delete_button = QPushButton("Delete Node")
         self.node_delete_button.clicked.connect(self.delete_node_row)
         self.save_button = QPushButton("Save", self)
         self.save_button.clicked.connect(self.on_save)
-        self.edge_delete_button = QPushButton("Delete Edge Row")
+        self.edge_delete_button = QPushButton("Delete Edge")
         self.edge_delete_button.clicked.connect(self.delete_edge_row)
+        self.edge_add_button = QPushButton("Add Edge")
+        self.edge_add_button.clicked.connect(self.add_edge_row)
         
         # Local copy data
         self.local_station = None
@@ -196,6 +214,7 @@ class GraphEditor(QWidget):
         self._left_layout.addWidget(self.node_table)
         self._left_layout.addWidget(self.node_delete_button)
         self._left_layout.addWidget(self.edge_table)
+        self._left_layout.addWidget(self.edge_add_button)
         self._left_layout.addWidget(self.edge_delete_button)
         self._left_layout.addWidget(self.confirm_button)
         self._left_layout.addWidget(self.save_button)
@@ -297,7 +316,27 @@ class GraphEditor(QWidget):
         # Refresh plot if you want
         self.update_plot()
 
+    def add_edge_row(self):
+      if self.local_station is None:
+          return
 
+      df = self.local_station.edges
+      if df.empty:
+          return
+
+      last_index = df.index[-1]
+      last_row = df.iloc[-1].copy()
+
+      # Create a new unique index
+      new_index = last_index + 1 if hasattr(last_index, "__add__") else len(df)
+
+      self.local_station.edges.loc[new_index] = last_row
+
+      # Reinstall model
+      self.edge_model = PandasModel(self.local_station.edges)
+      self.edge_table.setModel(self.edge_model)
+
+      self.update_plot()
 
     def on_item_changed(self, item):
         # Prevent updates triggered by programmatic reloads

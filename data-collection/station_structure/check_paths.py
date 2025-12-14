@@ -7,7 +7,12 @@ with open("station_structures.json","rb") as f:
   s = json.load(f)
 assert s is not None
 
+if sys.argv[1] == "l":
+  print([*s.keys()])
+  sys.exit()
+
 key = list(s.keys())[int(sys.argv[1])]
+print(key)
 struc = s[key]["structure"]
 
 def add_node(g, struc, id, reverse=False):

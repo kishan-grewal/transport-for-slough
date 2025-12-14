@@ -74,7 +74,7 @@ class EdgeData:
     last_fwd = -1
     last_rev = -1
 
-    if not ignore_entrance and "entrance" in self.start_node["nodeType"]:
+    if not ignore_entrance and ("entrance" in self.start_node["nodeType"] or "exit" in self.start_node["nodeType"]):
       segments.append({"id":len(segments)+idx_offset,"type":"AREA_OUTFLOW","next":-1,"xk":1,"is_entrance":True})
       last_fwd = len(segments)-1
       start_idx.append(last_fwd + idx_offset)
@@ -94,6 +94,7 @@ class EdgeData:
     
     distance = vincenty_sphere_distance(float(self.start_node["x"]),float(self.start_node["y"]),float(self.end_node["x"]),float(self.end_node["y"]))
     n_slices = max(1,math.ceil(distance / SLICE_LEN)) # Ensure there is always one segment, even for negligible length regions
+    # n_slices = 1
 
     for _ in range(n_slices):
       if last_fwd != -1: segments[last_fwd]["next"] = len(segments) + idx_offset
@@ -220,7 +221,7 @@ class EdgeManager:
         next = i
       
     self.edges.append(edge)
-    # print(f"\tS: {start} | E: {end} | P: {prev} | N: {next} | ({edge.start_node.name} - {edge.end_node.name})")
+    print(f"\tS: {start} | E: {end} | P: {prev} | N: {next} | ({edge.start_node.name} - {edge.end_node.name})")
     if prev is None and start is None and end is None: # No connections needed
       l = len(self.station_structure)
       struc, start_idx, end_idx, platforms = edge.to_dict(l)
@@ -257,26 +258,42 @@ class EdgeManager:
       # Bi-directional
       else:
         l = len(self.station_structure)
-        self.station_structure[existing_start_idx[0]]["next"] = l
-        self.station_structure[existing_start_idx[1]]["prev"] = l+1
-        struc, start_idx, end_idx,platforms = edge.to_dict(l)
-        edge_platforms.update(platforms)
         
-        if len(start_idx) != len(existing_start_idx):
-          raise Exception("Cannot join bi-directional edge to unidirectional edge")
-        struc[start_idx[0]-l]["prev"] = existing_start_idx[0] # Change the fields so they link
-        struc[start_idx[1]-l]["next"] = existing_start_idx[1]
+        if "AREA" in self.station_structure[existing_start_idx[0]]["type"]:
+          raise Exception()
 
-        self.station_structure.extend(struc)
-        self.edge_starts.append(start_idx)
-        self.edge_ends.append(end_idx)
-        
-        print(f"  Linked bidirectional edge from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure")
+        else:
+          self.station_structure[existing_start_idx[0]]["next"] = l
+          self.station_structure[existing_start_idx[1]]["prev"] = l+1
+          struc, start_idx, end_idx,platforms = edge.to_dict(l)
+          edge_platforms.update(platforms)
+          
+          if len(start_idx) != len(existing_start_idx):
+            raise Exception("Cannot join bi-directional edge to unidirectional edge")
+          struc[start_idx[0]-l]["prev"] = existing_start_idx[0] # Change the fields so they link
+          struc[start_idx[1]-l]["next"] = existing_start_idx[1]
+
+          self.station_structure.extend(struc)
+          self.edge_starts.append(start_idx)
+          self.edge_ends.append(end_idx)
+          
+          print(f"  Linked bidirectional edge from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure")
 
     # Has a common starting node
-    elif start is not None and end is None:
+    if start is not None and end is None:
       if prev is not None:
         existing_start_idx = self.edge_ends[prev]
+
+        # Move forward one level if the start is an area
+        if "AREA" in self.station_structure[existing_start_idx[0]]["type"]:
+          existing_start_idx[0] = self.station_structure[existing_start_idx[0]]["prev"]
+        if "AREA" in self.station_structure[existing_start_idx[1]]["type"]:
+          existing_start_idx[1] = self.station_structure[existing_start_idx[1]]["next"]
+        
+        while "SPLIT" in self.station_structure[existing_start_idx[0]]["type"]:
+          existing_start_idx[0] += 6
+        while "SPLIT" in self.station_structure[existing_start_idx[1]]["type"]:
+          existing_start_idx[1] += 6
       else:
         existing_start_idx = self.edge_starts[start]
         # Move forward one level if the start is an area
@@ -332,7 +349,7 @@ class EdgeManager:
       self.station_structure[existing_start_idx[0]]["next"] = l
       self.station_structure[existing_start_idx[1]]["prev"] = l+1
 
-      struc, start_idx, end_idx,platforms = edge.to_dict(l+6)
+      struc, start_idx, end_idx,platforms = edge.to_dict(l+6, ignore_entrance=True, ignore_platform=next is not None)
       edge_platforms.update(platforms)
       
       if len(start_idx) != len(existing_start_idx):
@@ -349,16 +366,26 @@ class EdgeManager:
       print(f"  Linked bidirectional edge as ending junction from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure [{prev} {next}]")
           
     # Has a common ending node
-    elif start is None and end is not None:
+    if start is None and end is not None:
       # Update the node that this wants to connect to
       if next is not None:
         existing_end_idx = self.edge_starts[next]
+        
+        while "SPLIT" in self.station_structure[existing_end_idx[0]]["type"]:
+          existing_end_idx[0] += 6
+        while "SPLIT" in self.station_structure[existing_end_idx[1]]["type"]:
+          existing_end_idx[1] += 6
       else:
         existing_end_idx = self.edge_ends[end]
         if "AREA" in self.station_structure[existing_end_idx[0]]["type"]:
           existing_end_idx[0] = self.station_structure[existing_end_idx[0]]["prev"]
         if "AREA" in self.station_structure[existing_end_idx[1]]["type"]:
           existing_end_idx[1] = self.station_structure[existing_end_idx[1]]["next"]
+          
+        while "SPLIT" in self.station_structure[existing_end_idx[0]]["type"]:
+          existing_end_idx[0] += 6
+        while "SPLIT" in self.station_structure[existing_end_idx[1]]["type"]:
+          existing_end_idx[1] += 6
 
       l = len(self.station_structure)
 
@@ -432,7 +459,7 @@ class EdgeManager:
       print(f"  Linked bidirectional edge as starting junction from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure [{prev} {next}]")
 
     # Joins a pair of nodes
-    elif start is not None and end is not None:
+    if start is not None and end is not None:
       l = len(self.station_structure)
 
       if prev is not None:
@@ -660,7 +687,7 @@ for station_id in paths.paths.keys(): #
       # print((path.sequence[i], path.sequence[i+1]))
       types = station.edges[(station.edges["start"] == path.sequence[i]) & (station.edges["end"] == path.sequence[i+1])]["type"].to_list()
       if len(types) == 0:
-        print("Fatal - could not find type")
+        print(f"Fatal - could not find type {path.sequence[i]} {path.sequence[i+1]}")
         continue
       elif len(types) == 1:
         path_type = types[0]
