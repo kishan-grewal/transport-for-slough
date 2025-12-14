@@ -106,6 +106,18 @@ ODE_Solver::Vector StationSystem::EntranceUpdateVector(std::vector<double> n_peo
   }
   return out;
 }
+
+//! Gives the vector for updating platform population from discrete events
+/*!
+Returns a vector for [inflow, outflow] of passengers
+\param n_people double signed number for change in platform population, negative for boarding, positive for alighting
+\param platform_id unsigned int platform identifier in station
+
+Creates a vector with size equal to number of platform segments, giving the change in passengers at each segment.
+Currently setup with only one segment.
+
+const
+*/
 ODE_Solver::Vector StationSystem::PlatformUpdateVector(double n_people, unsigned int platform_id) {
   ODE_Solver::Vector out = ODE_Solver::Vector(this->segments.size(), 0);
   if (n_people > 0) {  // People alighting from a train

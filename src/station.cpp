@@ -66,6 +66,8 @@ Function checks for arrivals and departures:
  - Reset entryRequests for the platform to acknowledge entry is being dealt with
  - ODE solve from previous timestep to current time
  - Attempt instantaneous alight/boarding calculations
+
+Has a double barrier for synchronisation
 */
 void Station::listen(std::barrier<>& syncPoint, State& state) {
   // listen for events from event pool
@@ -97,7 +99,7 @@ void Station::listen(std::barrier<>& syncPoint, State& state) {
           }
         }
         if (this->leaveRequests[platform_i] > -1) {  // Departure
-          this->leaveRequests[platform_i] = -1;
+          this->leaveRequests[platform_i] = -1; //currently disabled, leave time included in time to next arrival
         }
       }
     }
