@@ -83,7 +83,6 @@ struct StationFileObserver : ODE_Solver::GlobalTimeObserverTemplate {
       this->skip_next = false;
       return;
     }
-    std::cout << t << std::endl;
     cache->push(x);
   };
   void finalise() { cache->finalise(); }

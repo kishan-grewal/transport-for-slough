@@ -108,29 +108,46 @@ class Solver {
         // Fast-forward the simulation to the next observer timestep, without observation
         double new_time = (int)(this->last_update_time / this->global_time_observer.timestep) + 1;
         new_time = std::clamp(new_time * this->global_time_observer.timestep, 0.0, t);
-        std::cout << "Fast forward from " << this->last_update_time << " to " << new_time
-                  << std::endl;
+        // std::cout << "Fast forward from " << this->last_update_time << " to " << new_time
+        //           << std::endl;
 
         boost::numeric::odeint::integrate_adaptive(this->system_stepper, this->system,
                                                    this->last_update_state, this->last_update_time,
                                                    new_time, 0.1);
         this->last_update_time = new_time;
 
-        if (this->last_update_time < t)
-          std::cout << "\t";
-
+        // Re-enable log, since we've forwarded the time
         this->global_time_observer.skip_next = false;
+        if (this->last_update_time == t && std::fmod(t, this->global_time_observer.timestep) == 0) {
+          this->global_time_observer(this->last_update_state, this->last_update_time);
+          // Now skip the next one
+          this->global_time_observer.skip_next = true;
+        }
       }
-      // Last update was already observed by a previous SolveToTime call
-      // else if (this->last_update_time < t and this->last_update_time != 0)
-      //   this->global_time_observer.skip_next = true;
 
       if (this->last_update_time < t) {
-        std::cout << "Running observer from " << this->last_update_time << " to " << t << std::endl;
+        // std::cout << "Running observer from " << this->last_update_time << " to " << t <<
+        // std::endl;
 
-        boost::numeric::odeint::integrate_const(
-          this->system_stepper, this->system, this->last_update_state, this->last_update_time, t,
-          this->global_time_observer.timestep, this->global_time_observer);
+        // Check if the observer actually can run in the given time (and run it anyways once at the
+        // start, even if not)
+        //  - This is because calling integrate_const (below) with a timestep > the time delta
+        //  causes no steps to be taken, stalling the simulation for this update
+        if (this->global_time_observer.timestep > t - this->last_update_time) {
+          if (this->last_update_time == 0) {
+            this->global_time_observer(this->last_update_state, this->last_update_time);
+          }
+
+          boost::numeric::odeint::integrate_adaptive(this->system_stepper, this->system,
+                                                     this->last_update_state,
+                                                     this->last_update_time, t, 0.1);
+        }
+        else {
+          boost::numeric::odeint::integrate_const(
+            this->system_stepper, this->system, this->last_update_state, this->last_update_time, t,
+            this->global_time_observer.timestep, this->global_time_observer);
+        }
+
         this->last_update_time = t;
 
         if (fmod(this->last_update_time, this->global_time_observer.timestep) == 0)
