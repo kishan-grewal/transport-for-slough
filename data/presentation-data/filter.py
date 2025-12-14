@@ -20,6 +20,7 @@ jubilee_stations = [
     "Swiss Cottage",
     "Finchley Road",
     "West Hampstead",
+    "West Hampstead LU",
     "Kilburn",
     "Willesden Green",
     "Dollis Hill",
@@ -39,16 +40,23 @@ sheet_names = [
     "Station_Alighters",
 ]
 
-data_folder = Path("excel_raw")
+data_folder = Path("raw_excel")
 output_folder = Path("excel_filtered")
 output_folder.mkdir(exist_ok=True)
 
+# input_files = [
+#     "NBT23MON_outputs.xlsx",
+#     "NBT23TWT_outputs.xlsx",
+#     "NBT23FRI_outputs.xlsx",
+#     "NBT23SAT_outputs.xlsx",
+#     "NBT23SUN_outputs.xlsx",
+# ]
 input_files = [
-    "NBT23MON_outputs.xlsx",
-    "NBT23TWT_outputs.xlsx",
-    "NBT23FRI_outputs.xlsx",
-    "NBT23SAT_outputs.xlsx",
-    "NBT23SUN_outputs.xlsx",
+    "NBT24MON_outputs.xlsx",
+    "NBT24TWT_outputs.xlsx",
+    "NBT24FRI_outputs.xlsx",
+    "NBT24SAT_outputs.xlsx",
+    "NBT24SUN_outputs.xlsx",
 ]
 
 for file_name in input_files:
