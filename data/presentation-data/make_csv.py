@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
-data_folder = Path("data_filtered")
+data_folder = Path("excel_filtered")
 csv_day_folder = Path("csv_day")
 csv_sheet_folder = Path("csv_sheet")
 
@@ -13,7 +13,7 @@ sheet_names = [
     "Station_Entries",
     "Station_Exits",
     "Station_Boarders",
-    "Station_Alighters"
+    "Station_Alighters",
 ]
 
 for excel_path in data_folder.glob("*.xlsx"):
