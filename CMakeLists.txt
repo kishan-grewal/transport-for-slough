@@ -2,14 +2,17 @@ cmake_minimum_required(VERSION 3.10)
 
 project(tfs VERSION 0.1.0)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
+set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall")
 
+<<<<<<< HEAD
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=thread")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=thread")
 
 find_package(SFML 3.0.2 COMPONENTS System Window Graphics Network Audio QUIET)
 
+=======
+>>>>>>> odeint_testing
 # Create compile_commands.json symlink for IDE to use
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 if (PROJECT_IS_TOP_LEVEL AND UNIX)

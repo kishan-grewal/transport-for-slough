@@ -1,0 +1,31 @@
+\doxysection{data.\+hpp}
+\hypertarget{data_8hpp_source}{}\label{data_8hpp_source}\index{include/vis/data.hpp@{include/vis/data.hpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ DATA\_HPP}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ DATA\_HPP}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <filesystem>}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ <vector>}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{keyword}{class\ }StationCSV\ \{}
+\DoxyCodeLine{00008\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00009\ \ \ \ \ std::vector<int>\ population;}
+\DoxyCodeLine{00010\ \ \ \ \ \textcolor{keywordtype}{int}\ platforms;}
+\DoxyCodeLine{00011\ \ \ \ \ std::vector<std::vector<int>>\ busy;}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00014\ \ \ \ \ StationCSV(std::string\ filename);}
+\DoxyCodeLine{00015\ \ \ \ \ \textcolor{keywordtype}{void}\ readData();}
+\DoxyCodeLine{00016\ \ \ \ \ \textcolor{keywordtype}{int}\ getPop(\textcolor{keywordtype}{int}\ idx);}
+\DoxyCodeLine{00017\ \ \ \ \ \textcolor{keywordtype}{void}\ printData(\textcolor{keywordtype}{int}\ idx);}
+\DoxyCodeLine{00018\ \ \ \ \ \string~StationCSV();}
+\DoxyCodeLine{00019\ \};}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00022\ std::vector<std::string>\ getData(std::string\ root);}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00024\ std::vector<int>\ getTimes(std::string\ fname);}
+\DoxyCodeLine{00025\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

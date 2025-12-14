@@ -1,0 +1,48 @@
+\doxysection{event\+\_\+pool.\+hpp}
+\hypertarget{event__pool_8hpp_source}{}\label{event__pool_8hpp_source}\index{include/event\_pool.hpp@{include/event\_pool.hpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ EVENT\_POOL\_HPP}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ EVENT\_POOL\_HPP}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ <mutex>}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}state.hpp"{}}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ <set>}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ <fstream>}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}event.hpp"{}}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{keyword}{class\ }EventPool\ \{}
+\DoxyCodeLine{00010\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00011\ \ \ \ \ std::multiset<Event>\ pool;}
+\DoxyCodeLine{00012\ \ \ \ \ std::mutex\ poolMutex;}
+\DoxyCodeLine{00013\ \ \ \ \ \textcolor{keywordtype}{int}\ globalTime\ =\ 0;}
+\DoxyCodeLine{00014\ \ \ \ \ \textcolor{keywordtype}{int}\ maxTime\ =\ 0;}
+\DoxyCodeLine{00015\ \ \ \ \ \textcolor{keywordtype}{int}\ tOffset\ =\ 0;\ \textcolor{comment}{//multiset\ is\ immutable}}
+\DoxyCodeLine{00016\ \ \ \ \ std::vector<int>\ target\ =\ \{\};}
+\DoxyCodeLine{00017\ \ \ \ \ std::vector<Event>\ targetInfo\ =\ \{\};}
+\DoxyCodeLine{00018\ \ \ \ \ \textcolor{keywordtype}{int}\ maxSize\ =\ 0;}
+\DoxyCodeLine{00019\ \ \ \ \ \textcolor{keywordtype}{int}\ trainsSize\ =\ 0;}
+\DoxyCodeLine{00020\ \ \ \ \ \mbox{\hyperlink{classState}{State}}*\ state;}
+\DoxyCodeLine{00021\ \ \ \ \ \textcolor{comment}{//rather\ than\ subtract\ the\ times\ from\ individual\ events}}
+\DoxyCodeLine{00022\ \ \ \ \ \textcolor{comment}{//store\ the\ number\ to\ subtract\ from\ all\ elements\ and\ compute}}
+\DoxyCodeLine{00023\ \ \ \ \ \textcolor{comment}{//on\ event\ fetch}}
+\DoxyCodeLine{00024\ }
+\DoxyCodeLine{00025\ \ \ \ \ std::ofstream\ file;}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \ \ \ \ \textcolor{comment}{//send\ a\ request\ to\ the\ station\ you\ would\ like\ for\ event\ to\ occur\ on}}
+\DoxyCodeLine{00028\ \ \ \ \ \textcolor{keywordtype}{int}\ sendRequest(\textcolor{keywordtype}{int}\ target,\ \mbox{\hyperlink{classEvent}{Event}}\ e);}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00031\ \ \ \ \ EventPool(\textcolor{keywordtype}{int}\ time,\ \textcolor{keywordtype}{int}\ stationSize,\ \textcolor{keywordtype}{int}\ trainsSize,\ \mbox{\hyperlink{classState}{State}}*\ loop);}
+\DoxyCodeLine{00032\ \ \ \ \ \textcolor{keywordtype}{int}\ dispatch(\mbox{\hyperlink{classEvent}{Event}}\ e);}
+\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keywordtype}{int}\ getGlobalTime();}
+\DoxyCodeLine{00034\ \ \ \ \ std::vector<int>\ getTargets();}
+\DoxyCodeLine{00035\ \ \ \ \ std::vector<Event>\ getTargetInfo();}
+\DoxyCodeLine{00036\ \ \ \ \ \textcolor{keywordtype}{void}\ emptyTargets()\ \{this-\/>target\ =\ \{-\/1\};\ this-\/>targetInfo\ =\ \{\mbox{\hyperlink{classEvent}{Event}}(0,-\/1,-\/1,\textcolor{keyword}{false})\};\}}
+\DoxyCodeLine{00037\ \ \ \ \ \textcolor{keywordtype}{int}\ progressTime(std::barrier<>\&\ syncPoint);}
+\DoxyCodeLine{00038\ \ \ \ \ \textcolor{keywordtype}{int}\ getPoolEmpty();}
+\DoxyCodeLine{00039\ \ \ \ \ \string~EventPool();}
+\DoxyCodeLine{00040\ \};}
+\DoxyCodeLine{00041\ }
+\DoxyCodeLine{00042\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

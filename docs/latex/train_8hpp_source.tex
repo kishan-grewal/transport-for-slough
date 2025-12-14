@@ -1,0 +1,30 @@
+\doxysection{train.\+hpp}
+\hypertarget{train_8hpp_source}{}\label{train_8hpp_source}\index{include/train.hpp@{include/train.hpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ TRAIN\_HPP}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ TRAIN\_HPP}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{keyword}{class\ }Train\ \{}
+\DoxyCodeLine{00005\ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00006\ \ \ \textcolor{keywordtype}{int}\ capacity;}
+\DoxyCodeLine{00007\ \ \ \textcolor{keywordtype}{int}\ startIndex;}
+\DoxyCodeLine{00008\ \ \ \textcolor{keywordtype}{int}\ endIndex;}
+\DoxyCodeLine{00009\ \ \ \textcolor{keywordtype}{int}\ direction;}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00012\ \ \ Train(\textcolor{keywordtype}{int}\ capacity,\ \textcolor{keywordtype}{int}\ startIndex,\ \textcolor{keywordtype}{int}\ endIndex,\ \textcolor{keywordtype}{int}\ direction,\ \textcolor{keywordtype}{int}\ passenger\_count\ =\ 0);}
+\DoxyCodeLine{00013\ \ \ \textcolor{keywordtype}{int}\ getId()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00014\ \ \ \textcolor{keywordtype}{int}\ getCapacity()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00015\ \ \ \textcolor{keywordtype}{int}\ getStartIndex()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00016\ \ \ \textcolor{keywordtype}{int}\ getEndIndex()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00017\ \ \ \textcolor{keywordtype}{int}\ getDirection()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00018\ \ \ \textcolor{keywordtype}{void}\ setDirection(\textcolor{keywordtype}{int}\ newDirection);}
+\DoxyCodeLine{00019\ \ \ \string~Train();}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \ \ \textcolor{keywordtype}{int}\ passenger\_count;}
+\DoxyCodeLine{00022\ \};}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00024\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

@@ -1,6 +1,8 @@
 #ifndef STATION_ODE_HPP
 #define STATION_ODE_HPP
+#include <fstream>
 
+#include "ode/ode_solver.hpp"
 #include "ode/ode_system.hpp"
 
 class StationSystem;
@@ -11,7 +13,7 @@ struct StationSystemInput {
   double input_n;
 
   StationSystemInput(const StationSystemInput &cpy, StationSystem *override = NULL)
-      : system(cpy.system), input_n(cpy.input_n) {
+      : system(cpy.system), input_n(cpy.input_n), timestep(cpy.timestep) {
     if (override != NULL)
       this->system = override;
   }
@@ -21,26 +23,96 @@ struct StationSystemInput {
   void operator()(ODE_Solver::Vector &x, double t);
 };
 
+struct StationFileObserverCache {
+  constexpr static unsigned int CACHE_SIZE = 50;
+  StationFileObserverCache(std::string path) : f(path), fpath(path), cache(50), cache_ptr(0) {
+    if (!f.is_open())
+      throw std::runtime_error("WARN - failed to open logging file [" + path + "]");
+  };
+  ~StationFileObserverCache() {
+    if (f.is_open())
+      f.close();
+  }
+
+  void push(ODE_Solver::Vector x) {
+    cache[cache_ptr++] = ODE_Solver::Vector(x);
+    if (cache_ptr == CACHE_SIZE)
+      fdump();
+  }
+
+  void finalise() {
+    // Dump anything remaining in cache
+    if (!f.is_open()) {
+      std::cout << "No file to finalise to" << std::endl;
+      return;
+    }
+    for (int i = 0; i < cache_ptr; ++i) {
+      for (auto val = cache[i].begin(); val != cache[i].end(); ++val)
+        f << *val << ",";
+      f << std::endl;
+    }
+    f.close();
+  }
+
+  private:
+  std::ofstream f;
+  std::string fpath;
+  std::vector<ODE_Solver::Vector> cache;
+  unsigned int cache_ptr = 0;
+
+  void fdump() {
+    for (auto vec = cache.begin(); vec != cache.end(); ++vec) {
+      for (auto val = vec->begin(); val != vec->end(); ++val)
+        f << std::fixed << std::setprecision(5) << *val << ",";
+      f << std::endl;
+    }
+    cache_ptr = 0;
+  }
+};
+struct StationFileObserver : ODE_Solver::GlobalTimeObserverTemplate {
+  StationFileObserver(std::string path) : cache(std::make_shared<StationFileObserverCache>(path)) {
+    this->timestep = 5;
+  }
+  StationFileObserver(StationFileObserver &cpy) : cache(cpy.cache) {
+    this->timestep = cpy.timestep;
+    this->skip_next = cpy.skip_next;
+  };
+
+  void operator()(const ODE_Solver::Vector &x, double t) {
+    if (this->skip_next) {
+      this->skip_next = false;
+      return;
+    }
+    cache->push(x);
+  };
+  void finalise() { cache->finalise(); }
+
+  private:
+  std::shared_ptr<StationFileObserverCache> cache;
+};
+
 class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> {
   public:
-  StationSystem(boost::json::object data);
+  StationSystem(boost::json::object data, std::ifstream &split_ratios, double input_timestep = 1);
   // Override copy constructor to make sure the input system pointer updates correctly
   StationSystem(const StationSystem &cpy)
       : segments(cpy.segments),
         input_segment_index(cpy.input_segment_index),
         platform_alight_segment_mapping(cpy.platform_alight_segment_mapping),
-        platform_board_segment_mapping(cpy.platform_board_segment_mapping) {
+        platform_board_segment_mapping(cpy.platform_board_segment_mapping),
+        split_ratios(cpy.split_ratios) {
     this->input_driver = StationSystemInput(cpy.input_driver, this);
   }
 
   void operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt, const double /* t */);
+  void _check();
 
   // Return the state update vector which should be added to the current state
   ODE_Solver::Vector EntranceUpdateVector(std::vector<double> n_people);
   ODE_Solver::Vector PlatformUpdateVector(double n_people, unsigned int platform_id);
   StationSystemInput InputDriver() { return this->input_driver; }
 
-  unsigned int platform_count() { return platform_board_segment_mapping.size(); }
+  int entrance_count() { return this->input_segment_index.size(); }
 
   private:
   // Standard pedestrian parameters
@@ -51,11 +123,17 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
   constexpr static double l_eff = 1 / p_max;
   constexpr static double p_cap = 1 / (v0 * t_gap + l_eff);
 
+  constexpr static int TIME_SERIES_ENTRY_COUNT =
+    (24 * 60) / 15 - 1;                            // 15 minute slices across a day
+  constexpr static int TIME_SERIES_ENTRY_LEN = 9;  // 9 characters
+
   StationSystemInput input_driver;
   std::vector<int> input_segment_index;
 
   std::vector<int> platform_board_segment_mapping;   // Platform segments that you board from
   std::vector<int> platform_alight_segment_mapping;  // Platform segments that you alight onto
+
+  std::basic_ifstream<char> &split_ratios;
 
   // --------------------
   //  Flow rate equations
@@ -71,11 +149,30 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
     return fmin(Qb_out(p1_in), Qb_in(p2_full)) - fmin(Qb_out(p2_in), Qb_in(p3_full));
   }
 
-  inline double _in_density_factor(int i) {
-    return segments[i].linked_to_area & AreaLink::FROM ? segments[segments[i].prev].xk : 1;
+  inline double _density_factor(int i) {
+    return (segments[i].type == AREA_INFLOW || segments[i].type == AREA_OUTFLOW) ? segments[i].xk
+                                                                                 : 1;
   }
-  inline double _out_density_factor(int i) {
-    return segments[i].linked_to_area & AreaLink::TO ? segments[segments[i].next].xk : 1;
+  inline double _split_ratio(int i, double t) {
+    if (segments[i].split_ratio != -1)
+      return segments[i].split_ratio;
+
+    if (segments[i].split_ratio_series_index == -1)
+      throw std::runtime_error("No valid split ratio found");
+    //           (minutes % minutes in a day) / entry count per day
+    int slice = ((int)floor(t / 60) % (24 * 60)) / 15;
+    int foffset =
+      (segments[i].split_ratio_series_index * (TIME_SERIES_ENTRY_COUNT * TIME_SERIES_ENTRY_LEN)) +
+      (slice * TIME_SERIES_ENTRY_LEN);
+
+    this->split_ratios.seekg(foffset, std::ios_base::beg);
+    this->split_ratios.clear();
+    char read[9] = "\0\0\0\0\0\0\0\0";
+    this->split_ratios.read(read, 8);
+    if (atof(read) > 1 || atof(read) < 0)
+      std::cout << "WARN - read at " << segments[i].split_ratio_series_index << " " << t << "("
+                << slice << " " << foffset << ")" << " returned invalid " << read << std::endl;
+    return atof(read);
   }
 
   enum SegmentType : unsigned char {
@@ -91,19 +188,18 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
     // Entrance
     AREA_OUTFLOW
   };
-  enum AreaLink : unsigned char { NONE = 0, FROM = 1, TO = 2, BOTH = FROM | TO };
 
   struct SegmentData {
     SegmentType type;
-    AreaLink linked_to_area;
     unsigned int prev, next;
-    unsigned int adjacent = -1;
+    int adjacent = -1;
     double xk;
 
     // SPLIT_OUTPUT fields
     // These then get read back by SPLIT_INPUT structures in calculations, to avoid data duplication
     unsigned int secondary;
-    double split_ratio = 1;
+    double split_ratio = -1;
+    int split_ratio_series_index = -1;
 
     SegmentData();
     SegmentData(boost::json::object data);

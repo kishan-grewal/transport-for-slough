@@ -1,0 +1,78 @@
+\doxysection{ode\+\_\+system.\+hpp}
+\hypertarget{ode__system_8hpp_source}{}\label{ode__system_8hpp_source}\index{include/ode/ode\_system.hpp@{include/ode/ode\_system.hpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ ODE\_SYSTEM\_HPP}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ ODE\_SYSTEM\_HPP}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <boost/json.hpp>}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ <boost/numeric/odeint.hpp>}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}ode/json\_util.hpp"{}}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{keyword}{namespace\ }ODE\_Solver\ \{}
+\DoxyCodeLine{00010\ \textcolor{keyword}{typedef}\ \textcolor{keyword}{typename}\ boost::numeric::ublas::vector<double>\ Vector;}
+\DoxyCodeLine{00011\ \textcolor{keyword}{typedef}\ \textcolor{keyword}{typename}\ boost::numeric::ublas::matrix<double,\ boost::numeric::ublas::row\_major>\ Matrix;}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{keyword}{class\ }LinearSystem\ \{}
+\DoxyCodeLine{00014\ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00015\ \ \ \textcolor{keywordtype}{double}\ input;}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \ \ LinearSystem(Matrix\ A,\ Vector\ B,\ \textcolor{keywordtype}{double}\ input\ =\ 0)\ :\ A(A),\ B(B),\ input(input)\ \{\}}
+\DoxyCodeLine{00018\ }
+\DoxyCodeLine{00019\ \ \ \textcolor{keywordtype}{void}\ operator()(\textcolor{keyword}{const}\ Vector\ \&x,\ Vector\ \&dxdt,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ t)\ \{}
+\DoxyCodeLine{00020\ \ \ \ \ dxdt\ =\ boost::numeric::ublas::prod(A,\ x)\ +\ (B\ *\ input);}
+\DoxyCodeLine{00021\ \ \ \}}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00024\ \ \ Matrix\ A;}
+\DoxyCodeLine{00025\ \ \ Vector\ B;}
+\DoxyCodeLine{00026\ \};}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00028\ \textcolor{keyword}{template}\ <\textcolor{keyword}{class}\ T>}
+\DoxyCodeLine{00029\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classODE__Solver_1_1InitialStateSystem}{InitialStateSystem}}\ \{}
+\DoxyCodeLine{00030\ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00031\ \ \ T\ get\_initialised\_state()\ \{\ \textcolor{keywordflow}{return}\ this-\/>initial\_state;\ \}}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \ \ \textcolor{keyword}{protected}:}
+\DoxyCodeLine{00034\ \ \ Vector\ initial\_state;}
+\DoxyCodeLine{00035\ \};}
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00037\ \textcolor{keyword}{class\ }CoefficientSystem\ \{}
+\DoxyCodeLine{00038\ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00039\ \ \ \textcolor{keywordtype}{double}\ input;}
+\DoxyCodeLine{00040\ }
+\DoxyCodeLine{00041\ \ \ CoefficientSystem(boost::json::value\ values)\ \{}
+\DoxyCodeLine{00042\ \ \ \ \ \textcolor{keywordflow}{if}\ (values.is\_int64())\ \{}
+\DoxyCodeLine{00043\ \ \ \ \ \ \ coefficients\ =\ std::vector<double>(1);}
+\DoxyCodeLine{00044\ \ \ \ \ \ \ coefficients[0]\ =\ values.as\_int64();}
+\DoxyCodeLine{00045\ \ \ \ \ \}}
+\DoxyCodeLine{00046\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (values.is\_uint64())\ \{}
+\DoxyCodeLine{00047\ \ \ \ \ \ \ coefficients\ =\ std::vector<double>(1);}
+\DoxyCodeLine{00048\ \ \ \ \ \ \ coefficients[0]\ =\ values.as\_uint64();}
+\DoxyCodeLine{00049\ \ \ \ \ \}}
+\DoxyCodeLine{00050\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (values.is\_double())\ \{}
+\DoxyCodeLine{00051\ \ \ \ \ \ \ coefficients\ =\ std::vector<double>(1);}
+\DoxyCodeLine{00052\ \ \ \ \ \ \ coefficients[0]\ =\ values.as\_double();}
+\DoxyCodeLine{00053\ \ \ \ \ \}}
+\DoxyCodeLine{00054\ \ \ \ \ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (values.is\_array())\ \{}
+\DoxyCodeLine{00055\ \ \ \ \ \ \ boost::json::array\ \&arr\ =\ values.as\_array();}
+\DoxyCodeLine{00056\ \ \ \ \ \ \ coefficients\ =\ std::vector<double>(arr.size());}
+\DoxyCodeLine{00057\ }
+\DoxyCodeLine{00058\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =\ 0;\ i\ <\ arr.size();\ ++i)\ \{}
+\DoxyCodeLine{00059\ \ \ \ \ \ \ \ \ JSON\_ParseNumericToDouble(coefficients[i],\ \&arr.at(i));}
+\DoxyCodeLine{00060\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00061\ \ \ \ \ \}}
+\DoxyCodeLine{00062\ \ \ \}}
+\DoxyCodeLine{00063\ }
+\DoxyCodeLine{00064\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ operator()(\textcolor{keyword}{const}\ Vector\ \&x,\ Vector\ \&dxdt,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ t)\ =\ 0;}
+\DoxyCodeLine{00065\ }
+\DoxyCodeLine{00066\ \ \ \textcolor{keyword}{protected}:}
+\DoxyCodeLine{00067\ \ \ std::vector<double>\ coefficients;}
+\DoxyCodeLine{00068\ \};}
+\DoxyCodeLine{00069\ }
+\DoxyCodeLine{00070\ \}\ \ \textcolor{comment}{//\ namespace\ ODE\_Solver}}
+\DoxyCodeLine{00071\ }
+\DoxyCodeLine{00072\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

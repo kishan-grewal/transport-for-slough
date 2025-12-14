@@ -1,0 +1,104 @@
+\doxysection{json\+\_\+util.\+hpp}
+\hypertarget{json__util_8hpp_source}{}\label{json__util_8hpp_source}\index{include/ode/json\_util.hpp@{include/ode/json\_util.hpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ ODE\_JSON\_UTIL\_HPP}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ ODE\_JSON\_UTIL\_HPP}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <boost/json.hpp>}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ <iostream>}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ JSON\_ParseNumericToDouble(\textcolor{keywordtype}{double}\ \&out,\ \textcolor{keyword}{const}\ boost::json::value\ *value)\ \{}
+\DoxyCodeLine{00008\ \ \ \textcolor{keywordflow}{switch}\ (value-\/>kind())\ \{}
+\DoxyCodeLine{00009\ \ \ \ \ \textcolor{keywordflow}{case}\ boost::json::kind::int64:}
+\DoxyCodeLine{00010\ \ \ \ \ \ \ out\ =\ (double)value-\/>as\_int64();}
+\DoxyCodeLine{00011\ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00012\ \ \ \ \ \textcolor{keywordflow}{case}\ boost::json::kind::uint64:}
+\DoxyCodeLine{00013\ \ \ \ \ \ \ out\ =\ (double)value-\/>as\_uint64();}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00015\ \ \ \ \ \textcolor{keywordflow}{case}\ boost::json::kind::double\_:}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ out\ =\ value-\/>as\_double();}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00018\ \ \ \ \ \textcolor{keywordflow}{default}:}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}Invalid\ JSON\ value\ in\ equation\ system\ initialisation\ -\/\ expected\ numeric\ type\ -\/\ "{}}}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}ignoring"{}};}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00022\ \ \ \}}
+\DoxyCodeLine{00023\ \}}
+\DoxyCodeLine{00024\ }
+\DoxyCodeLine{00025\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ pretty\_print(std::ostream\ \&os,\ boost::json::value\ \textcolor{keyword}{const}\ \&jv,}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ *indent\ =\ \textcolor{keyword}{nullptr})\ \{}
+\DoxyCodeLine{00027\ \ \ std::string\ indent\_;}
+\DoxyCodeLine{00028\ \ \ \textcolor{keywordflow}{if}\ (!indent)}
+\DoxyCodeLine{00029\ \ \ \ \ indent\ =\ \&indent\_;}
+\DoxyCodeLine{00030\ \ \ \textcolor{keywordflow}{switch}\ (jv.kind())\ \{}
+\DoxyCodeLine{00031\ \ \ \ \ \textcolor{keywordflow}{case}\ boost::json::kind::object:\ \{}
+\DoxyCodeLine{00032\ \ \ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{}\{\(\backslash\)n"{}};}
+\DoxyCodeLine{00033\ \ \ \ \ \ \ indent-\/>append(4,\ \textcolor{charliteral}{'\ '});}
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \textcolor{keyword}{auto}\ \textcolor{keyword}{const}\ \&obj\ =\ jv.get\_object();}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!obj.empty())\ \{}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \textcolor{keyword}{auto}\ it\ =\ obj.begin();}
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (;;)\ \{}
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ \ \ os\ <<\ *indent\ <<\ boost::json::serialize(it-\/>key())\ <<\ \textcolor{stringliteral}{"{}\ :\ "{}};}
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ \ \ pretty\_print(os,\ it-\/>value(),\ indent);}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (++it\ ==\ obj.end())}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{},\(\backslash\)n"{}};}
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00044\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00045\ \ \ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)n"{}};}
+\DoxyCodeLine{00046\ \ \ \ \ \ \ indent-\/>resize(indent-\/>size()\ -\/\ 4);}
+\DoxyCodeLine{00047\ \ \ \ \ \ \ os\ <<\ *indent\ <<\ \textcolor{stringliteral}{"{}\}"{}};}
+\DoxyCodeLine{00048\ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00049\ \ \ \ \ \}}
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00051\ \ \ \ \ \textcolor{keywordflow}{case}\ boost::json::kind::array:\ \{}
+\DoxyCodeLine{00052\ \ \ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{}[\(\backslash\)n"{}};}
+\DoxyCodeLine{00053\ \ \ \ \ \ \ indent-\/>append(4,\ \textcolor{charliteral}{'\ '});}
+\DoxyCodeLine{00054\ \ \ \ \ \ \ \textcolor{keyword}{auto}\ \textcolor{keyword}{const}\ \&arr\ =\ jv.get\_array();}
+\DoxyCodeLine{00055\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!arr.empty())\ \{}
+\DoxyCodeLine{00056\ \ \ \ \ \ \ \ \ \textcolor{keyword}{auto}\ it\ =\ arr.begin();}
+\DoxyCodeLine{00057\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (;;)\ \{}
+\DoxyCodeLine{00058\ \ \ \ \ \ \ \ \ \ \ os\ <<\ *indent;}
+\DoxyCodeLine{00059\ \ \ \ \ \ \ \ \ \ \ pretty\_print(os,\ *it,\ indent);}
+\DoxyCodeLine{00060\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (++it\ ==\ arr.end())}
+\DoxyCodeLine{00061\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00062\ \ \ \ \ \ \ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{},\(\backslash\)n"{}};}
+\DoxyCodeLine{00063\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00064\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00065\ \ \ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)n"{}};}
+\DoxyCodeLine{00066\ \ \ \ \ \ \ indent-\/>resize(indent-\/>size()\ -\/\ 4);}
+\DoxyCodeLine{00067\ \ \ \ \ \ \ os\ <<\ *indent\ <<\ \textcolor{stringliteral}{"{}]"{}};}
+\DoxyCodeLine{00068\ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00069\ \ \ \ \ \}}
+\DoxyCodeLine{00070\ }
+\DoxyCodeLine{00071\ \ \ \ \ \textcolor{keywordflow}{case}\ boost::json::kind::string:\ \{}
+\DoxyCodeLine{00072\ \ \ \ \ \ \ os\ <<\ boost::json::serialize(jv.get\_string());}
+\DoxyCodeLine{00073\ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00074\ \ \ \ \ \}}
+\DoxyCodeLine{00075\ }
+\DoxyCodeLine{00076\ \ \ \ \ \textcolor{keywordflow}{case}\ boost::json::kind::uint64:}
+\DoxyCodeLine{00077\ \ \ \ \ \textcolor{keywordflow}{case}\ boost::json::kind::int64:}
+\DoxyCodeLine{00078\ \ \ \ \ \textcolor{keywordflow}{case}\ boost::json::kind::double\_:}
+\DoxyCodeLine{00079\ \ \ \ \ \ \ os\ <<\ jv;}
+\DoxyCodeLine{00080\ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00081\ }
+\DoxyCodeLine{00082\ \ \ \ \ \textcolor{keywordflow}{case}\ boost::json::kind::bool\_:}
+\DoxyCodeLine{00083\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (jv.get\_bool())}
+\DoxyCodeLine{00084\ \ \ \ \ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{}true"{}};}
+\DoxyCodeLine{00085\ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00086\ \ \ \ \ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{}false"{}};}
+\DoxyCodeLine{00087\ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00088\ }
+\DoxyCodeLine{00089\ \ \ \ \ \textcolor{keywordflow}{case}\ boost::json::kind::null:}
+\DoxyCodeLine{00090\ \ \ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{}null"{}};}
+\DoxyCodeLine{00091\ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00092\ \ \ \}}
+\DoxyCodeLine{00093\ }
+\DoxyCodeLine{00094\ \ \ \textcolor{keywordflow}{if}\ (indent-\/>empty())}
+\DoxyCodeLine{00095\ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)n"{}};}
+\DoxyCodeLine{00096\ \}}
+\DoxyCodeLine{00097\ }
+\DoxyCodeLine{00098\ \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

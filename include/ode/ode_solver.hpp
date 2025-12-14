@@ -15,6 +15,7 @@ class EmptyObserver {};
 class GlobalTimeObserverTemplate {
   public:
   double timestep;
+  bool skip_next = false;
 
   virtual void operator()(const ODE_Solver::Vector &x, double t) = 0;
 };
@@ -34,7 +35,7 @@ class Solver {
   // Using std::forward<T> to allow use of both lvalues and rvalues in the constructure for the
   // system - this means you can both directly instantiate the system in the constructor, OR use a
   // reference to it (where a standard copy constructor would then break the reference)
-  explicit Solver(Stepper stepper, System &&system, GlobalObserver observer = EmptyObserver())
+  explicit Solver(Stepper stepper, System &&system, GlobalObserver &&observer = EmptyObserver())
       : system_stepper(stepper),
         system(std::forward<System>(system)),
         last_update_state(system.get_initialised_state()),
@@ -102,20 +103,56 @@ class Solver {
       this->last_update_time = t;
     }
     else {
+      // this->global_time_observer.skip_next = false;
       if (std::fmod(this->last_update_time, this->global_time_observer.timestep) != 0) {
         // Fast-forward the simulation to the next observer timestep, without observation
         double new_time = (int)(this->last_update_time / this->global_time_observer.timestep) + 1;
-        new_time *= this->global_time_observer.timestep;
+        new_time = std::clamp(new_time * this->global_time_observer.timestep, 0.0, t);
+        // std::cout << "Fast forward from " << this->last_update_time << " to " << new_time
+        //           << std::endl;
 
         boost::numeric::odeint::integrate_adaptive(this->system_stepper, this->system,
                                                    this->last_update_state, this->last_update_time,
                                                    new_time, 0.1);
         this->last_update_time = new_time;
+
+        // Re-enable log, since we've forwarded the time
+        this->global_time_observer.skip_next = false;
+        if (this->last_update_time == t && std::fmod(t, this->global_time_observer.timestep) == 0) {
+          this->global_time_observer(this->last_update_state, this->last_update_time);
+          // Now skip the next one
+          this->global_time_observer.skip_next = true;
+        }
       }
-      boost::numeric::odeint::integrate_const(
-        this->system_stepper, this->system, this->last_update_state, this->last_update_time, t,
-        this->global_time_observer.timestep, this->global_time_observer);
-      this->last_update_time = t;
+
+      if (this->last_update_time < t) {
+        // std::cout << "Running observer from " << this->last_update_time << " to " << t <<
+        // std::endl;
+
+        // Check if the observer actually can run in the given time (and run it anyways once at the
+        // start, even if not)
+        //  - This is because calling integrate_const (below) with a timestep > the time delta
+        //  causes no steps to be taken, stalling the simulation for this update
+        if (this->global_time_observer.timestep > t - this->last_update_time) {
+          if (this->last_update_time == 0) {
+            this->global_time_observer(this->last_update_state, this->last_update_time);
+          }
+
+          boost::numeric::odeint::integrate_adaptive(this->system_stepper, this->system,
+                                                     this->last_update_state,
+                                                     this->last_update_time, t, 0.1);
+        }
+        else {
+          boost::numeric::odeint::integrate_const(
+            this->system_stepper, this->system, this->last_update_state, this->last_update_time, t,
+            this->global_time_observer.timestep, this->global_time_observer);
+        }
+
+        this->last_update_time = t;
+
+        if (fmod(this->last_update_time, this->global_time_observer.timestep) == 0)
+          this->global_time_observer.skip_next = true;
+      }
     }
   }
 
@@ -149,20 +186,24 @@ class Solver {
         "Attempting to run ODE solver with an invalid input timestep - must be > 0");
 
     double tmp_t = this->last_update_time;
-    input(last_update_state, tmp_t);  // Initialise input signal
 
-    while (tmp_t < t) {
-      // Update internal time
-      tmp_t = std::clamp(tmp_t + input.timestep, 0.0, t);
+    if (fmod(this->last_update_time, input.timestep) != 0) {
+      tmp_t = std::ceil(this->last_update_time / input.timestep) * input.timestep;
       this->SolveToTime(tmp_t);
-
-      input(last_update_state, tmp_t);  // Update input signal after running solver
     }
-    this->last_update_time = t;
+    while (tmp_t < t) {
+      input(last_update_state, this->last_update_time);  // Update input signal after running solver
+
+      // Update internal time
+      tmp_t = std::clamp(this->last_update_time + input.timestep, 0.0, t);
+      this->SolveToTime(tmp_t);
+    }
+    // this->last_update_time = t;
   }
 
   double LastTime() { return this->last_update_time; }
   State &LastState() { return this->last_update_state; }
+  inline GlobalObserver GetGlobalObserver() { return global_time_observer; }
 };
 
 template <class Stepper>

@@ -1,0 +1,109 @@
+\doxysection{Station Class Reference}
+\hypertarget{classStation}{}\label{classStation}\index{Station@{Station}}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classStation_ab08bfd825567db4bce17345583f9137b}{Station}} (std\+::string name, std\+::vector$<$ int $>$ platforms, boost\+::json\+::object json\+\_\+definition)
+\begin{DoxyCompactList}\small\item\em \doxylink{classStation}{Station} conststructor. \end{DoxyCompactList}\item 
+\Hypertarget{classStation_a2ed81309f3ce98e73d0e23b272b8aa38}\label{classStation_a2ed81309f3ce98e73d0e23b272b8aa38} 
+{\bfseries Station} (\mbox{\hyperlink{classStation}{Station}} \&\&other) noexcept
+\item 
+\Hypertarget{classStation_ad4be2d2d65d705a8fa3061bf4375e28b}\label{classStation_ad4be2d2d65d705a8fa3061bf4375e28b} 
+{\bfseries Station} (const \mbox{\hyperlink{classStation}{Station}} \&)=delete
+\item 
+\Hypertarget{classStation_ac1f2187d9f3e763ec4fc912fedea1edb}\label{classStation_ac1f2187d9f3e763ec4fc912fedea1edb} 
+\mbox{\hyperlink{classStation}{Station}} \& {\bfseries operator=} (const \mbox{\hyperlink{classStation}{Station}} \&)=delete
+\item 
+void \mbox{\hyperlink{classStation_a750251cf4eeb0e871b3b693003c0c092}{listen}} (std\+::barrier$<$$>$ \&sync\+Point, \mbox{\hyperlink{classState}{State}} \&state)
+\begin{DoxyCompactList}\small\item\em \doxylink{classStation}{Station} listener. \end{DoxyCompactList}\item 
+\Hypertarget{classStation_a5ce4ee20d68c64c6fa35958912519977}\label{classStation_a5ce4ee20d68c64c6fa35958912519977} 
+void {\bfseries stop} ()
+\item 
+\Hypertarget{classStation_ae4f8babff949abfe8289946379559a9f}\label{classStation_ae4f8babff949abfe8289946379559a9f} 
+\mbox{\hyperlink{classEvent}{Event}} {\bfseries receive\+Entry\+Request} (\mbox{\hyperlink{classEvent}{Event}} e, \mbox{\hyperlink{classState}{State}} \texorpdfstring{$\ast$}{*}state)
+\item 
+\Hypertarget{classStation_a36eb393594083d0bbc46fe261d81cbec}\label{classStation_a36eb393594083d0bbc46fe261d81cbec} 
+\mbox{\hyperlink{classEvent}{Event}} {\bfseries receive\+Leave\+Request} (\mbox{\hyperlink{classEvent}{Event}} e, \mbox{\hyperlink{classState}{State}} \texorpdfstring{$\ast$}{*}state)
+\item 
+\Hypertarget{classStation_ae353616abbfca44e00a0baa730998d1c}\label{classStation_ae353616abbfca44e00a0baa730998d1c} 
+std\+::string {\bfseries get\+Name} ()
+\item 
+\Hypertarget{classStation_a7379112576fb3ed4a52f70cf62e6a633}\label{classStation_a7379112576fb3ed4a52f70cf62e6a633} 
+void {\bfseries export\+Cur\+State} ()
+\item 
+\Hypertarget{classStation_a278811491c6edd3383034516828b3e01}\label{classStation_a278811491c6edd3383034516828b3e01} 
+void {\bfseries finish\+Export} ()
+\end{DoxyCompactItemize}
+
+
+\label{doc-constructors}
+\Hypertarget{classStation_doc-constructors}
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classStation_ab08bfd825567db4bce17345583f9137b}\index{Station@{Station}!Station@{Station}}
+\index{Station@{Station}!Station@{Station}}
+\doxysubsubsection{\texorpdfstring{Station()}{Station()}}
+{\footnotesize\ttfamily \label{classStation_ab08bfd825567db4bce17345583f9137b} 
+Station\+::\+Station (\begin{DoxyParamCaption}\item[{std\+::string}]{name}{, }\item[{std\+::vector$<$ int $>$}]{platforms}{, }\item[{boost\+::json\+::object}]{json\+\_\+definition}{}\end{DoxyParamCaption})}
+
+
+
+\doxylink{classStation}{Station} conststructor. 
+
+\doxylink{classStation}{Station} constructor 
+\begin{DoxyParams}{Parameters}
+{\em name} & string argument denoting symbolic name \\
+\hline
+{\em platforms} & int vector argument denoting platform directions (1 west, -\/1 east, 0 both directions/turnaround) \\
+\hline
+{\em json\+\_\+definition} & boost\+::json\+::object json object defining the station layout\\
+\hline
+\end{DoxyParams}
+Sets the following fields
+\begin{DoxyItemize}
+\item name
+\item running (atomic)
+\item platforms
+\item leave\+Requests
+\item entry\+Requests
+\item leave\+Request\+Timestamps
+\item entry\+Request\+Timestamps
+\item platform\+Status
+\item file (name)
+\end{DoxyItemize}
+
+Writes csv headers for logging output to the file with the station name 
+
+\label{doc-func-members}
+\Hypertarget{classStation_doc-func-members}
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classStation_a750251cf4eeb0e871b3b693003c0c092}\index{Station@{Station}!listen@{listen}}
+\index{listen@{listen}!Station@{Station}}
+\doxysubsubsection{\texorpdfstring{listen()}{listen()}}
+{\footnotesize\ttfamily \label{classStation_a750251cf4eeb0e871b3b693003c0c092} 
+void Station\+::listen (\begin{DoxyParamCaption}\item[{std\+::barrier$<$$>$ \&}]{sync\+Point}{, }\item[{\mbox{\hyperlink{classState}{State}} \&}]{state}{}\end{DoxyParamCaption})}
+
+
+
+\doxylink{classStation}{Station} listener. 
+
+Listens for events while program is still running 
+\begin{DoxyParams}{Parameters}
+{\em sync\+Point} & std\+::barrier$<$$>$\& the barrier for lockstep execution between all stations and event loop thread \\
+\hline
+{\em state} & \doxylink{classState}{State}\& reference to the global state\\
+\hline
+\end{DoxyParams}
+Function checks for arrivals and departures\+:
+\begin{DoxyItemize}
+\item Iterate over all platforms to check for entry or exit
+\item On entry fetch train id of entry
+\item Fetch timestep of entry request
+\item Reset entry\+Requests for the platform to acknowledge entry is being dealt with
+\item ODE solve from previous timestep to current time
+\item Attempt instantaneous alight/boarding calculations 
+\end{DoxyItemize}
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+include/station.\+hpp\item 
+src/station.\+cpp\end{DoxyCompactItemize}
