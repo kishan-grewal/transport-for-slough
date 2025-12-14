@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
   station_flows_f.close();
   */
 
-  typedef boost::numeric::odeint::runge_kutta_cash_karp54<ODE_Solver::Vector> error_stepper_type;
+  typedef boost::numeric::odeint::runge_kutta_dopri5<ODE_Solver::Vector> error_stepper_type;
   typedef boost::numeric::odeint::controlled_runge_kutta<error_stepper_type>
     controlled_stepper_type;
   double abs_err = 1.0e-10, rel_err = 1.0e-8, a_x = 0.1, a_dxdt = 0.1;
@@ -122,12 +122,17 @@ int main(int argc, char **argv) {
   auto station_system = ODE_Solver::Solver<controlled_stepper_type, StationSystem,
                                            ODE_Solver::Vector, StationFileObserver>(
     controlled_stepper,
-    StationSystem(j.as_object().at("stations").as_array().at(0).as_object(), station_flows_f, 15),
+    StationSystem(j.as_object().at("stations").as_array().at(0).as_object(), station_flows_f, 1),
     StationFileObserver("out/stations/test.csv"));
   std::cout << "Input: " << station_system.system.InputDriver().timestep
             << " Observer: " << station_system.GetGlobalObserver().timestep << std::endl;
   station_system.SolveToTime(100, station_system.system.InputDriver());
   station_system.GetGlobalObserver().finalise();
+
+  auto vec = station_system.LastState();
+  for (auto i = vec.begin(); i != vec.end(); ++i)
+    std::cout << *i << ",";
+  std::cout << std::endl;
 
   station_flows_f.close();
 }
