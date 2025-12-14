@@ -43,7 +43,6 @@ LinearSysFromJSON(boost::json::value system_definition) {
     }
   }
 
-  // std::cout << abs_err << "  " << rel_err << "  " << a_x << "  " << a_dxdt << std::endl;
   return LinearSysFromJSON(
     boost::numeric::odeint::controlled_runge_kutta<
       boost::numeric::odeint::runge_kutta_dopri5<Vector>>(

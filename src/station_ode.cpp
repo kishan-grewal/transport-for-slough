@@ -7,14 +7,15 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
 
   // Const input (used in testing)
   if (input_n >= 0) {
-    x += system->EntranceUpdateVector(std::vector<double>(1, input_n));
+    x += system->EntranceUpdateVector(std::vector<double>(system->entrance_count(), input_n));
     return;
   }
   // RVG-driven input
   //  ...
 }
 
-StationSystem::StationSystem(boost::json::object data) {
+StationSystem::StationSystem(boost::json::object data, std::ifstream &split_ratios)
+    : split_ratios(split_ratios) {
   // Setup internal equation structure
   if (!data.at("structure").is_array())
     throw std::runtime_error(
@@ -85,7 +86,6 @@ StationSystem::StationSystem(boost::json::object data) {
   else if (data.at("initial_state").is_number()) {
     double val = 0;
     JSON_ParseNumericToDouble(val, &data.at("initial_state"));
-    std::cout << "Configuring initial value " << val << std::endl;
     this->initial_state = ODE_Solver::Vector(len, val);
   }
   else
@@ -234,12 +234,24 @@ StationSystem::SegmentData::SegmentData(boost::json::object data) {
       JSON_ParseNumericToDouble(this->split_ratio, &val);
       // Bounds check, and also check for failure in generation script (initialises them to -1,
       // before calculating ratios)
-      if (this->split_ratio < 0 || this->split_ratio > 1)
-        throw std::runtime_error("Invalid JSON value for station segment data, vlaue at key "
+      if (this->split_ratio < 0 || this->split_ratio > 1) {
+        std::cout << this->split_ratio << std::endl;
+        throw std::runtime_error("Invalid JSON value for station segment data, value at key "
                                  "[split_ratio] must be >= 0 and <= 1");
+      }
     }
     else if (data.at("split_ratio").is_object()) {
-      throw std::runtime_error("Time-series driven split ratio not implemented yet");
+      // throw std::runtime_error("Time-series driven split ratio not implemented yet");
+      auto &ratio = data.at("split_ratio").as_object();
+      if (!(ratio.contains("index") &&
+            (ratio.at("index").is_int64() || ratio.at("index").is_uint64())))
+        throw std::runtime_error(
+          "Invalid JSON value for station segment data, missing/mistyped  key [split_ratio.index]");
+
+      if (ratio.at("index").is_int64())
+        this->split_ratio_series_index = ratio.at("index").as_int64();
+      else if (ratio.at("index").is_uint64())
+        this->split_ratio_series_index = ratio.at("index").as_uint64();
     }
   }
 }
@@ -334,8 +346,9 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
 
         double p_outflow = fmax(p_outflow1, p_outflow2);
 
-        dxdt[i] = fct * (dQe(p_inflow, p_self_full, p_self * segments[i].split_ratio, p_outflow) -
-                         fmin(Qb_out(p_self * (1 - segments[i].split_ratio)), Qb_in(p_outflow)));
+        double split_ratio = _split_ratio(i, t);
+        dxdt[i] = fct * (dQe(p_inflow, p_self_full, p_self * split_ratio, p_outflow) -
+                         fmin(Qb_out(p_self * (1 - split_ratio)), Qb_in(p_outflow)));
         break;
       }
       case SegmentType::SPLIT_INPUT: {
@@ -345,12 +358,11 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
         double p_self = x[i];
         double p_self_full = p_self;
 
-        double split_ratio1, split_ratio2;
+        double split_ratio1 = _split_ratio(segments[i].prev, t),
+               split_ratio2 = _split_ratio(segments[i].secondary, t);
         double p_alternative1 = 0, p_alternative2 = 0;
 
         if (segments[segments[i].prev].next == i) {
-          split_ratio1 = segments[segments[i].prev].split_ratio;
-
           int alt = segments[segments[i].prev].secondary;
           p_alternative1 = x[alt] / _density_factor(alt);
           if (segments[alt].adjacent != -1) {
@@ -360,7 +372,7 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
           }
         }
         else {
-          split_ratio1 = 1 - segments[segments[i].prev].split_ratio;
+          split_ratio1 = 1 - split_ratio1;
 
           int alt = segments[segments[i].prev].next;
           p_alternative1 = x[alt] / _density_factor(alt);
@@ -371,8 +383,6 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
           }
         }
         if (segments[segments[i].secondary].next == i) {
-          split_ratio2 = segments[segments[i].secondary].split_ratio;
-
           int alt = segments[segments[i].secondary].secondary;
           p_alternative2 = x[alt] / _density_factor(alt);
           if (segments[alt].adjacent != -1) {
@@ -382,7 +392,7 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
           }
         }
         else {
-          split_ratio2 = 1 - segments[segments[i].secondary].split_ratio;
+          split_ratio2 = 1 - split_ratio2;
 
           int alt = segments[segments[i].secondary].next;
           p_alternative2 = x[alt] / _density_factor(alt);

@@ -60,23 +60,6 @@ struct LinearSystemInput {
   void operator()(ODE_Solver::Vector /*x*/, double t) { system.input = t / 10; };
 };
 
-struct GlobalStateTimeObserver : ODE_Solver::GlobalTimeObserverTemplate {
-  std::vector<ODE_Solver::Vector> &m_states;
-  std::vector<double> &m_times;
-
-  GlobalStateTimeObserver(std::vector<ODE_Solver::Vector> &states, std::vector<double> &times,
-                          double timestep = 1)
-      : m_states(states), m_times(times) {
-    this->timestep = timestep;
-  }
-
-  virtual void operator()(const ODE_Solver::Vector &x, double t) {
-    // std::cout << "Step " << t << std::endl;
-    m_states.push_back(x);
-    m_times.push_back(t);
-  };
-};
-
 const double t = 50;
 void SystemToPlot(csrc::SFPlot &plot, std::vector<ODE_Solver::Vector> &states,
                   std::vector<double> &times, const double y_range[2] = (double[2]){-1, 1},
@@ -93,163 +76,46 @@ void SystemToPlot(csrc::SFPlot &plot, std::vector<ODE_Solver::Vector> &states,
   plot.GenerateVertices();
 }
 
-/*
 int main(int argc, char **argv) {
-  sf::RenderWindow window(sf::VideoMode({800, 800}), "ODEint Testing");
-  sf::Font font;
-  if (!font.openFromFile("/mnt/c/Windows/Fonts/arial.ttf"))
-    throw std::runtime_error("Failed to load font");
+  // sf::RenderWindow window(sf::VideoMode({800, 800}), "ODEint Testing");
+  // sf::Font font;
+  // if (!font.openFromFile("/mnt/c/Windows/Fonts/arial.ttf"))
+  //   throw std::runtime_error("Failed to load font");
 
-  //
-  // Manual equation definition
-  //
+  std::ifstream station_config_f("config/station_structures.json", std::ios_base::in);
+  assert(station_config_f.is_open());
+  boost::json::value j = boost::json::parse(station_config_f);
+  station_config_f.close();
 
-  // state_initialization
-  ODE_Solver::Vector x(2);
-  x[0] = 1.0, x[1] = 0.0;  // start at x=1.0, p=0.0
-
-  // Custom class solver
-  auto ode_system =
-    ODE_Solver::Solver(odeint::runge_kutta4<ODE_Solver::Vector>(), harm_osc(0.15), x);
-  ode_system.SolveToTime(3.6745);
-  ode_system.SolveToTime(t);
-  ODE_Solver::Vector s = ode_system.LastState();
-  std::cout << "Harmonic Osc. ending state:" << ode_system.LastTime() << "  " << s[0] << " " << s[1]
-            << std::endl;
-
-  //
-  // JSON equation defintion
-  //
-  std::ifstream inFile("test.json", std::ios_base::in);
-  boost::json::value j = boost::json::parse(inFile);
-  inFile.close();
-
-  // --------------------------------------
-  // Solver class testing
-  // --------------------------------------
-  auto const &equation_definition_array = j.at("equations").as_array();
-
-  auto ss = ODE_Solver::LinearSysFromJSON(odeint::runge_kutta_dopri5<ODE_Solver::Vector>(),
-                                          equation_definition_array.at(0));
-  auto ss2 = ODE_Solver::LinearSysFromJSON(equation_definition_array.at(1));
-  ss2.system.input = 0.05;
-
-  // Solving
-  std::vector<ODE_Solver::Vector> states;
-  std::vector<double> times;
-
-  ss.SolveToTime(t, StateTimeObserver(states, times), -1, LinearSystemInput(ss.system));
-  csrc::SFPlot plot1(sf::Vector2f(0, 0), sf::Vector2f(375, 700), 35, font, "t", "X");
-  SystemToPlot(plot1, states, times);
-  states.clear(), times.clear();
-
-  ss2.SolveToTime(t, StateTimeObserver(states, times), -1);
-  csrc::SFPlot plot2(sf::Vector2f(400, 0), sf::Vector2f(375, 700), 35, font, "t", "X");
-  SystemToPlot(plot2, states, times, sf::Color::Blue);
-  states.clear(), times.clear();
-
-  //
-  // Nonlinear equation defintion (JSON coefficients)
-  //
-  auto nonlinear_state = ODE_Solver::Vector(1);
-  nonlinear_state[0] = 5;
-  auto nonlinear = ODE_Solver::Solver<
-    odeint::controlled_runge_kutta<odeint::runge_kutta_dopri5<ODE_Solver::Vector>>,
-    nonlinear_sys_test, ODE_Solver::Vector>(
-    odeint::controlled_runge_kutta<odeint::runge_kutta_dopri5<ODE_Solver::Vector>>(),
-    nonlinear_sys_test(j.at("coefficients").as_array().at(0)), nonlinear_state);
-  nonlinear.SolveToTime(t, StateTimeObserver(states, times), 0.1);
-  csrc::SFPlot plot3(sf::Vector2f(0, 0), sf::Vector2f(700, 700), 35, font, "t", "X");
-  SystemToPlot(plot3, states, times, sf::Color::Blue);
-  states.clear(), times.clear();
-
-  //
-  // Faking a DDE with the ODE solver
-  //
-  auto dde_state = ODE_Solver::Vector(2);
-  dde_state[0] = 0, dde_state[1] = 0;
-  auto dde_sys = dde_sys_test(60, dde_state);
-  dde_state[0] = 10, dde_state[1] = 0;
-
-  auto dde = ODE_Solver::Solver<
-    odeint::controlled_runge_kutta<odeint::runge_kutta_dopri5<ODE_Solver::Vector>>, dde_sys_test,
-    ODE_Solver::Vector, GlobalStateTimeObserver>(
-    odeint::controlled_runge_kutta<odeint::runge_kutta_dopri5<ODE_Solver::Vector>>(), dde_sys,
-    dde_state, GlobalStateTimeObserver(states, times));
-  auto dde_driver = dde_sys_test_driver(&dde.system.past_states, &dde.system.memory_ptr, 60);
-  dde.SolveToTime(100, dde_driver);
-  csrc::SFPlot plot4(sf::Vector2f(0, 0), sf::Vector2f(700, 700), 35, font, "t", "X");
-  SystemToPlot(plot4, states, times, sf::Color::Blue);
-  states.clear(), times.clear();
-  std::cout << dde.system.memory_ptr << std::endl;
-
-  // Window rendering
-  while (window.isOpen()) {
-    while (const std::optional<sf::Event> event = window.pollEvent()) {
-      if (event->is<sf::Event::Closed>()) {
-        window.close();
-      }
-    }
-    window.clear();
-    // window.draw(plot1);
-    // window.draw(plot2);
-
-    // window.draw(plot3);
-
-    window.draw(plot4);
-    window.display();
-  }
-}
-*/
-
-int main(int argc, char **argv) {
-  sf::RenderWindow window(sf::VideoMode({800, 800}), "ODEint Testing");
-  sf::Font font;
-  if (!font.openFromFile("/mnt/c/Windows/Fonts/arial.ttf"))
-    throw std::runtime_error("Failed to load font");
-
-  std::ifstream inFile("test2.json", std::ios_base::in);
-  boost::json::value j = boost::json::parse(inFile);
-  inFile.close();
+  std::basic_ifstream<char> station_flows_f("config/station_split_ratios.csv", std::ios_base::in);
+  assert(station_flows_f.is_open());
 
   std::vector<ODE_Solver::Vector> states;
   std::vector<double> times;
 
   auto station_system = ODE_Solver::Solver<odeint::runge_kutta4<ODE_Solver::Vector>, StationSystem,
-                                           ODE_Solver::Vector, GlobalStateTimeObserver>(
+                                           ODE_Solver::Vector, StationFileObserver>(
     odeint::runge_kutta4<ODE_Solver::Vector>(),
-    StationSystem(j.as_object().at("Canons Park Underground Station").as_object()),
-    GlobalStateTimeObserver(states, times));
-  station_system.LastState() += station_system.system.PlatformUpdateVector(50, 0);
-  // station_system.system._check();
-  station_system.SolveToTime(2000, station_system.system.InputDriver());
+    StationSystem(j.as_object().at("Canons Park Underground Station").as_object(), station_flows_f),
+    StationFileObserver("out/stations/Canons Park Underground Station.csv"));
+  station_system.SolveToTime(1000, station_system.system.InputDriver());
+  station_system.GetGlobalObserver().finalise();
 
-  for (int i = states.size() - 5; i < states.size(); ++i) {
-    double s = 0;
-    for (int j = 0; j < states[i].size(); ++j) {
-      std::cout << std::fixed << std::setprecision(2) << states[i][j] << " ";
-      s += states[i][j];
-
-      if (j != 0 && j != 5 && j != 6 && j != 11)
-        s += states[i][j];
-    }
-    // std::cout << "\t\t" << s << std::endl;
-    std::cout << std::endl;
-  }
-
-  csrc::SFPlot plot(sf::Vector2f(35, 35), sf::Vector2f(700, 700), 35, font, "t", "X");
-  double y_range[2] = {0, 250};
-  SystemToPlot(plot, states, times, y_range);
+  // csrc::SFPlot plot(sf::Vector2f(35, 35), sf::Vector2f(700, 700), 35, font, "t", "X");
+  // double y_range[2] = {0, 50};
+  // SystemToPlot(plot, states, times, y_range);
 
   // Window rendering
-  while (window.isOpen()) {
-    while (const std::optional<sf::Event> event = window.pollEvent()) {
-      if (event->is<sf::Event::Closed>()) {
-        window.close();
-      }
-    }
-    window.clear();
-    window.draw(plot);
-    window.display();
-  }
+  // while (window.isOpen()) {
+  //   while (const std::optional<sf::Event> event = window.pollEvent()) {
+  //     if (event->is<sf::Event::Closed>()) {
+  //       window.close();
+  //     }
+  //   }
+  //   window.clear();
+  //   window.draw(plot);
+  //   window.display();
+  // }
+
+  station_flows_f.close();
 }
