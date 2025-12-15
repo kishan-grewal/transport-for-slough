@@ -8,7 +8,7 @@ var annotated_dup =
       [ "InitialStateSystem", "classODE__Solver_1_1InitialStateSystem.html", null ],
       [ "CoefficientSystem", "classODE__Solver_1_1CoefficientSystem.html", null ]
     ] ],
-    [ "Event", "classEvent.html", null ],
+    [ "Event", "classEvent.html", "classEvent" ],
     [ "EventLoop", "classEventLoop.html", "classEventLoop" ],
     [ "EventPool", "classEventPool.html", "classEventPool" ],
     [ "State", "classState.html", null ],

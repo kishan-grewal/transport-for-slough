@@ -1,6 +1,17 @@
 #include "station_ode.hpp"
 #include "ode/json_util.hpp"
 
+//! StationSystemInput constructor
+/*!
+Create a station system input
+\param system StationSystem* pointer to the StationSystem that is linked to this input
+\param input int population added by the input
+
+For the input, provide a StationSystem to be linked to
+Set the number of inputs to the StationSystem
+Set the timestamp of the previous update
+Allocate the target_inputs, accumulated inputs and interp_t vectors with the number of entrances to the station system
+*/
 StationSystemInput::StationSystemInput(StationSystem *system, int input)
     : system(system),
       input_n(input),
@@ -8,6 +19,20 @@ StationSystemInput::StationSystemInput(StationSystem *system, int input)
       target_inputs(system == NULL ? 0 : system->entrance_count(), 0),
       accumulated(system == NULL ? 0 : system->entrance_count(), 0),
       interp_t(system == NULL ? 0 : system->entrance_count(), 0) {}
+
+
+//! Update the input for the timestep
+/*!
+Update the number of people inflow.
+\param x ODE_Solver::Vector& the current populations for the segments of the station
+\param t double the timestamp of the update
+
+Add constant population on all segments if constant input specified
+Else if enough time elapsed update targets, add input flow and subtract the accumulated
+Otherwise calculate delta input interpolated from time multiplied by inputs, then subtracting accumulated populations
+Then adding the delta to the accumulated population and returning the accumulated input populations
+Finally return the population and update to new timestep
+*/
 void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
   if (this->system == NULL)
     return;
@@ -62,6 +87,23 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
     this->last_update_t += TIME_SERIES_TIMESTEP;  // Update
 }
 
+//! StationSystem constructor
+/*!
+Parse JSON for station topology
+\param data boost::json::object contains topology data for the station
+\param split_ratios std::ifstream& not sure
+\param input_timestep double time between updating inputs
+
+Check JSON is valid before unwrapping.
+Initialise the segments with SegmentData objects
+Add indexes of entrances to input_segment_index
+Get platform IDs
+Check segment type, if INFLOW or OUTFLOW
+Resize board/alight_segment_mappings to fit the segments as they get loaded
+Add segment index to board/alight index mappings
+Set initial state and input driver (input driver generates inflow/outflow from entrances)
+Set input driver timestep
+*/
 StationSystem::StationSystem(boost::json::object data, std::ifstream &split_ratios,
                              double input_timestep)
     : split_ratios(split_ratios) {
@@ -152,6 +194,10 @@ StationSystem::StationSystem(boost::json::object data, std::ifstream &split_rati
   this->input_driver.timestep = input_timestep;
 }
 
+//! Update populations from entrances in station
+/*!
+For each segment add the correlated number of people in each input segment
+*/
 ODE_Solver::Vector StationSystem::EntranceUpdateVector(std::vector<double> n_people) {
   if (this->input_segment_index.size() != n_people.size()) {
     throw std::runtime_error("Invalid input size for station system");
@@ -166,14 +212,9 @@ ODE_Solver::Vector StationSystem::EntranceUpdateVector(std::vector<double> n_peo
 
 //! Gives the vector for updating platform population from discrete events
 /*!
-Returns a vector for [inflow, outflow] of passengers
-\param n_people double signed number for change in platform population, negative for boarding, positive for alighting
-\param platform_id unsigned int platform identifier in station
-
-Creates a vector with size equal to number of platform segments, giving the change in passengers at each segment.
-Currently setup with only one segment.
-
-const
+Returns platform update vector for train boarding
+\param n_people double number of people alighting (positive) or boarding (negative)
+\param platform_id unsigned int platform ID so only segments on that platform get inflow/outflow
 */
 ODE_Solver::Vector StationSystem::PlatformUpdateVector(double n_people, unsigned int platform_id) {
   ODE_Solver::Vector out = ODE_Solver::Vector(this->segments.size(), 0);
@@ -191,6 +232,8 @@ ODE_Solver::Vector StationSystem::PlatformUpdateVector(double n_people, unsigned
 }
 
 StationSystem::SegmentData::SegmentData() { this->type = SegmentType::INVALID; }
+
+//!
 StationSystem::SegmentData::SegmentData(boost::json::object data) {
   if (!data.contains("type") || !data.at("type").is_string())
     throw std::runtime_error(

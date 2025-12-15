@@ -113,8 +113,23 @@ void Station::listen(std::barrier<>& syncPoint, State& state) {
   }
 }
 
+//! Stop event loop
+/*!
+Sets atomic running flag to false
+*/
 void Station::stop() { this->running.store(false); }
 
+//! Receive an entry request
+/*!
+Filters entry requests and passes through when platforms are free
+\param e Event event to be passed through to station listen
+\param state State* global state
+
+Mutex protected
+If platform is free in the correct direction, pass through train to enter station, return invalid event
+Set relevant flags for updated platform status, time of entry, etc.
+Otherwise return propogated event when train will try to enter again
+*/
 Event Station::receiveEntryRequest(Event e, State* state) {
   std::lock_guard<std::mutex> lock(this->stationMutex);
 
@@ -135,6 +150,18 @@ Event Station::receiveEntryRequest(Event e, State* state) {
   return e;
 }
 
+
+//! Receive a leave request
+/*!
+Filters leave requests and passes through when platforms are busy
+\param e Event event to be passed through to station listen
+\param state State* global state
+
+Mutex protected
+If platform is busy in the correct direction (extend for further signalling), pass through train to leave station, return invalid event
+Set relevant flags for updated platform status, time of entry, etc.
+Otherwise return propogated event when train will try to leave again
+*/
 Event Station::receiveLeaveRequest(Event e, State* state) {
   std::lock_guard<std::mutex> lock(this->stationMutex);
 
@@ -156,6 +183,10 @@ Event Station::receiveLeaveRequest(Event e, State* state) {
   return e;
 }
 
+//! Export current statoin state
+/*!
+Helper function to log station state at the timestep to csv file
+*/
 void Station::exportCurState() {
   std::string status = "";
   for (int i = 0; i < this->platformStatus.size(); ++i) {
@@ -164,6 +195,8 @@ void Station::exportCurState() {
   // this->file << this->population << status << std::endl;
 }
 
+//! Close file for writing
 void Station::finishExport() { this->file.close(); }
 
+//! Station destructor
 Station::~Station() { this->name = ""; }

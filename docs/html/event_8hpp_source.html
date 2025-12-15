@@ -96,7 +96,7 @@ $(function(){initNavTree('event_8hpp_source.html','',''); });
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define EVENT_HPP</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
 <div class="foldopen" id="foldopen00004" data-start="{" data-end="};">
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno"><a class="line" href="classEvent.html">    4</a></span><span class="keyword">class </span>Event {</div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno"><a class="line" href="classEvent.html">    4</a></span><span class="keyword">class </span><a class="code hl_function" href="classEvent.html#a3756ac5d032d68c2907ab8c1e936f15e">Event</a> {</div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="keyword">private</span>:</div>
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span>    <span class="keywordtype">int</span> time; <span class="comment">//in seconds &lt;timestep&gt; to request trigger</span></div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span>    <span class="keywordtype">int</span> targetIndex; <span class="comment">//index to target of request being dispatched</span></div>
@@ -104,13 +104,13 @@ $(function(){initNavTree('event_8hpp_source.html','',''); });
 <div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span>    <span class="keywordtype">bool</span> entryExit;</div>
 <div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
 <div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>    Event(<span class="keywordtype">int</span> t, <span class="keywordtype">int</span> index, <span class="keywordtype">int</span> trainIndex, <span class="keywordtype">bool</span> entryExit);</div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    <span class="keywordtype">int</span> getTime() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    <span class="keywordtype">int</span> getTarget() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    <span class="keywordtype">int</span> getTrainIndex() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    <span class="keywordtype">bool</span> getEntryExit() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    <span class="keywordtype">void</span> propogate(<span class="keywordtype">int</span> addition);</div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    ~Event();</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>    <a class="code hl_function" href="classEvent.html#a3756ac5d032d68c2907ab8c1e936f15e">Event</a>(<span class="keywordtype">int</span> t, <span class="keywordtype">int</span> index, <span class="keywordtype">int</span> trainIndex, <span class="keywordtype">bool</span> entryExit);</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    <span class="keywordtype">int</span> <a class="code hl_function" href="classEvent.html#a07cf6ef3af83600f4f8958c685726015">getTime</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    <span class="keywordtype">int</span> <a class="code hl_function" href="classEvent.html#a33c466793e07133cf69a4c0edf546e0f">getTarget</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    <span class="keywordtype">int</span> <a class="code hl_function" href="classEvent.html#ad1a9628ec2e39366f2ee5261dc705123">getTrainIndex</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classEvent.html#aaf17d3347223b89f9f965ace19d84423">getEntryExit</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classEvent.html#a3c8447eed0ed1964885c70799863f629">propogate</a>(<span class="keywordtype">int</span> addition);</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    <a class="code hl_function" href="classEvent.html#a7704ec01ce91e673885792054214b3d2">~Event</a>();</div>
 <div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>};</div>
 </div>
 <div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
@@ -118,6 +118,13 @@ $(function(){initNavTree('event_8hpp_source.html','',''); });
 <div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aclassEvent_html"><div class="ttname"><a href="classEvent.html">Event</a></div><div class="ttdef"><b>Definition</b> event.hpp:4</div></div>
+<div class="ttc" id="aclassEvent_html_a07cf6ef3af83600f4f8958c685726015"><div class="ttname"><a href="classEvent.html#a07cf6ef3af83600f4f8958c685726015">Event::getTime</a></div><div class="ttdeci">int getTime() const</div><div class="ttdoc">Get time of event.</div><div class="ttdef"><b>Definition</b> event.cpp:27</div></div>
+<div class="ttc" id="aclassEvent_html_a33c466793e07133cf69a4c0edf546e0f"><div class="ttname"><a href="classEvent.html#a33c466793e07133cf69a4c0edf546e0f">Event::getTarget</a></div><div class="ttdeci">int getTarget() const</div><div class="ttdoc">Get station of the event.</div><div class="ttdef"><b>Definition</b> event.cpp:22</div></div>
+<div class="ttc" id="aclassEvent_html_a3756ac5d032d68c2907ab8c1e936f15e"><div class="ttname"><a href="classEvent.html#a3756ac5d032d68c2907ab8c1e936f15e">Event::Event</a></div><div class="ttdeci">Event(int t, int index, int trainIndex, bool entryExit)</div><div class="ttdoc">Create Event object.</div><div class="ttdef"><b>Definition</b> event.cpp:14</div></div>
+<div class="ttc" id="aclassEvent_html_a3c8447eed0ed1964885c70799863f629"><div class="ttname"><a href="classEvent.html#a3c8447eed0ed1964885c70799863f629">Event::propogate</a></div><div class="ttdeci">void propogate(int addition)</div><div class="ttdoc">Propogate event.</div><div class="ttdef"><b>Definition</b> event.cpp:46</div></div>
+<div class="ttc" id="aclassEvent_html_a7704ec01ce91e673885792054214b3d2"><div class="ttname"><a href="classEvent.html#a7704ec01ce91e673885792054214b3d2">Event::~Event</a></div><div class="ttdeci">~Event()</div><div class="ttdoc">Event destructor.</div><div class="ttdef"><b>Definition</b> event.cpp:55</div></div>
+<div class="ttc" id="aclassEvent_html_aaf17d3347223b89f9f965ace19d84423"><div class="ttname"><a href="classEvent.html#aaf17d3347223b89f9f965ace19d84423">Event::getEntryExit</a></div><div class="ttdeci">bool getEntryExit() const</div><div class="ttdoc">Get entry/exit status of event.</div><div class="ttdef"><b>Definition</b> event.cpp:37</div></div>
+<div class="ttc" id="aclassEvent_html_ad1a9628ec2e39366f2ee5261dc705123"><div class="ttname"><a href="classEvent.html#ad1a9628ec2e39366f2ee5261dc705123">Event::getTrainIndex</a></div><div class="ttdeci">int getTrainIndex() const</div><div class="ttdoc">Get train of event.</div><div class="ttdef"><b>Definition</b> event.cpp:32</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 </div><!-- container -->

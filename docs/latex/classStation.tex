@@ -16,24 +16,23 @@
 \item 
 void \mbox{\hyperlink{classStation_a750251cf4eeb0e871b3b693003c0c092}{listen}} (std\+::barrier$<$$>$ \&sync\+Point, \mbox{\hyperlink{classState}{State}} \&state)
 \begin{DoxyCompactList}\small\item\em \doxylink{classStation}{Station} listener. \end{DoxyCompactList}\item 
-\Hypertarget{classStation_a5ce4ee20d68c64c6fa35958912519977}\label{classStation_a5ce4ee20d68c64c6fa35958912519977} 
-void {\bfseries stop} ()
-\item 
-\Hypertarget{classStation_ae4f8babff949abfe8289946379559a9f}\label{classStation_ae4f8babff949abfe8289946379559a9f} 
-\mbox{\hyperlink{classEvent}{Event}} {\bfseries receive\+Entry\+Request} (\mbox{\hyperlink{classEvent}{Event}} e, \mbox{\hyperlink{classState}{State}} \texorpdfstring{$\ast$}{*}state)
-\item 
-\Hypertarget{classStation_a36eb393594083d0bbc46fe261d81cbec}\label{classStation_a36eb393594083d0bbc46fe261d81cbec} 
-\mbox{\hyperlink{classEvent}{Event}} {\bfseries receive\+Leave\+Request} (\mbox{\hyperlink{classEvent}{Event}} e, \mbox{\hyperlink{classState}{State}} \texorpdfstring{$\ast$}{*}state)
-\item 
+void \mbox{\hyperlink{classStation_a5ce4ee20d68c64c6fa35958912519977}{stop}} ()
+\begin{DoxyCompactList}\small\item\em Stop event loop. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classEvent}{Event}} \mbox{\hyperlink{classStation_ae4f8babff949abfe8289946379559a9f}{receive\+Entry\+Request}} (\mbox{\hyperlink{classEvent}{Event}} e, \mbox{\hyperlink{classState}{State}} \texorpdfstring{$\ast$}{*}state)
+\begin{DoxyCompactList}\small\item\em Receive an entry request. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classEvent}{Event}} \mbox{\hyperlink{classStation_a36eb393594083d0bbc46fe261d81cbec}{receive\+Leave\+Request}} (\mbox{\hyperlink{classEvent}{Event}} e, \mbox{\hyperlink{classState}{State}} \texorpdfstring{$\ast$}{*}state)
+\begin{DoxyCompactList}\small\item\em Receive a leave request. \end{DoxyCompactList}\item 
 \Hypertarget{classStation_ae353616abbfca44e00a0baa730998d1c}\label{classStation_ae353616abbfca44e00a0baa730998d1c} 
 std\+::string {\bfseries get\+Name} ()
 \item 
-\Hypertarget{classStation_a7379112576fb3ed4a52f70cf62e6a633}\label{classStation_a7379112576fb3ed4a52f70cf62e6a633} 
-void {\bfseries export\+Cur\+State} ()
-\item 
+void \mbox{\hyperlink{classStation_a7379112576fb3ed4a52f70cf62e6a633}{export\+Cur\+State}} ()
+\begin{DoxyCompactList}\small\item\em Export current statoin state. \end{DoxyCompactList}\item 
 \Hypertarget{classStation_a278811491c6edd3383034516828b3e01}\label{classStation_a278811491c6edd3383034516828b3e01} 
 void {\bfseries finish\+Export} ()
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Close file for writing. \end{DoxyCompactList}\item 
+\Hypertarget{classStation_a00434e79e8ee7f4ebd6d3b631dde5ac0}\label{classStation_a00434e79e8ee7f4ebd6d3b631dde5ac0} 
+{\bfseries \texorpdfstring{$\sim$}{\string~}\+Station} ()
+\begin{DoxyCompactList}\small\item\em \doxylink{classStation}{Station} destructor. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \label{doc-constructors}
@@ -76,7 +75,17 @@ Writes csv headers for logging output to the file with the station name
 \label{doc-func-members}
 \Hypertarget{classStation_doc-func-members}
 \doxysubsection{Member Function Documentation}
-\Hypertarget{classStation_a750251cf4eeb0e871b3b693003c0c092}\index{Station@{Station}!listen@{listen}}
+\Hypertarget{classStation_a7379112576fb3ed4a52f70cf62e6a633}\index{Station@{Station}!exportCurState@{exportCurState}}
+\index{exportCurState@{exportCurState}!Station@{Station}}
+\doxysubsubsection{\texorpdfstring{exportCurState()}{exportCurState()}}
+{\footnotesize\ttfamily \label{classStation_a7379112576fb3ed4a52f70cf62e6a633} 
+void Station\+::export\+Cur\+State (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+Export current statoin state. 
+
+Helper function to log station state at the timestep to csv file \Hypertarget{classStation_a750251cf4eeb0e871b3b693003c0c092}\index{Station@{Station}!listen@{listen}}
 \index{listen@{listen}!Station@{Station}}
 \doxysubsubsection{\texorpdfstring{listen()}{listen()}}
 {\footnotesize\ttfamily \label{classStation_a750251cf4eeb0e871b3b693003c0c092} 
@@ -103,7 +112,51 @@ Function checks for arrivals and departures\+:
 \item Attempt instantaneous alight/boarding calculations
 \end{DoxyItemize}
 
-Has a double barrier for synchronisation 
+Has a double barrier for synchronisation \Hypertarget{classStation_ae4f8babff949abfe8289946379559a9f}\index{Station@{Station}!receiveEntryRequest@{receiveEntryRequest}}
+\index{receiveEntryRequest@{receiveEntryRequest}!Station@{Station}}
+\doxysubsubsection{\texorpdfstring{receiveEntryRequest()}{receiveEntryRequest()}}
+{\footnotesize\ttfamily \label{classStation_ae4f8babff949abfe8289946379559a9f} 
+\mbox{\hyperlink{classEvent}{Event}} Station\+::receive\+Entry\+Request (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classEvent}{Event}}}]{e}{, }\item[{\mbox{\hyperlink{classState}{State}} \texorpdfstring{$\ast$}{*}}]{state}{}\end{DoxyParamCaption})}
+
+
+
+Receive an entry request. 
+
+Filters entry requests and passes through when platforms are free 
+\begin{DoxyParams}{Parameters}
+{\em e} & \doxylink{classEvent}{Event} event to be passed through to station listen \\
+\hline
+{\em state} & State\texorpdfstring{$\ast$}{*} global state\\
+\hline
+\end{DoxyParams}
+Mutex protected If platform is free in the correct direction, pass through train to enter station, return invalid event Set relevant flags for updated platform status, time of entry, etc. Otherwise return propogated event when train will try to enter again \Hypertarget{classStation_a36eb393594083d0bbc46fe261d81cbec}\index{Station@{Station}!receiveLeaveRequest@{receiveLeaveRequest}}
+\index{receiveLeaveRequest@{receiveLeaveRequest}!Station@{Station}}
+\doxysubsubsection{\texorpdfstring{receiveLeaveRequest()}{receiveLeaveRequest()}}
+{\footnotesize\ttfamily \label{classStation_a36eb393594083d0bbc46fe261d81cbec} 
+\mbox{\hyperlink{classEvent}{Event}} Station\+::receive\+Leave\+Request (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classEvent}{Event}}}]{e}{, }\item[{\mbox{\hyperlink{classState}{State}} \texorpdfstring{$\ast$}{*}}]{state}{}\end{DoxyParamCaption})}
+
+
+
+Receive a leave request. 
+
+Filters leave requests and passes through when platforms are busy 
+\begin{DoxyParams}{Parameters}
+{\em e} & \doxylink{classEvent}{Event} event to be passed through to station listen \\
+\hline
+{\em state} & State\texorpdfstring{$\ast$}{*} global state\\
+\hline
+\end{DoxyParams}
+Mutex protected If platform is busy in the correct direction (extend for further signalling), pass through train to leave station, return invalid event Set relevant flags for updated platform status, time of entry, etc. Otherwise return propogated event when train will try to leave again \Hypertarget{classStation_a5ce4ee20d68c64c6fa35958912519977}\index{Station@{Station}!stop@{stop}}
+\index{stop@{stop}!Station@{Station}}
+\doxysubsubsection{\texorpdfstring{stop()}{stop()}}
+{\footnotesize\ttfamily \label{classStation_a5ce4ee20d68c64c6fa35958912519977} 
+void Station\+::stop (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+Stop event loop. 
+
+Sets atomic running flag to false 
 
 The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
 \item 

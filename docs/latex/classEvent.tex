@@ -3,24 +3,80 @@
 \doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\Hypertarget{classEvent_a3756ac5d032d68c2907ab8c1e936f15e}\label{classEvent_a3756ac5d032d68c2907ab8c1e936f15e} 
-{\bfseries Event} (int t, int index, int train\+Index, bool entry\+Exit)
-\item 
+\mbox{\hyperlink{classEvent_a3756ac5d032d68c2907ab8c1e936f15e}{Event}} (int t, int index, int train\+Index, bool entry\+Exit)
+\begin{DoxyCompactList}\small\item\em Create \doxylink{classEvent}{Event} object. \end{DoxyCompactList}\item 
 \Hypertarget{classEvent_a07cf6ef3af83600f4f8958c685726015}\label{classEvent_a07cf6ef3af83600f4f8958c685726015} 
 int {\bfseries get\+Time} () const
-\item 
+\begin{DoxyCompactList}\small\item\em Get time of event. \end{DoxyCompactList}\item 
 \Hypertarget{classEvent_a33c466793e07133cf69a4c0edf546e0f}\label{classEvent_a33c466793e07133cf69a4c0edf546e0f} 
 int {\bfseries get\+Target} () const
-\item 
+\begin{DoxyCompactList}\small\item\em Get station of the event. \end{DoxyCompactList}\item 
 \Hypertarget{classEvent_ad1a9628ec2e39366f2ee5261dc705123}\label{classEvent_ad1a9628ec2e39366f2ee5261dc705123} 
 int {\bfseries get\+Train\+Index} () const
-\item 
+\begin{DoxyCompactList}\small\item\em Get train of event. \end{DoxyCompactList}\item 
 \Hypertarget{classEvent_aaf17d3347223b89f9f965ace19d84423}\label{classEvent_aaf17d3347223b89f9f965ace19d84423} 
 bool {\bfseries get\+Entry\+Exit} () const
-\item 
-\Hypertarget{classEvent_a3c8447eed0ed1964885c70799863f629}\label{classEvent_a3c8447eed0ed1964885c70799863f629} 
-void {\bfseries propogate} (int addition)
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Get entry/exit status of event. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classEvent_a3c8447eed0ed1964885c70799863f629}{propogate}} (int addition)
+\begin{DoxyCompactList}\small\item\em Propogate event. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classEvent_a7704ec01ce91e673885792054214b3d2}{\texorpdfstring{$\sim$}{\string~}\+Event}} ()
+\begin{DoxyCompactList}\small\item\em \doxylink{classEvent}{Event} destructor. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\label{doc-constructors}
+\Hypertarget{classEvent_doc-constructors}
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classEvent_a3756ac5d032d68c2907ab8c1e936f15e}\index{Event@{Event}!Event@{Event}}
+\index{Event@{Event}!Event@{Event}}
+\doxysubsubsection{\texorpdfstring{Event()}{Event()}}
+{\footnotesize\ttfamily \label{classEvent_a3756ac5d032d68c2907ab8c1e936f15e} 
+Event\+::\+Event (\begin{DoxyParamCaption}\item[{int}]{t}{, }\item[{int}]{index}{, }\item[{int}]{train\+Index}{, }\item[{bool}]{entry\+Exit}{}\end{DoxyParamCaption})}
+
+
+
+Create \doxylink{classEvent}{Event} object. 
+
+\doxylink{classEvent}{Event} object constructor 
+\begin{DoxyParams}{Parameters}
+{\em t} & int timestamp (wrt global time) for when event should be consumed \\
+\hline
+{\em index} & int station for the event to be consumed \\
+\hline
+{\em train\+Index} & int train that is involved in the event \\
+\hline
+{\em entry\+Exit} & bool True for exit, False for entry \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classEvent_a7704ec01ce91e673885792054214b3d2}\index{Event@{Event}!````~Event@{\texorpdfstring{$\sim$}{\string~}Event}}
+\index{````~Event@{\texorpdfstring{$\sim$}{\string~}Event}!Event@{Event}}
+\doxysubsubsection{\texorpdfstring{\texorpdfstring{$\sim$}{\string~}Event()}{\string~Event()}}
+{\footnotesize\ttfamily \label{classEvent_a7704ec01ce91e673885792054214b3d2} 
+Event\+::\texorpdfstring{$\sim$}{\string~}\+Event (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+\doxylink{classEvent}{Event} destructor. 
+
+Set event time, train and target to 0 
+
+\label{doc-func-members}
+\Hypertarget{classEvent_doc-func-members}
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classEvent_a3c8447eed0ed1964885c70799863f629}\index{Event@{Event}!propogate@{propogate}}
+\index{propogate@{propogate}!Event@{Event}}
+\doxysubsubsection{\texorpdfstring{propogate()}{propogate()}}
+{\footnotesize\ttfamily \label{classEvent_a3c8447eed0ed1964885c70799863f629} 
+void Event\+::propogate (\begin{DoxyParamCaption}\item[{int}]{addition}{}\end{DoxyParamCaption})}
+
+
+
+Propogate event. 
+
+Add time to an event 
+\begin{DoxyParams}{Parameters}
+{\em addition} & int time to add to the event \\
+\hline
+\end{DoxyParams}
 
 
 The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
