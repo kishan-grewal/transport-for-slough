@@ -56,8 +56,7 @@ int main(int argc, char **argv) {
   std::basic_ifstream<char> station_flow_splits_f("config/station_split_ratios.csv");
   assert(station_flow_splits_f.is_open());
 
-  std::basic_ifstream<char> station_flows_f(
-    "data/presentation-data/csv_day/FRI/NBT24FRI_filtered_Station_Flows.csv");
+  std::basic_ifstream<char> station_flows_f("config/station_entrance_flows.csv");
   assert(station_flows_f.is_open());
 
   std::vector<ODE_Solver::Vector> states;
@@ -65,19 +64,20 @@ int main(int argc, char **argv) {
 
   typedef odeint::runge_kutta_dopri5<ODE_Solver::Vector> error_stepper_type;
   typedef odeint::controlled_runge_kutta<error_stepper_type> controlled_stepper_type;
-  double abs_err = 1.0e-8, rel_err = 1.0e-7, a_x = 0.1, a_dxdt = 0.1;
+  double abs_err = 1.0e-10, rel_err = 1.0e-8, a_x = 0.1, a_dxdt = 0.1;
   controlled_stepper_type controlled_stepper(
     odeint::default_error_checker<double, odeint::vector_space_algebra, odeint::default_operations>(
       abs_err, rel_err, a_x, a_dxdt));
 
-  auto station_system = ODE_Solver::Solver<controlled_stepper_type, StationSystem,
+  auto station_system = ODE_Solver::Solver<odeint::runge_kutta4<ODE_Solver::Vector>, StationSystem,
                                            ODE_Solver::Vector, StationFileObserver>(
-    controlled_stepper,
-    StationSystem(j.as_object().at("Bermondsey Underground Station").as_object(),
-                  station_flow_splits_f, station_flows_f, 5),
-    StationFileObserver("out/stations/Bermondsey Underground Station.csv"));
+    odeint::runge_kutta4<ODE_Solver::Vector>(),
+    StationSystem(j.as_object().at("Bond Street Underground Station").as_object(),
+                  station_flow_splits_f, station_flows_f),
+    StationFileObserver("out/stations/Bond Street Underground Station.csv", 5));
+  // station_system.LastState() += station_system.system.PlatformUpdateVector(5, 0);
 
-  station_system.SolveToTime(sim_time, station_system.system.InputDriver());
+  station_system.SolveToTime(sim_time, station_system.system.InputDriver());  //
   station_system.GetGlobalObserver().finalise();
 
   station_flow_splits_f.close();
