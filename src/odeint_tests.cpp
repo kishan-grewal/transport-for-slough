@@ -12,53 +12,21 @@
 #include "ode/ode_solver.hpp"
 #include "station_ode.hpp"
 
-// rhs_class
-/* The rhs of x' = f(x) defined as a class */
-class harm_osc {
-  double m_gam;
+double input_noise, time_offset, sim_time;
+bool settings_loaded = false;
+void load_settings() {
+  std::ifstream conf("config/config.json", std::ios_base::in);
+  assert(conf.is_open());
+  boost::json::object j = boost::json::parse(conf).as_object();
+  conf.close();
 
-  public:
-  harm_osc(double gam) : m_gam(gam) {}
+  JSON_ParseNumericToDouble(input_noise, &j.at("input_noise"));
+  JSON_ParseNumericToDouble(time_offset, &j.at("time_offset"));
+  JSON_ParseNumericToDouble(sim_time, &j.at("sim_time"));
 
-  void operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt, const double /* t */) {
-    dxdt[0] = x[1];
-    dxdt[1] = -x[0] - m_gam * x[1];
-  }
-};
+  settings_loaded = true;
+}
 
-// Logistic growth:
-// dN/dt = rN( 1 - N/k )
-class nonlinear_sys_test : ODE_Solver::CoefficientSystem {
-  public:
-  nonlinear_sys_test(boost::json::value values) : ODE_Solver::CoefficientSystem(values) {}
-  void operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt, const double t) {
-    // Pass
-    dxdt[0] = this->coefficients[0] * x[0] * (1 - x[0] / this->coefficients[1]);
-  };
-};
-
-struct StateTimeObserver {
-  std::vector<ODE_Solver::Vector> &m_states;
-  std::vector<double> &m_times;
-
-  StateTimeObserver(std::vector<ODE_Solver::Vector> &states, std::vector<double> &times)
-      : m_states(states), m_times(times) {}
-
-  void operator()(const ODE_Solver::Vector &x, double t) {
-    m_states.push_back(x);
-    m_times.push_back(t);
-  }
-};
-struct LinearSystemInput {
-  ODE_Solver::LinearSystem &system;
-  double timestep = 0.1;
-
-  LinearSystemInput(ODE_Solver::LinearSystem &system) : system(system) {}
-
-  void operator()(ODE_Solver::Vector /*x*/, double t) { system.input = t / 10; };
-};
-
-const double t = 50;
 void SystemToPlot(csrc::SFPlot &plot, std::vector<ODE_Solver::Vector> &states,
                   std::vector<double> &times, const double y_range[2] = (double[2]){-1, 1},
                   sf::Color colour = sf::Color::Green, std::string label = "") {
@@ -74,8 +42,12 @@ void SystemToPlot(csrc::SFPlot &plot, std::vector<ODE_Solver::Vector> &states,
   plot.GenerateVertices();
 }
 
+namespace odeint = boost::numeric::odeint;
 int main(int argc, char **argv) {
-  /*
+  load_settings();
+  if (!settings_loaded)
+    throw std::runtime_error("Settings not loaded");
+
   std::ifstream station_config_f("config/station_structures.json", std::ios_base::in);
   assert(station_config_f.is_open());
   boost::json::value j = boost::json::parse(station_config_f);
@@ -90,14 +62,15 @@ int main(int argc, char **argv) {
   auto station_system = ODE_Solver::Solver<odeint::runge_kutta4<ODE_Solver::Vector>, StationSystem,
                                            ODE_Solver::Vector, StationFileObserver>(
     odeint::runge_kutta4<ODE_Solver::Vector>(),
-    StationSystem(j.as_object().at("Canons Park Underground Station").as_object(), station_flows_f),
-    StationFileObserver("out/stations/Canons Park Underground Station.csv"));
-  station_system.SolveToTime(1000, station_system.system.InputDriver());
+    StationSystem(j.as_object().at("Kingsbury Underground Station").as_object(), station_flows_f),
+    StationFileObserver("out/stations/Kingsbury Underground Station.csv"));
+
+  station_system.SolveToTime(sim_time, station_system.system.InputDriver());
   station_system.GetGlobalObserver().finalise();
 
   station_flows_f.close();
-  */
 
+  /*
   typedef boost::numeric::odeint::runge_kutta_dopri5<ODE_Solver::Vector> error_stepper_type;
   typedef boost::numeric::odeint::controlled_runge_kutta<error_stepper_type>
     controlled_stepper_type;
@@ -135,6 +108,7 @@ int main(int argc, char **argv) {
   std::cout << std::endl;
 
   station_flows_f.close();
+*/
 }
 
 // sf::RenderWindow window(sf::VideoMode({800, 800}), "ODEint Testing");

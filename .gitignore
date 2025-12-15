@@ -17,6 +17,7 @@ compile_commands.json
 *__pycache__/
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 *.csv
 
 docs/
@@ -24,4 +25,12 @@ docs/
 out/**/*.csv
 
 old/
+>>>>>>> odeint_testing
+=======
+data/json_corr/
+
+.venv/
+
+old/
+out/**/*.csv
 >>>>>>> odeint_testing

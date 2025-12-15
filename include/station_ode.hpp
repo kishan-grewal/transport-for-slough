@@ -7,20 +7,41 @@
 
 class StationSystem;
 struct StationSystemInput {
-  StationSystem *system;
   double timestep = 1;
 
-  double input_n;
+  StationSystem *system;
+  double input_n = -1;  // Const input, used for testing (default to negative, which is ignored)
 
   StationSystemInput(const StationSystemInput &cpy, StationSystem *override = NULL)
-      : system(cpy.system), input_n(cpy.input_n), timestep(cpy.timestep) {
+      : system(cpy.system),
+        input_n(cpy.input_n),
+        timestep(cpy.timestep),
+
+        last_update_t(cpy.last_update_t),
+        target_inputs(cpy.target_inputs),
+        accumulated(cpy.accumulated),
+        interp_t(cpy.interp_t),
+        inflows(cpy.inflows) {
     if (override != NULL)
       this->system = override;
   }
-  StationSystemInput(StationSystem *system = NULL, int input = -1)
-      : system(system), input_n(input) {}
+  StationSystemInput(StationSystem *system = NULL, int input = -1);
 
   void operator()(ODE_Solver::Vector &x, double t);
+
+  private:
+  int last_update_t;
+
+  constexpr static int TIME_SERIES_TIMESTEP = 15 * 60;
+  constexpr static int TIME_SERIES_ENTRY_COUNT =
+    (24 * 60) / 15 - 1;                            // 15 minute slices across a day
+  constexpr static int TIME_SERIES_ENTRY_LEN = 9;  // 9 characters
+
+  std::vector<double> accumulated;
+  std::vector<double> target_inputs;
+  std::vector<double> interp_t;
+
+  std::ifstream *inflows;
 };
 
 struct StationFileObserverCache {
@@ -113,6 +134,12 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
   StationSystemInput InputDriver() { return this->input_driver; }
 
   int entrance_count() { return this->input_segment_index.size(); }
+  int entrance_flow_index(int i) {
+    if (i >= this->entrance_flow_rate_indexes.size())
+      return -1;
+    else
+      return this->entrance_flow_rate_indexes[i];
+  }
 
   private:
   // Standard pedestrian parameters
@@ -132,6 +159,8 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
 
   std::vector<int> platform_board_segment_mapping;   // Platform segments that you board from
   std::vector<int> platform_alight_segment_mapping;  // Platform segments that you alight onto
+
+  std::vector<int> entrance_flow_rate_indexes;
 
   std::basic_ifstream<char> &split_ratios;
 
