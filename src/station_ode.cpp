@@ -1,6 +1,13 @@
 #include "station_ode.hpp"
 #include "ode/json_util.hpp"
 
+StationSystemInput::StationSystemInput(StationSystem *system, int input)
+    : system(system),
+      input_n(input),
+      last_update_t(0),
+      target_inputs(system == NULL ? 0 : system->entrance_count(), 0),
+      accumulated(system == NULL ? 0 : system->entrance_count(), 0),
+      interp_t(system == NULL ? 0 : system->entrance_count(), 0) {}
 void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
   if (this->system == NULL)
     return;
@@ -12,6 +19,47 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
   }
   // RVG-driven input
   //  ...
+  int flow_index;
+  auto update_vector = std::vector<double>(system->entrance_count(), 0);
+  for (int i = 1; i < system->entrance_count(); ++i) {
+    // Update flow target if enough time has passed
+    if (t >= this->last_update_t + TIME_SERIES_TIMESTEP) {
+      flow_index = system->entrance_flow_index(i);
+      if (flow_index == -1) {
+        std::cout
+          << "WARN - misconfigured input parameters, unable to get input flow index for entrance "
+          << i << std::endl;
+      }
+
+      else {
+        int slice = ((int)floor(t / 60) % (24 * 60)) / TIME_SERIES_TIMESTEP;
+        int foffset = (flow_index * (TIME_SERIES_ENTRY_COUNT * TIME_SERIES_ENTRY_LEN)) +
+                      (slice * TIME_SERIES_ENTRY_LEN);
+
+        inflows->seekg(foffset, std::ios_base::beg);
+        char read[9] = "\0\0\0\0\0\0\0\0";
+        inflows->read(read, 8);
+        this->target_inputs[i] += atof(read);
+
+        this->target_inputs[i] -= this->accumulated[i];
+        this->accumulated[i] = 0;
+      }
+    }
+
+    //
+    double interp = this->target_inputs[i] * (fmod(t, TIME_SERIES_TIMESTEP) / TIME_SERIES_TIMESTEP);
+    double delta = interp - this->accumulated[i];
+    if (delta < 1)
+      continue;
+    delta = floor(delta);
+    this->accumulated[i] += delta;
+    update_vector[i] += delta;
+  }
+  x += system->EntranceUpdateVector(update_vector);
+
+  // Do this at the end, not in the loop
+  if (t >= this->last_update_t + TIME_SERIES_TIMESTEP)
+    this->last_update_t += TIME_SERIES_TIMESTEP;  // Update
 }
 
 StationSystem::StationSystem(boost::json::object data, std::ifstream &split_ratios,
