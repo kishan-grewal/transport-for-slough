@@ -36,9 +36,7 @@ struct StationSystemInput {
   constexpr static int TIME_SERIES_TIMESTEP = 15 * 60;
   // constexpr static int TIME_SERIES_ENTRY_COUNT = (24 * 60) / 15;  // 15 minute slices across a
   // day
-  constexpr static int TIME_SERIES_CELL_OFFSET = 18;  // Start from element at index 18
-  // Start from 1st row 0 indexing (not 2nd row 1 indexing like excel)
-  constexpr static int TIME_SERIES_ROW_OFFSET = 1;
+  constexpr static int TIME_SERIES_ROW_OFFSET = 1;  // Skip column headers
   constexpr static int TIME_SERIES_MAX_LINE_LEN = 2000;
 
   std::vector<double> accumulated;
@@ -96,8 +94,9 @@ struct StationFileObserverCache {
   }
 };
 struct StationFileObserver : ODE_Solver::GlobalTimeObserverTemplate {
-  StationFileObserver(std::string path) : cache(std::make_shared<StationFileObserverCache>(path)) {
-    this->timestep = 5;
+  StationFileObserver(std::string path, double timestep = 5)
+      : cache(std::make_shared<StationFileObserverCache>(path)) {
+    this->timestep = timestep;
   }
   StationFileObserver(StationFileObserver &cpy) : cache(cpy.cache) {
     this->timestep = cpy.timestep;
@@ -159,7 +158,7 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
   constexpr static double p_cap = 1 / (v0 * t_gap + l_eff);
 
   constexpr static int TIME_SERIES_ENTRY_COUNT =
-    (24 * 60) / 15 - 1;                            // 15 minute slices across a day
+    ((24 * 60) / 15) * 7;                          // 15 minute slices across a day, 7 days
   constexpr static int TIME_SERIES_ENTRY_LEN = 9;  // 9 characters
 
   StationSystemInput input_driver;
@@ -206,10 +205,11 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
     this->split_ratios.clear();
     char read[9] = "\0\0\0\0\0\0\0\0";
     this->split_ratios.read(read, 8);
-    if (atof(read) > 1 || atof(read) < 0)
+    double out = atof(read);
+    if (out > 1 || out < 0)
       std::cout << "WARN - read at " << segments[i].split_ratio_series_index << " " << t << "("
                 << slice << " " << foffset << ")" << " returned invalid " << read << std::endl;
-    return atof(read);
+    return out;
   }
 
   enum SegmentType : unsigned char {

@@ -51,7 +51,7 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
       continue;
     delta = floor(delta);
     this->accumulated[i] += delta;
-    // std::cout << "Inflow of " << delta << " people" << std::endl;
+    // std::cout << "Inflow of " << delta << " people at entrance " << i << std::endl;
     update_vector[i] += delta;
   }
   x += system->EntranceUpdateVector(update_vector);
@@ -86,7 +86,7 @@ double StationSystemInput::read_inflow(int flow_index, double t) {
     Tokenizer;
 
   inflows->seekg(0, std::ios_base::beg);
-  for (int i = 0; i < flow_index - TIME_SERIES_ROW_OFFSET; ++i) {
+  for (int i = 0; i < flow_index + TIME_SERIES_ROW_OFFSET; ++i) {
     inflows->ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   }
   std::string s;
@@ -96,7 +96,7 @@ double StationSystemInput::read_inflow(int flow_index, double t) {
   Tokenizer tok(s, seps);
 
   auto start = tok.begin();
-  for (int i = 0; i < TIME_SERIES_CELL_OFFSET + slice; ++i, ++start)
+  for (int i = 0; i < slice; ++i, ++start)
     ;
   return std::stod(*start);
 }
@@ -130,6 +130,9 @@ StationSystem::StationSystem(boost::json::object data, std::ifstream &split_rati
         id = segment.at("platform_id").as_int64();
       else if (segment.at("platform_id").is_uint64())
         id = segment.at("platform_id").as_uint64();
+      else if (segment.at("platform_id").is_string() &&
+               segment.at("platform_id").as_string() == "NONE")
+        continue;
       else
         throw std::runtime_error(
           "Invalid JSON value for station data, expected integer for key [platform_id]");
@@ -174,6 +177,7 @@ StationSystem::StationSystem(boost::json::object data, std::ifstream &split_rati
   else if (data.at("initial_state").is_number()) {
     double val = 0;
     JSON_ParseNumericToDouble(val, &data.at("initial_state"));
+    std::cout << "Setting initial state to " << val << std::endl;
     this->initial_state = ODE_Solver::Vector(len, val);
   }
   else
@@ -417,8 +421,9 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
         if (segments[i].adjacent != -1) {
           p_self = (p_self + x[segments[i].adjacent] / _density_factor(segments[i].adjacent)) / 2;
         }
-        if (segments[segments[i].prev].adjacent != -1)
+        if (segments[segments[i].prev].adjacent != -1) {
           p_inflow /= 2;
+        }
 
         dxdt[i] = fmin(Qb_out(p_inflow), Qb_in(p_self));
         break;
