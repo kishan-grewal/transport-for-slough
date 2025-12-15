@@ -1,1 +1,451 @@
-{"Bond Street Underground Station": {"initial_state": 0, "input": [{"index": 0}, {"index": 1}], "structure": [{"id": 0, "type": "AREA_OUTFLOW", "next": 2, "xk": 1, "is_entrance": true}, {"id": 1, "type": "AREA_INFLOW", "prev": 3, "xk": 2147483647}, {"id": 2, "type": "DIRECT", "next": 4, "prev": 0, "xk": 1, "adjacent": 3}, {"id": 3, "type": "DIRECT", "next": 1, "prev": 5, "xk": 1, "adjacent": 2}, {"id": 4, "type": "DIRECT", "next": 10, "prev": 2, "xk": 1, "adjacent": 5}, {"id": 5, "type": "DIRECT", "next": 3, "prev": 11, "xk": 1, "adjacent": 4}, {"id": 6, "type": "DIRECT", "next": 28, "prev": 12, "xk": 1, "adjacent": 7}, {"id": 7, "type": "DIRECT", "next": 13, "prev": 29, "xk": 1, "adjacent": 6}, {"id": 8, "type": "AREA_INFLOW", "prev": 30, "xk": 120, "platform_id": 0, "adjacent": 9}, {"id": 9, "type": "AREA_OUTFLOW", "next": 31, "xk": 120, "adjacent": 8, "platform_id": 0, "is_entrance": false}, {"type": "SPLIT_OUTPUT", "id": 10, "prev": 4, "next": 12, "adjacent": 11, "secondary": 14, "split_ratio": {"index": 0}, "xk": 1}, {"type": "SPLIT_INPUT", "id": 11, "prev": 13, "next": 5, "adjacent": 10, "secondary": 15, "xk": 1}, {"type": "SPLIT_INPUT", "id": 12, "prev": 10, "next": 6, "adjacent": 13, "secondary": 15, "xk": 1}, {"type": "SPLIT_OUTPUT", "id": 13, "prev": 7, "next": 11, "adjacent": 12, "secondary": 14, "split_ratio": 1, "xk": 1}, {"type": "SPLIT_INPUT", "id": 14, "prev": 10, "next": 16, "adjacent": 15, "secondary": 13, "xk": 1}, {"type": "SPLIT_OUTPUT", "id": 15, "prev": 17, "next": 11, "adjacent": 14, "secondary": 12, "split_ratio": 1, "xk": 1}, {"id": 16, "type": "DIRECT", "next": 42, "prev": 14, "xk": 1, "adjacent": 17}, {"id": 17, "type": "DIRECT", "next": 15, "prev": 43, "xk": 1, "adjacent": 16}, {"id": 18, "type": "AREA_INFLOW", "prev": 44, "xk": 120, "platform_id": 1, "adjacent": 19}, {"id": 19, "type": "AREA_OUTFLOW", "next": 45, "xk": 120, "adjacent": 18, "platform_id": 1, "is_entrance": false}, {"id": 20, "type": "AREA_OUTFLOW", "next": 22, "xk": 1, "is_entrance": true}, {"id": 21, "type": "AREA_INFLOW", "prev": 23, "xk": 2147483647}, {"id": 22, "type": "DIRECT", "next": 24, "prev": 20, "xk": 1, "adjacent": 23}, {"id": 23, "type": "DIRECT", "next": 21, "prev": 25, "xk": 1, "adjacent": 22}, {"id": 24, "type": "DIRECT", "next": 38, "prev": 22, "xk": 1, "adjacent": 25}, {"id": 25, "type": "DIRECT", "next": 23, "prev": 39, "xk": 1, "adjacent": 24}, {"id": 26, "type": "DIRECT", "next": 34, "prev": 36, "xk": 1, "adjacent": 27}, {"id": 27, "type": "DIRECT", "next": 37, "prev": 35, "xk": 1, "adjacent": 26}, {"type": "SPLIT_OUTPUT", "id": 28, "prev": 6, "next": 30, "adjacent": 29, "secondary": 32, "split_ratio": 0, "xk": 1}, {"type": "SPLIT_INPUT", "id": 29, "prev": 31, "next": 7, "adjacent": 28, "secondary": 33, "xk": 1}, {"type": "SPLIT_INPUT", "id": 30, "prev": 28, "next": 8, "adjacent": 31, "secondary": 33, "xk": 1}, {"type": "SPLIT_OUTPUT", "id": 31, "prev": 9, "next": 29, "adjacent": 30, "secondary": 32, "split_ratio": 1, "xk": 1}, {"type": "SPLIT_INPUT", "id": 32, "prev": 28, "next": 35, "adjacent": 33, "secondary": 31, "xk": 1}, {"type": "SPLIT_OUTPUT", "id": 33, "prev": 34, "next": 29, "adjacent": 32, "secondary": 30, "split_ratio": 0, "xk": 1}, {"id": 34, "type": "DIRECT", "next": 33, "prev": 26, "xk": 1, "adjacent": 35}, {"id": 35, "type": "DIRECT", "next": 27, "prev": 32, "xk": 1, "adjacent": 34}, {"type": "SPLIT_OUTPUT", "id": 36, "prev": 26, "next": 38, "adjacent": 37, "secondary": 40, "split_ratio": 0, "xk": 1}, {"type": "SPLIT_INPUT", "id": 37, "prev": 39, "next": 27, "adjacent": 36, "secondary": 41, "xk": 1}, {"type": "SPLIT_INPUT", "id": 38, "prev": 36, "next": 24, "adjacent": 39, "secondary": 41, "xk": 1}, {"type": "SPLIT_OUTPUT", "id": 39, "prev": 25, "next": 37, "adjacent": 38, "secondary": 40, "split_ratio": 1, "xk": 1}, {"type": "SPLIT_INPUT", "id": 40, "prev": 36, "next": 48, "adjacent": 41, "secondary": 39, "xk": 1}, {"type": "SPLIT_OUTPUT", "id": 41, "prev": 49, "next": 37, "adjacent": 40, "secondary": 38, "split_ratio": 1, "xk": 1}, {"type": "SPLIT_OUTPUT", "id": 42, "prev": 16, "next": 44, "adjacent": 43, "secondary": 46, "split_ratio": 0, "xk": 1}, {"type": "SPLIT_INPUT", "id": 43, "prev": 45, "next": 17, "adjacent": 42, "secondary": 47, "xk": 1}, {"type": "SPLIT_INPUT", "id": 44, "prev": 42, "next": 18, "adjacent": 45, "secondary": 47, "xk": 1}, {"type": "SPLIT_OUTPUT", "id": 45, "prev": 19, "next": 43, "adjacent": 44, "secondary": 46, "split_ratio": 0, "xk": 1}, {"type": "SPLIT_INPUT", "id": 46, "prev": 42, "next": 49, "adjacent": 47, "secondary": 45, "xk": 1}, {"type": "SPLIT_OUTPUT", "id": 47, "prev": 48, "next": 43, "adjacent": 40, "secondary": 44, "split_ratio": 0, "xk": 1}, {"id": 48, "type": "DIRECT", "next": 47, "prev": 40, "xk": 1, "adjacent": 49}, {"id": 49, "type": "DIRECT", "next": 41, "prev": 46, "xk": 1, "adjacent": 48}]}}
+{
+  "Bond Street Underground Station": {
+    "initial_state": 0,
+    "input": [
+      {
+        "index": 0
+      },
+      {
+        "index": 1
+      }
+    ],
+    "structure": [
+      {
+        "id": 0,
+        "type": "AREA_OUTFLOW",
+        "next": 2,
+        "xk": 1,
+        "is_entrance": true
+      },
+      {
+        "id": 1,
+        "type": "AREA_INFLOW",
+        "prev": 3,
+        "xk": 2147483647
+      },
+      {
+        "id": 2,
+        "type": "DIRECT",
+        "next": 4,
+        "prev": 0,
+        "xk": 1,
+        "adjacent": 3
+      },
+      {
+        "id": 3,
+        "type": "DIRECT",
+        "next": 1,
+        "prev": 5,
+        "xk": 1,
+        "adjacent": 2
+      },
+      {
+        "id": 4,
+        "type": "DIRECT",
+        "next": 10,
+        "prev": 2,
+        "xk": 1,
+        "adjacent": 5
+      },
+      {
+        "id": 5,
+        "type": "DIRECT",
+        "next": 3,
+        "prev": 11,
+        "xk": 1,
+        "adjacent": 4
+      },
+      {
+        "id": 6,
+        "type": "DIRECT",
+        "next": 28,
+        "prev": 12,
+        "xk": 1,
+        "adjacent": 7
+      },
+      {
+        "id": 7,
+        "type": "DIRECT",
+        "next": 13,
+        "prev": 29,
+        "xk": 1,
+        "adjacent": 6
+      },
+      {
+        "id": 8,
+        "type": "AREA_INFLOW",
+        "prev": 30,
+        "xk": 120,
+        "platform_id": 0,
+        "adjacent": 9
+      },
+      {
+        "id": 9,
+        "type": "AREA_OUTFLOW",
+        "next": 31,
+        "xk": 120,
+        "adjacent": 8,
+        "platform_id": 0,
+        "is_entrance": false
+      },
+      {
+        "type": "SPLIT_OUTPUT",
+        "id": 10,
+        "prev": 4,
+        "next": 12,
+        "adjacent": 11,
+        "secondary": 14,
+        "split_ratio": {
+          "index": 0
+        },
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_INPUT",
+        "id": 11,
+        "prev": 13,
+        "next": 5,
+        "adjacent": 10,
+        "secondary": 15,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_INPUT",
+        "id": 12,
+        "prev": 10,
+        "next": 6,
+        "adjacent": 13,
+        "secondary": 15,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_OUTPUT",
+        "id": 13,
+        "prev": 7,
+        "next": 11,
+        "adjacent": 12,
+        "secondary": 14,
+        "split_ratio": 0,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_INPUT",
+        "id": 14,
+        "prev": 10,
+        "next": 16,
+        "adjacent": 15,
+        "secondary": 13,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_OUTPUT",
+        "id": 15,
+        "prev": 17,
+        "next": 11,
+        "adjacent": 14,
+        "secondary": 12,
+        "split_ratio": 0,
+        "xk": 1
+      },
+      {
+        "id": 16,
+        "type": "DIRECT",
+        "next": 42,
+        "prev": 14,
+        "xk": 1,
+        "adjacent": 17
+      },
+      {
+        "id": 17,
+        "type": "DIRECT",
+        "next": 15,
+        "prev": 43,
+        "xk": 1,
+        "adjacent": 16
+      },
+      {
+        "id": 18,
+        "type": "AREA_INFLOW",
+        "prev": 44,
+        "xk": 120,
+        "platform_id": 1,
+        "adjacent": 19
+      },
+      {
+        "id": 19,
+        "type": "AREA_OUTFLOW",
+        "next": 45,
+        "xk": 120,
+        "adjacent": 18,
+        "platform_id": 1,
+        "is_entrance": false
+      },
+      {
+        "id": 20,
+        "type": "AREA_OUTFLOW",
+        "next": 22,
+        "xk": 1,
+        "is_entrance": true
+      },
+      {
+        "id": 21,
+        "type": "AREA_INFLOW",
+        "prev": 23,
+        "xk": 2147483647
+      },
+      {
+        "id": 22,
+        "type": "DIRECT",
+        "next": 24,
+        "prev": 20,
+        "xk": 1,
+        "adjacent": 23
+      },
+      {
+        "id": 23,
+        "type": "DIRECT",
+        "next": 21,
+        "prev": 25,
+        "xk": 1,
+        "adjacent": 22
+      },
+      {
+        "id": 24,
+        "type": "DIRECT",
+        "next": 26,
+        "prev": 22,
+        "xk": 1,
+        "adjacent": 25
+      },
+      {
+        "id": 25,
+        "type": "DIRECT",
+        "next": 23,
+        "prev": 27,
+        "xk": 1,
+        "adjacent": 24
+      },
+      {
+        "id": 26,
+        "type": "DIRECT",
+        "next": 36,
+        "prev": 24,
+        "xk": 1,
+        "adjacent": 27
+      },
+      {
+        "id": 27,
+        "type": "DIRECT",
+        "next": 25,
+        "prev": 37,
+        "xk": 1,
+        "adjacent": 26
+      },
+      {
+        "type": "SPLIT_OUTPUT",
+        "id": 28,
+        "prev": 6,
+        "next": 30,
+        "adjacent": 29,
+        "secondary": 32,
+        "split_ratio": 0,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_INPUT",
+        "id": 29,
+        "prev": 31,
+        "next": 7,
+        "adjacent": 28,
+        "secondary": 33,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_INPUT",
+        "id": 30,
+        "prev": 28,
+        "next": 8,
+        "adjacent": 31,
+        "secondary": 33,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_OUTPUT",
+        "id": 31,
+        "prev": 9,
+        "next": 29,
+        "adjacent": 30,
+        "secondary": 32,
+        "split_ratio": 1,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_INPUT",
+        "id": 32,
+        "prev": 28,
+        "next": 35,
+        "adjacent": 33,
+        "secondary": 31,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_OUTPUT",
+        "id": 33,
+        "prev": 34,
+        "next": 29,
+        "adjacent": 32,
+        "secondary": 30,
+        "split_ratio": 0,
+        "xk": 1
+      },
+      {
+        "id": 34,
+        "type": "DIRECT",
+        "next": 33,
+        "prev": 38,
+        "xk": 1,
+        "adjacent": 35
+      },
+      {
+        "id": 35,
+        "type": "DIRECT",
+        "next": 39,
+        "prev": 32,
+        "xk": 1,
+        "adjacent": 34
+      },
+      {
+        "type": "SPLIT_OUTPUT",
+        "id": 36,
+        "prev": 26,
+        "next": 38,
+        "adjacent": 37,
+        "secondary": 40,
+        "split_ratio": {
+          "index": 1
+        },
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_INPUT",
+        "id": 37,
+        "prev": 39,
+        "next": 27,
+        "adjacent": 36,
+        "secondary": 41,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_INPUT",
+        "id": 38,
+        "prev": 36,
+        "next": 34,
+        "adjacent": 39,
+        "secondary": 41,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_OUTPUT",
+        "id": 39,
+        "prev": 35,
+        "next": 37,
+        "adjacent": 38,
+        "secondary": 40,
+        "split_ratio": 1,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_INPUT",
+        "id": 40,
+        "prev": 36,
+        "next": 48,
+        "adjacent": 41,
+        "secondary": 39,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_OUTPUT",
+        "id": 41,
+        "prev": 49,
+        "next": 37,
+        "adjacent": 40,
+        "secondary": 38,
+        "split_ratio": 0,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_OUTPUT",
+        "id": 42,
+        "prev": 16,
+        "next": 44,
+        "adjacent": 43,
+        "secondary": 46,
+        "split_ratio": 0,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_INPUT",
+        "id": 43,
+        "prev": 45,
+        "next": 17,
+        "adjacent": 42,
+        "secondary": 47,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_INPUT",
+        "id": 44,
+        "prev": 42,
+        "next": 14,
+        "adjacent": 45,
+        "secondary": 47,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_OUTPUT",
+        "id": 45,
+        "prev": 15,
+        "next": 43,
+        "adjacent": 44,
+        "secondary": 46,
+        "split_ratio": 1,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_INPUT",
+        "id": 46,
+        "prev": 42,
+        "next": 49,
+        "adjacent": 47,
+        "secondary": 45,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_OUTPUT",
+        "id": 47,
+        "prev": 48,
+        "next": 43,
+        "adjacent": 40,
+        "secondary": 44,
+        "split_ratio": 0,
+        "xk": 1
+      },
+      {
+        "id": 48,
+        "type": "DIRECT",
+        "next": 47,
+        "prev": 40,
+        "xk": 1,
+        "adjacent": 49
+      },
+      {
+        "id": 49,
+        "type": "DIRECT",
+        "next": 41,
+        "prev": 46,
+        "xk": 1,
+        "adjacent": 48
+      }
+    ]
+  }
+}

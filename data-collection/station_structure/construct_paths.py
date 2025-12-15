@@ -510,15 +510,15 @@ class EdgeManager:
       self.station_structure.extend([
         {"type":"SPLIT_OUTPUT","id":l,"prev":existing_start_idx[0],"next":l+2,"adjacent":l+1, "secondary":l+4,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+1,"prev":l+3,"next":existing_start_idx[1],"adjacent":l, "secondary":l+5, "xk":SLICE_LEN},
-        {"type":"SPLIT_INPUT","id":l+2,"prev":l,"next":self.station_structure[existing_start_idx[0]]["prev"],"adjacent":l+3, "secondary":l+5, "xk":SLICE_LEN},
-        {"type":"SPLIT_OUTPUT","id":l+3,"prev":self.station_structure[existing_start_idx[1]]["next"],"next":l+1,"adjacent":l+2, "secondary":l+4,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
+        {"type":"SPLIT_INPUT","id":l+2,"prev":l,"next":self.station_structure[existing_start_idx[0]]["next"],"adjacent":l+3, "secondary":l+5, "xk":SLICE_LEN},
+        {"type":"SPLIT_OUTPUT","id":l+3,"prev":self.station_structure[existing_start_idx[1]]["prev"],"next":l+1,"adjacent":l+2, "secondary":l+4,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+4,"prev":l,"next":-1,"adjacent":l+5, "secondary":l+3, "xk":SLICE_LEN},
         {"type":"SPLIT_OUTPUT","id":l+5,"prev":-1,"next":l+1,"adjacent":l+4, "secondary":l+2,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         
         {"type":"SPLIT_OUTPUT","id":l+6,"prev":existing_end_idx[0],"next":l+8,"adjacent":l+7, "secondary":l+10,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+7,"prev":l+9,"next":existing_end_idx[1],"adjacent":l+6, "secondary":l+11, "xk":SLICE_LEN},
-        {"type":"SPLIT_INPUT","id":l+8,"prev":l+6,"next":self.station_structure[existing_end_idx[0]]["next"],"adjacent":l+9, "secondary":l+11, "xk":SLICE_LEN},
-        {"type":"SPLIT_OUTPUT","id":l+9,"prev":self.station_structure[existing_end_idx[1]]["prev"],"next":l+7,"adjacent":l+8, "secondary":l+10,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
+        {"type":"SPLIT_INPUT","id":l+8,"prev":l+6,"next":self.station_structure[existing_end_idx[0]]["prev"],"adjacent":l+9, "secondary":l+11, "xk":SLICE_LEN},
+        {"type":"SPLIT_OUTPUT","id":l+9,"prev":self.station_structure[existing_end_idx[1]]["next"],"next":l+7,"adjacent":l+8, "secondary":l+10,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+10,"prev":l+6,"next":-1,"adjacent":l+11, "secondary":l+9, "xk":SLICE_LEN},
         {"type":"SPLIT_OUTPUT","id":l+11,"prev":-1,"next":l+7,"adjacent":l+4, "secondary":l+8,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
       ])
@@ -557,14 +557,14 @@ class EdgeManager:
       if self_edge_id_graph in self.split_nodes:
         raise Exception()
       else:
-        self.split_nodes[self_edge_id_graph] = [SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+11],"reverse_flows",["reverse_flows","forward_flows"]) ,SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+5],"forward_flows",["reverse_flows","forward_flows"]), ]
-
+        print(start_edge_id_graph)
+        self.split_nodes[self_edge_id_graph] = [SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+5],"reverse_flows",["forward_flows","reverse_flows"]), SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+11],"forward_flows",["reverse_flows","forward_flows"]) ,]
 
       # Fill in linking parameters in structure
-      self.station_structure[self.station_structure[existing_start_idx[0]]["prev"]]["next"] = l+2
-      self.station_structure[self.station_structure[existing_start_idx[1]]["next"]]["prev"] = l+3
-      self.station_structure[existing_start_idx[0]]["prev"] = l
-      self.station_structure[existing_start_idx[1]]["next"] = l+1
+      self.station_structure[self.station_structure[existing_start_idx[0]]["next"]]["prev"] = l+2
+      self.station_structure[self.station_structure[existing_start_idx[1]]["prev"]]["next"] = l+3
+      self.station_structure[existing_start_idx[0]]["next"] = l
+      self.station_structure[existing_start_idx[1]]["prev"] = l+1
 
       # Fill in linking parameters in structure
       self.station_structure[self.station_structure[existing_end_idx[0]]["next"]]["prev"] = l+8
@@ -601,10 +601,10 @@ class EdgeManager:
   
   def __update_junction_nodes(self, edge_flow_graph, id, junc : SegmentJunction, split_rates : list, flow_rates : pd.DataFrame):
     print("Updating split node "+str(id))
-    inflow = edge_flow_graph.get_edge_data(*id)[junc.dir]#.copy()
-
+    inflow = edge_flow_graph.get_edge_data(*id)[junc.dir].copy()
+    
     for i in range(len(junc.outflow_idxs)):
-      primary_outflow = edge_flow_graph.get_edge_data(*junc.outflow_edges[i]).copy()
+      primary_outflow = edge_flow_graph.get_edge_data(*junc.outflow_edges[i])#.copy()
       # print(primary_outflow, junc.outflow_dirs[i])
       primary_outflow = [*set(n for n in primary_outflow[junc.outflow_dirs[i]] if n in inflow)]
       split = [inflow, primary_outflow]
@@ -653,7 +653,7 @@ class EdgeManager:
     for edge in self.edges:
       edge_flow_graph.add_edge(*self.__edge_id(edge),forward_flows=edge.forward_flows,reverse_flows=edge.reverse_flows)
 
-    # print(*edge_flow_graph.edges.data(),sep="\n")
+    print(*edge_flow_graph.edges.data(),sep="\n")
     # import matplotlib.pyplot as plt
     # plt.figure(1)
     # nx.draw_networkx(edge_flow_graph)
