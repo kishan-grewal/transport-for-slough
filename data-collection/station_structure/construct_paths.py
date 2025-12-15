@@ -71,7 +71,7 @@ class EdgeData:
     end_idx = []
 
     platforms = {}
-    entrances = {}
+    entrances = []
 
     last_fwd = -1
     last_rev = -1
@@ -81,6 +81,7 @@ class EdgeData:
       last_fwd = len(segments)-1
       start_idx.append(last_fwd + idx_offset)
       end_idx = [last_fwd + idx_offset]
+      entrances.append(self.forward_flows)
       
       
       if self.reversible:
@@ -97,6 +98,7 @@ class EdgeData:
     
     distance = vincenty_sphere_distance(float(self.start_node["x"]),float(self.start_node["y"]),float(self.end_node["x"]),float(self.end_node["y"]))
     n_slices = max(1,math.ceil(distance / SLICE_LEN)) # Ensure there is always one segment, even for negligible length regions
+    n_slices = 1
 
     for _ in range(n_slices):
       if last_fwd != -1: segments[last_fwd]["next"] = len(segments) + idx_offset
@@ -122,7 +124,8 @@ class EdgeData:
       if len(splt) > 1:
         platform_id = int(splt[1])
       
-      segments.append({"id":len(segments)+idx_offset,"type":"AREA_INFLOW","prev":last_fwd + idx_offset,"xk":PLATFORM_LEN, "platform_id":platform_id})
+      segments.append({"id":len(segments)+idx_offset,"type":"AREA_INFLOW","prev":last_fwd + idx_offset,"xk":PLATFORM_LEN if platform_id != "NONE" else 2147483647, 
+                       "platform_id":platform_id})
       last_fwd = len(segments) - 1
       end_idx[0] = last_fwd + idx_offset
 
@@ -131,18 +134,22 @@ class EdgeData:
       else:
         platforms[platform_id] = [len(segments)-1 + idx_offset]
 
+      if platform_id == "NONE":
+        entrances.append(self.reverse_flows)
+
       
       if self.reversible:
         if last_rev != -1: segments[last_rev]["prev"] = len(segments) + idx_offset
         
         adj_i = len(segments)-1
-        segments.append({"id":len(segments)+idx_offset,"type":"AREA_OUTFLOW","next":last_rev + idx_offset,"xk":PLATFORM_LEN,"adjacent":adj_i + idx_offset, "platform_id":platform_id})
+        segments.append({"id":len(segments)+idx_offset,"type":"AREA_OUTFLOW","next":last_rev + idx_offset,"xk":PLATFORM_LEN,"adjacent":adj_i + idx_offset, 
+                         "platform_id":platform_id, "is_entrance": platform_id == "NONE"})
         segments[adj_i]["adjacent"] = len(segments)-1 + idx_offset
         platforms[platform_id].append(len(segments)-1 + idx_offset)
         last_rev = len(segments) - 1
         end_idx[1] = last_rev + idx_offset
 
-    return segments, start_idx, end_idx, platforms
+    return segments, start_idx, end_idx, platforms, entrances
 
 class SegmentJunction:
   def __init__(self, outflow_edges, outflow_idxs, dir, outflow_dirs):
@@ -201,17 +208,18 @@ class EdgeManager:
 
   def register_edge(self, edge : EdgeData):
     edge_platforms = {}
+    edge_entrances = []
     for e in self.edges:
       # Edge already exists
       if e.matches(edge.start_node.name, edge.end_node.name):
         e.forward_flows += edge.forward_flows
         e.reverse_flows += edge.reverse_flows
-        return {}
+        return {}, []
       # Reversed edge exists, and one or the other can be reversed
       if (e.reversible or edge.reversible) and (e.matches(edge.end_node.name, edge.start_node.name)):
         e.forward_flows += edge.reverse_flows
         e.reverse_flows += edge.forward_flows
-        return {}
+        return {}, []
     
     start = None; end = None; prev = None; next = None
     for i,e in enumerate(self.edges):
@@ -228,8 +236,8 @@ class EdgeManager:
     print(f"\tS: {start} | E: {end} | P: {prev} | N: {next} | ({edge.start_node.name} - {edge.end_node.name})")
     if prev is None and start is None and end is None: # No connections needed
       l = len(self.station_structure)
-      struc, start_idx, end_idx, platforms = edge.to_dict(l)
-      edge_platforms.update(platforms)
+      struc, start_idx, end_idx, platforms, entrances = edge.to_dict(l)
+      edge_platforms.update(platforms); edge_entrances.extend(entrances)
 
       self.station_structure.extend(struc)
       self.edge_starts.append(start_idx)
@@ -246,8 +254,8 @@ class EdgeManager:
       if len(existing_start_idx) == 1:
         l = len(self.station_structure)
         self.station_structure[existing_start_idx[0]]["next"] = l
-        struc, start_idx, end_idx,platforms = edge.to_dict(l)
-        edge_platforms.update(platforms)
+        struc, start_idx, end_idx,platforms,entrances = edge.to_dict(l)
+        edge_platforms.update(platforms); edge_entrances.extend(entrances)
         
         if len(start_idx) != len(existing_start_idx):
           raise Exception("Cannot join bi-directional edge to unidirectional edge")
@@ -269,8 +277,8 @@ class EdgeManager:
         else:
           self.station_structure[existing_start_idx[0]]["next"] = l
           self.station_structure[existing_start_idx[1]]["prev"] = l+1
-          struc, start_idx, end_idx,platforms = edge.to_dict(l)
-          edge_platforms.update(platforms)
+          struc, start_idx, end_idx,platforms,entrances = edge.to_dict(l)
+          edge_platforms.update(platforms); edge_entrances.extend(entrances)
           
           if len(start_idx) != len(existing_start_idx):
             raise Exception("Cannot join bi-directional edge to unidirectional edge")
@@ -346,9 +354,6 @@ class EdgeManager:
       # ---------------------------------
 
       # Fill in linking parameters in structure
-      print(self.station_structure[self.station_structure[existing_start_idx[0]]["next"]])
-      print(self.station_structure[self.station_structure[existing_start_idx[1]]["prev"]])
-
       if self.station_structure[self.station_structure[existing_start_idx[0]]["next"]]["type"] == "SPLIT_INPUT": # Reversed order
         self.station_structure[self.station_structure[existing_start_idx[0]]["next"]]["next"] = l+2
         self.station_structure[self.station_structure[existing_start_idx[1]]["prev"]]["prev"] = l+3
@@ -359,8 +364,8 @@ class EdgeManager:
       self.station_structure[existing_start_idx[0]]["next"] = l
       self.station_structure[existing_start_idx[1]]["prev"] = l+1
 
-      struc, start_idx, end_idx,platforms = edge.to_dict(l+6, ignore_entrance=True, ignore_platform=next is not None)
-      edge_platforms.update(platforms)
+      struc, start_idx, end_idx,platforms,entrances = edge.to_dict(l+6, ignore_entrance=True, ignore_platform=next is not None)
+      edge_platforms.update(platforms); edge_entrances.extend(entrances)
       
       if len(start_idx) != len(existing_start_idx):
         raise Exception("Cannot join bi-directional edge to unidirectional edge")
@@ -439,16 +444,13 @@ class EdgeManager:
       # ---------------------------------
 
       # Fill in linking parameters in structure
-      print(self.station_structure[self.station_structure[existing_end_idx[0]]["next"]])
-      print(self.station_structure[self.station_structure[existing_end_idx[1]]["prev"]])
-
       self.station_structure[self.station_structure[existing_end_idx[0]]["next"]]["prev"] = l+2
       self.station_structure[self.station_structure[existing_end_idx[1]]["prev"]]["next"] = l+3
       self.station_structure[existing_end_idx[0]]["next"] = l
       self.station_structure[existing_end_idx[1]]["prev"] = l+1
 
-      struc, start_idx, end_idx,platforms = edge.to_dict(l+6, ignore_entrance=prev is not None, ignore_platform=True)
-      edge_platforms.update(platforms)
+      struc, start_idx, end_idx,platforms, entrances = edge.to_dict(l+6, ignore_entrance=prev is not None, ignore_platform=True)
+      edge_platforms.update(platforms); edge_entrances.extend(entrances)
       
       if len(start_idx) != len(existing_end_idx):
         raise Exception("Cannot join bi-directional edge to unidirectional edge")
@@ -570,8 +572,8 @@ class EdgeManager:
       self.station_structure[existing_end_idx[0]]["next"] = l+6
       self.station_structure[existing_end_idx[1]]["prev"] = l+7
 
-      struc, start_idx, end_idx,platforms = edge.to_dict(l+12, ignore_entrance=prev is None, ignore_platform=next is None)
-      edge_platforms.update(platforms)
+      struc, start_idx, end_idx,platforms,entrances = edge.to_dict(l+12, ignore_entrance=prev is None, ignore_platform=next is None)
+      edge_platforms.update(platforms); edge_entrances.extend(entrances)
       
       if len(start_idx) != len(existing_start_idx):
         raise Exception("Cannot join bi-directional edge to unidirectional edge")
@@ -595,7 +597,7 @@ class EdgeManager:
       self.edge_ends.append(end_idx)
       print(f"  Linked bidirectional edge between junctions from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure [{prev} {next}]")
     
-    return edge_platforms
+    return edge_platforms, edge_entrances
   
   def __update_junction_nodes(self, edge_flow_graph, id, junc : SegmentJunction, split_rates : list, flow_rates : pd.DataFrame):
     print("Updating split node "+str(id))
@@ -606,7 +608,7 @@ class EdgeManager:
       # print(primary_outflow, junc.outflow_dirs[i])
       primary_outflow = [*set(n for n in primary_outflow[junc.outflow_dirs[i]] if n in inflow)]
       split = [inflow, primary_outflow]
-      print("  Split ("+str(junc.outflow_idxs[i])+"): "+str(split))
+      print("  Split ("+str(junc.outflow_idxs[i])+"): "+str(split) + str([n for n in edge_flow_graph.get_edge_data(*junc.outflow_edges[i]).copy()[junc.outflow_dirs[i]]]))
       
       if len(primary_outflow) == 0:
         self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = 0# if junc.dir != "reverse_flows" else 1
@@ -652,6 +654,11 @@ class EdgeManager:
       edge_flow_graph.add_edge(*self.__edge_id(edge),forward_flows=edge.forward_flows,reverse_flows=edge.reverse_flows)
 
     # print(*edge_flow_graph.edges.data(),sep="\n")
+    # import matplotlib.pyplot as plt
+    # plt.figure(1)
+    # nx.draw_networkx(edge_flow_graph)
+    # plt.show()
+
     for id, junc in self.split_nodes.items():
       if isinstance(junc,SegmentJunction):
         self.__update_junction_nodes(edge_flow_graph,id,junc,split_rates,flow_rates)
@@ -675,13 +682,33 @@ with open(path, "rb") as f:
   stations = pickle.load(f)
 assert stations is not None
 
-station_flows = pd.read_csv("data/presentation-data/csv_sheet/Station_Flows/NBT24FRI_filtered.csv")
+station_flows = pd.DataFrame()
+flow_root = "data/presentation-data/csv_sheet/Station_Flows/"
+tmp = pd.read_csv(flow_root+"NBT24MON_filtered.csv")
+station_flows = pd.concat([station_flows,tmp],axis=1)
+# Tues Weds Thurs
+tmp = pd.read_csv(flow_root+"NBT24TWT_filtered.csv").iloc(axis=1)[18:]
+station_flows = pd.concat([station_flows,tmp],axis=1)
+station_flows = pd.concat([station_flows,tmp],axis=1)
+station_flows = pd.concat([station_flows,tmp],axis=1)
+# Fri
+tmp = pd.read_csv(flow_root+"NBT24FRI_filtered.csv").iloc(axis=1)[18:]
+station_flows = pd.concat([station_flows,tmp],axis=1)
+tmp = pd.read_csv(flow_root+"NBT24SAT_filtered.csv").iloc(axis=1)[18:]
+station_flows = pd.concat([station_flows,tmp],axis=1)
+tmp = pd.read_csv(flow_root+"NBT24SUN_filtered.csv").iloc(axis=1)[18:]
+station_flows = pd.concat([station_flows,tmp],axis=1)
+del tmp
+
+station_entrance_flows : pd.DataFrame = pd.DataFrame(columns=list(station_flows.iloc(axis=1)[18:]))
+
+# station_flows = pd.read_csv("data/presentation-data/csv_sheet/Station_Flows/NBT24FRI_filtered.csv")
 split_ratio_list = []
 
 station_structures = {}
 station_platforms = {}
 
-for station_id in paths.paths.keys(): # 
+for station_id in ["Bond Street Underground Station"]: # paths.paths.keys()
   print(f"Station ID: {station_id}")
 
   station_paths = paths.paths[station_id]
@@ -693,6 +720,7 @@ for station_id in paths.paths.keys(): #
 
   station_segment_structure = EdgeManager()
   platforms = {}
+  entrances = []
   for path in station_paths:
     for i in range(len(path.sequence) - 1):
       # Find the type
@@ -721,20 +749,37 @@ for station_id in paths.paths.keys(): #
       e = EdgeData(station.nodes.loc(axis=0)[path.sequence[i]],station.nodes.loc(axis=0)[path.sequence[i+1]],
                    path.reverse_flows is not None,path_type, path.flow_rows,path.reverse_flows)
       
-      new_platforms = station_segment_structure.register_edge(e)
+      new_platforms, new_entrances = station_segment_structure.register_edge(e)
       c = [platforms, new_platforms]
+      # Combine key lists for platforms
       platforms = {key: list(itertools.chain.from_iterable([d.get(key,[]) for d in c])) for key in set().union(*c)}
+      # Extend entrances
+      for ent in new_entrances:
+        ent_flow = np.zeros(station_flows.shape[1] - 18,dtype=np.float64)
+        for ind in ent:
+          if isinstance(ind, int):
+            ent_flow += station_flows.iloc[ind-2,18:].to_numpy(dtype=np.float64)
+          else:
+            ent_flow += ind[1] * station_flows.iloc[ind[0]-2,18:].to_numpy(dtype=np.float64)
+
+        # station_entrance_flows.append(
+        
+        station_entrance_flows = pd.concat([station_entrance_flows,pd.DataFrame(ent_flow.reshape(1,-1),columns=list(station_entrance_flows))])
+        entrances.append({"index":int(station_entrance_flows.shape[0] - 1)})
+      # [entrances.append({"index": ind}) for ind in new_entrances]
 
 
   # Store JSON 
   station_segment_structure.calculate_splits(split_ratio_list,station_flows)
-  station_structures[station_id] = {"initial_state":0}
+  station_structures[station_id] = {"initial_state":0,"input":entrances}
   station_structures[station_id]["structure"] = copy.deepcopy(station_segment_structure.station_structure)
   station_platforms[station_id] = platforms
   print(f"  {len(station_structures[station_id]["structure"])} segments")
 
 with open("station_split_ratios.csv","w+") as f:
   np.savetxt(f, np.array(split_ratio_list), delimiter=',',fmt="%.6f")
+station_entrance_flows.to_csv( "station_entrance_flows.csv",index=False)
+  
 with open("station_structures.json","w+") as f:
   print(json.dumps(station_structures),file=f)
 with open("station_config.json","w+") as f:
