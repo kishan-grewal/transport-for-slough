@@ -167,6 +167,7 @@ class EdgeManager:
 
     self.station_structure = []
     self.split_nodes : dict[tuple[tuple[int],tuple[int]], SegmentJunction | list[SegmentJunction]] = {}
+    # self.split_nodes_df : pd.DataFrame = pd.DataFrame(columns=["node_id","inflow_target","self_edge"])
 
   def __start_node_juncs(self,l:int,start_edge_id_graph,next_edge_id_graph,self_edge_id_graph):
     if start_edge_id_graph in self.split_nodes:
@@ -351,6 +352,11 @@ class EdgeManager:
       else:
         self.split_nodes[self_edge_id_graph] = SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+5],"reverse_flows",["reverse_flows","forward_flows"])
       
+      # self.split_nodes_df = pd.concat([self.split_nodes_df, pd.DataFrame([
+      #   {"node_id":l,"inflow_target":self.edges[start].start_node.name,"outflow_target":self.edges[start].end_node.name},
+      #   {"node_id":l+3,"inflow_target":self.edges[start].start_node.name,"outflow_target":self.edges[prev if prev is not None else start].start_node.name},
+      #   {"node_id":l+5,"inflow_target":self.edges[start].start_node.name,"outflow_target":self.edges[prev if prev is not None else start].start_node.name}])],axis=0)
+
       # ---------------------------------
 
       # Fill in linking parameters in structure
@@ -440,6 +446,11 @@ class EdgeManager:
         raise Exception()
       else:
         self.split_nodes[self_edge_id_graph] = SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+5],"forward_flows",["reverse_flows","forward_flows"])
+      
+      # self.split_nodes_df = pd.concat([self.split_nodes_df, pd.DataFrame([
+      #   {"node_id":l,"inflow_target":self.edges[end].end_node.name,"outflow_target":self.edges[end].end_node.name},
+      #   {"node_id":l+3,"inflow_target":self.edges[end].end_node.name,"outflow_target":self.edges[]},
+      #   {"node_id":l+5,"inflow_target":self.edges[end].end_node.name,"outflow_target":self.__edges_id(end)}])],axis=0)
 
       # ---------------------------------
 
@@ -517,8 +528,8 @@ class EdgeManager:
         
         {"type":"SPLIT_OUTPUT","id":l+6,"prev":existing_end_idx[0],"next":l+8,"adjacent":l+7, "secondary":l+10,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+7,"prev":l+9,"next":existing_end_idx[1],"adjacent":l+6, "secondary":l+11, "xk":SLICE_LEN},
-        {"type":"SPLIT_INPUT","id":l+8,"prev":l+6,"next":self.station_structure[existing_end_idx[0]]["prev"],"adjacent":l+9, "secondary":l+11, "xk":SLICE_LEN},
-        {"type":"SPLIT_OUTPUT","id":l+9,"prev":self.station_structure[existing_end_idx[1]]["next"],"next":l+7,"adjacent":l+8, "secondary":l+10,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
+        {"type":"SPLIT_INPUT","id":l+8,"prev":l+6,"next":self.station_structure[existing_end_idx[0]]["next"],"adjacent":l+9, "secondary":l+11, "xk":SLICE_LEN},
+        {"type":"SPLIT_OUTPUT","id":l+9,"prev":self.station_structure[existing_end_idx[1]]["prev"],"next":l+7,"adjacent":l+8, "secondary":l+10,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
         {"type":"SPLIT_INPUT","id":l+10,"prev":l+6,"next":-1,"adjacent":l+11, "secondary":l+9, "xk":SLICE_LEN},
         {"type":"SPLIT_OUTPUT","id":l+11,"prev":-1,"next":l+7,"adjacent":l+4, "secondary":l+8,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
       ])
@@ -559,6 +570,7 @@ class EdgeManager:
       else:
         print(start_edge_id_graph)
         self.split_nodes[self_edge_id_graph] = [SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+5],"reverse_flows",["forward_flows","reverse_flows"]), SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+11],"forward_flows",["reverse_flows","forward_flows"]) ,]
+        # self.split_nodes[self_edge_id_graph] = [SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+11],"reverse_flows",["reverse_flows","forward_flows"]) ,SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+5],"forward_flows",["reverse_flows","forward_flows"]), ]
 
       # Fill in linking parameters in structure
       self.station_structure[self.station_structure[existing_start_idx[0]]["next"]]["prev"] = l+2

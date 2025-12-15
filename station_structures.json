@@ -396,7 +396,7 @@
         "type": "SPLIT_INPUT",
         "id": 44,
         "prev": 42,
-        "next": 14,
+        "next": 18,
         "adjacent": 45,
         "secondary": 47,
         "xk": 1
@@ -404,7 +404,7 @@
       {
         "type": "SPLIT_OUTPUT",
         "id": 45,
-        "prev": 15,
+        "prev": 19,
         "next": 43,
         "adjacent": 44,
         "secondary": 46,

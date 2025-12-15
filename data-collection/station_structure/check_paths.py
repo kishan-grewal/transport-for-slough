@@ -42,3 +42,13 @@ for elem in struc:
 
 nx.draw_spring(g,with_labels=True)
 plt.show()
+
+# g = nx.DiGraph()
+# struc = list(struc)
+# for elem in struc:
+#   if "next" in elem and "id" in elem:
+#     g.add_edge(elem["id"],elem["next"])
+#   if "secondary" in elem and elem["type"] == "SPLIT_OUTPUT":
+#     g.add_edge(elem["id"],elem["secondary"])
+# nx.draw(g,with_labels=True)
+# plt.show()
