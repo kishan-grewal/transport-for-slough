@@ -1,13 +1,17 @@
 #include "station_ode.hpp"
 #include "ode/json_util.hpp"
 
+#include <boost/tokenizer.hpp>
+#include <string>
+
+// Default constructor, has NULL and -1 by default
 StationSystemInput::StationSystemInput(StationSystem *system, int input)
     : system(system),
       input_n(input),
       last_update_t(0),
+      // interp_t(system == NULL ? 0 : system->entrance_count(), 0),
       target_inputs(system == NULL ? 0 : system->entrance_count(), 0),
-      accumulated(system == NULL ? 0 : system->entrance_count(), 0),
-      interp_t(system == NULL ? 0 : system->entrance_count(), 0) {}
+      accumulated(system == NULL ? 0 : system->entrance_count(), 0) {}
 void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
   if (this->system == NULL)
     return;
@@ -21,7 +25,7 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
   //  ...
   int flow_index;
   auto update_vector = std::vector<double>(system->entrance_count(), 0);
-  for (int i = 1; i < system->entrance_count(); ++i) {
+  for (int i = 0; i < system->entrance_count(); ++i) {
     // Update flow target if enough time has passed
     if (t >= this->last_update_t + TIME_SERIES_TIMESTEP) {
       flow_index = system->entrance_flow_index(i);
@@ -32,17 +36,11 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
       }
 
       else {
-        int slice = ((int)floor(t / 60) % (24 * 60)) / TIME_SERIES_TIMESTEP;
-        int foffset = (flow_index * (TIME_SERIES_ENTRY_COUNT * TIME_SERIES_ENTRY_LEN)) +
-                      (slice * TIME_SERIES_ENTRY_LEN);
-
-        inflows->seekg(foffset, std::ios_base::beg);
-        char read[9] = "\0\0\0\0\0\0\0\0";
-        inflows->read(read, 8);
-        this->target_inputs[i] += atof(read);
-
+        this->target_inputs[i] += this->read_inflow(flow_index, t);
         this->target_inputs[i] -= this->accumulated[i];
         this->accumulated[i] = 0;
+
+        // Log inflows here to get same 15min time gap as TFL?
       }
     }
 
@@ -53,6 +51,7 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
       continue;
     delta = floor(delta);
     this->accumulated[i] += delta;
+    // std::cout << "Inflow of " << delta << " people" << std::endl;
     update_vector[i] += delta;
   }
   x += system->EntranceUpdateVector(update_vector);
@@ -61,9 +60,49 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
   if (t >= this->last_update_t + TIME_SERIES_TIMESTEP)
     this->last_update_t += TIME_SERIES_TIMESTEP;  // Update
 }
+void StationSystemInput::initialise_timeseries_input(int entrance_count, std::ifstream *flows) {
+  this->accumulated = std::vector<double>(entrance_count, 0);
+  this->target_inputs = std::vector<double>(entrance_count, 0);
+  // this->interp_t = std::vector<double>(entrance_count, 0);
+  this->inflows = flows;
+
+  int flow_index;
+  if (this->system == NULL)
+    throw std::runtime_error(
+      "Cannot initialise station input system with NULL station system pointer");
+
+  for (int i = 0; i < entrance_count; ++i) {
+    flow_index = system->entrance_flow_index(i);
+    this->target_inputs[i] += this->read_inflow(flow_index, 0);
+  }
+}
+double StationSystemInput::read_inflow(int flow_index, double t) {
+  if (this->inflows == NULL || !this->inflows->is_open())
+    throw std::runtime_error("No open inflow file provided");
+
+  int slice = ((int)floor(t) % (24 * 3600)) / TIME_SERIES_TIMESTEP;
+  typedef boost::tokenizer<boost::escaped_list_separator<char>, std::string::const_iterator,
+                           std::string>
+    Tokenizer;
+
+  inflows->seekg(0, std::ios_base::beg);
+  for (int i = 0; i < flow_index - TIME_SERIES_ROW_OFFSET; ++i) {
+    inflows->ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+  }
+  std::string s;
+  s.reserve(TIME_SERIES_MAX_LINE_LEN);
+  std::getline(*inflows, s);
+  boost::escaped_list_separator<char> seps('\\', ',', '\"');
+  Tokenizer tok(s, seps);
+
+  auto start = tok.begin();
+  for (int i = 0; i < TIME_SERIES_CELL_OFFSET + slice; ++i, ++start)
+    ;
+  return std::stod(*start);
+}
 
 StationSystem::StationSystem(boost::json::object data, std::ifstream &split_ratios,
-                             double input_timestep)
+                             std::ifstream &flows, double input_timestep)
     : split_ratios(split_ratios) {
   // Setup internal equation structure
   if (!data.at("structure").is_array())
@@ -147,6 +186,31 @@ StationSystem::StationSystem(boost::json::object data, std::ifstream &split_rati
     if (data.at("input").is_number())
       JSON_ParseNumericToDouble(this->input_driver.input_n, &data.at("input"));
     else {
+      if (!data.at("input").is_array() ||
+          data.at("input").as_array().size() != this->entrance_count())
+        throw std::runtime_error("Invalid JSON value for station data, expected int or array with "
+                                 "length <n_platforms> for [input]");
+
+      this->entrance_flow_rate_indexes = std::vector<int>(this->entrance_count(), 0);
+      for (int i = 0; i < this->entrance_count(); ++i) {
+        if (!data.at("input").as_array().at(i).is_object())
+          throw std::runtime_error(
+            "Invalid JSON value for station data, expected object for value in list [input]");
+
+        auto it = data.at("input").as_array().at(i).as_object();
+        if (it.contains("index") && (it.at("index").is_int64() || it.at("index").is_uint64())) {
+          this->entrance_flow_rate_indexes[i] =
+            it.at("index").is_int64() ? it.at("index").as_int64() : it.at("index").as_uint64();
+
+          // More logic for partial flows
+          // ...
+        }
+        else
+          throw std::runtime_error(
+            "Invalid JSON value for station data, expected int for [index] in list [input]");
+
+        this->input_driver.initialise_timeseries_input(this->entrance_count(), &flows);
+      }
     }
   }
 

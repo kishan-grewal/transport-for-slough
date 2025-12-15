@@ -1,9 +1,9 @@
 {
   "Bermondsey Underground Station": {
     "initial_state": 0,
-    "inputs": [{
+    "input": [{
       "segment": 0,
-      "index": 0
+      "index": 4
     }],
     "structure": [
       {
