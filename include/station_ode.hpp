@@ -20,7 +20,7 @@ struct StationSystemInput {
         last_update_t(cpy.last_update_t),
         target_inputs(cpy.target_inputs),
         accumulated(cpy.accumulated),
-        interp_t(cpy.interp_t),
+        // interp_t(cpy.interp_t),
         inflows(cpy.inflows) {
     if (override != NULL)
       this->system = override;
@@ -28,20 +28,25 @@ struct StationSystemInput {
   StationSystemInput(StationSystem *system = NULL, int input = -1);
 
   void operator()(ODE_Solver::Vector &x, double t);
+  void initialise_timeseries_input(int entrance_count, std::ifstream *flows);
 
   private:
   int last_update_t;
 
   constexpr static int TIME_SERIES_TIMESTEP = 15 * 60;
-  constexpr static int TIME_SERIES_ENTRY_COUNT =
-    (24 * 60) / 15 - 1;                            // 15 minute slices across a day
-  constexpr static int TIME_SERIES_ENTRY_LEN = 9;  // 9 characters
+  // constexpr static int TIME_SERIES_ENTRY_COUNT = (24 * 60) / 15;  // 15 minute slices across a
+  // day
+  constexpr static int TIME_SERIES_CELL_OFFSET = 18;  // Start from element at index 18
+  // Start from 1st row 0 indexing (not 2nd row 1 indexing like excel)
+  constexpr static int TIME_SERIES_ROW_OFFSET = 1;
+  constexpr static int TIME_SERIES_MAX_LINE_LEN = 2000;
 
   std::vector<double> accumulated;
   std::vector<double> target_inputs;
-  std::vector<double> interp_t;
+  // std::vector<double> interp_t;
 
   std::ifstream *inflows;
+  double read_inflow(int flow_index, double t);
 };
 
 struct StationFileObserverCache {
@@ -114,13 +119,15 @@ struct StationFileObserver : ODE_Solver::GlobalTimeObserverTemplate {
 
 class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> {
   public:
-  StationSystem(boost::json::object data, std::ifstream &split_ratios, double input_timestep = 1);
+  StationSystem(boost::json::object data, std::ifstream &split_ratios, std::ifstream &flows,
+                double input_timestep = 1);
   // Override copy constructor to make sure the input system pointer updates correctly
   StationSystem(const StationSystem &cpy)
       : segments(cpy.segments),
         input_segment_index(cpy.input_segment_index),
         platform_alight_segment_mapping(cpy.platform_alight_segment_mapping),
         platform_board_segment_mapping(cpy.platform_board_segment_mapping),
+        entrance_flow_rate_indexes(cpy.entrance_flow_rate_indexes),
         split_ratios(cpy.split_ratios) {
     this->input_driver = StationSystemInput(cpy.input_driver, this);
   }

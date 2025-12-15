@@ -48,27 +48,39 @@ int main(int argc, char **argv) {
   if (!settings_loaded)
     throw std::runtime_error("Settings not loaded");
 
-  std::ifstream station_config_f("config/station_structures.json", std::ios_base::in);
+  std::ifstream station_config_f("config/station_structures.json");
   assert(station_config_f.is_open());
   boost::json::value j = boost::json::parse(station_config_f);
   station_config_f.close();
 
-  std::basic_ifstream<char> station_flows_f("config/station_split_ratios.csv", std::ios_base::in);
+  std::basic_ifstream<char> station_flow_splits_f("config/station_split_ratios.csv");
+  assert(station_flow_splits_f.is_open());
+
+  std::basic_ifstream<char> station_flows_f(
+    "data/presentation-data/csv_day/FRI/NBT24FRI_filtered_Station_Flows.csv");
   assert(station_flows_f.is_open());
 
   std::vector<ODE_Solver::Vector> states;
   std::vector<double> times;
 
-  auto station_system = ODE_Solver::Solver<odeint::runge_kutta4<ODE_Solver::Vector>, StationSystem,
+  typedef odeint::runge_kutta_dopri5<ODE_Solver::Vector> error_stepper_type;
+  typedef odeint::controlled_runge_kutta<error_stepper_type> controlled_stepper_type;
+  double abs_err = 1.0e-8, rel_err = 1.0e-7, a_x = 0.1, a_dxdt = 0.1;
+  controlled_stepper_type controlled_stepper(
+    odeint::default_error_checker<double, odeint::vector_space_algebra, odeint::default_operations>(
+      abs_err, rel_err, a_x, a_dxdt));
+
+  auto station_system = ODE_Solver::Solver<controlled_stepper_type, StationSystem,
                                            ODE_Solver::Vector, StationFileObserver>(
-    odeint::runge_kutta4<ODE_Solver::Vector>(),
-    StationSystem(j.as_object().at("Kingsbury Underground Station").as_object(), station_flows_f),
-    StationFileObserver("out/stations/Kingsbury Underground Station.csv"));
+    controlled_stepper,
+    StationSystem(j.as_object().at("Bermondsey Underground Station").as_object(),
+                  station_flow_splits_f, station_flows_f, 5),
+    StationFileObserver("out/stations/Bermondsey Underground Station.csv"));
 
   station_system.SolveToTime(sim_time, station_system.system.InputDriver());
   station_system.GetGlobalObserver().finalise();
 
-  station_flows_f.close();
+  station_flow_splits_f.close();
 
   /*
   typedef boost::numeric::odeint::runge_kutta_dopri5<ODE_Solver::Vector> error_stepper_type;
