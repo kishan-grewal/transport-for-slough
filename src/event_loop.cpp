@@ -64,6 +64,7 @@ void EventLoop::run() {
           if (propogation.getTrainIndex() != -1) {
             std::cout << "propogation" << std::endl;
             this->events.load()->dispatch(propogation);
+            this->events.load()->eraseFirstNot(propogation); //delete the next event that was pre-emptively dispatched
           }
         }
       }

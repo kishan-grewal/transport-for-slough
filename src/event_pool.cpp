@@ -5,6 +5,23 @@
 #include <thread>
 #include <barrier>
 
+//! Event pool constructor
+/*!
+Creates an empty event pool (containing an event with invalid target)
+\param time int maximum simulation time
+\param stationSize int number of stations to simulate
+\param trainsSize int number of trains to simulate
+\param state State* pointer to the global state object
+
+Internally uses a multiset of Event objects, which are sorted by time on insertion, nearest time first. Global time set to zero.
+
+The event system uses indices for accessing stations and trains in the state, so the order of the items in the state *must* be preserved.
+The number of stations and trains passed must be the number in the state or trains will be missed/out of bounds errors will occur.
+
+The logging file for the timestamps is also created in this constructor.
+
+Initial trains are set off here as well.
+*/
 EventPool::EventPool(int time, int stationSize, int trainsSize, State* state) {
   this->pool = std::multiset<Event>();
   this->globalTime = 0;
@@ -25,6 +42,22 @@ EventPool::EventPool(int time, int stationSize, int trainsSize, State* state) {
   }
 }
 
+//! progress event pool function
+/*!
+progressTime consumes the event that is about to happen (and falls through multiple that have the same timestamp)
+\param syncPoint std::barrier<>& reference to the barrier that synchronises the stations for lockstep execution
+
+The consumed event is accessed and deleted inside the mutex lock scope, thus all necessary fields are copied into local variables.
+
+Dispatches an invalid event if the pool is empty to keep the program running
+Recursively calls multiple events that have the same timestamp, setting a flag multi to signal that the time shouldn't be updated until all of the concurrent events are consumed.
+
+Closes the file and sends simulation time finished to the main program
+
+Sends request to the target station of the event
+
+Sets up next event to dispatch, does not listen whether request is accepted or rejected (BAD)
+*/
 int EventPool::progressTime(std::barrier<>& syncPoint) {
   // print the pool for debugging
 
@@ -143,6 +176,26 @@ int EventPool::dispatch(Event e) {
   std::lock_guard<std::mutex> lock(this->poolMutex);
   this->pool.insert(e);
   return 0;  // lock goes out of scope at end of function
+}
+
+//! Erase function to get rid of conflicting predicted dispatched events
+/*!
+Function that erases other events the same train has dispatched that are now classed invalid
+
+Probably should have a regular set now with different sorting criteria
+*/
+int EventPool::eraseFirstNot(Event e) {
+  std::lock_guard<std::mutex> lock(this->polMutex);
+  auto it = this->pool.begin();
+    
+  while (it != pool.end()) {
+    if (it->getTrainIndex() == e.getTrainIndex() && it->getTarget() != e.getTarget()) {
+      it = pool.erase(it);
+    }
+    else {
+      ++it;
+    }
+  }
 }
 
 int EventPool::sendRequest(int target, Event e) {
