@@ -663,7 +663,7 @@ with open(path, "rb") as f:
   stations = pickle.load(f)
 assert stations is not None
 
-station_flows = pd.read_csv("data-collection/csv_sheet/Station_Flows/NBT23FRI_filtered.csv")
+station_flows = pd.read_csv("data/presentation-data/csv_sheet/Station_Flows/NBT23FRI_filtered.csv")
 split_ratio_list = []
 
 station_structures = {}

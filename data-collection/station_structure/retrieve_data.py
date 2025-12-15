@@ -119,6 +119,16 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"  Exception [{e}]")
 
+        if name == "West Ham Underground Station":
+            try:
+                station_id5 = "940GZZDLWHM"
+                print(f"  Trying {station_id5}\t",end="")
+                stations[name] = load_station_data(station_id5)
+                print()
+                continue
+            except Exception as e:
+                print(f"  Exception [{e}]")
+
         print("  WARN - failed to find any station data")
 
     for name, station in stations.items():
@@ -132,5 +142,5 @@ if __name__ == "__main__":
     # visualise_station(s, "Canada Water Underground Station",label_nodes=True, label_edges=True)
     # plt.show()
 
-    with open("data-collection/station_structure/outputs/stations.pkl", "wb") as f:
-        pickle.dump(stations,f)
+    # with open("data-collection/station_structure/outputs/stations.pkl", "wb") as f:
+    #     pickle.dump(stations,f)
