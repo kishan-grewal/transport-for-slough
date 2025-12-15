@@ -20,7 +20,6 @@ jubilee_stations = [
     "Swiss Cottage",
     "Finchley Road",
     "West Hampstead",
-    "West Hampstead LU",
     "Kilburn",
     "Willesden Green",
     "Dollis Hill",
@@ -39,6 +38,14 @@ sheet_names = [
     "Station_Boarders",
     "Station_Alighters",
 ]
+
+STATION_NAME_MAPPING = {
+    "Canary Wharf LU": "Canary Wharf",
+    "Canary Wharf EL": "Canary Wharf",
+    "London Bridge LU": "London Bridge",
+    "Waterloo LU": "Waterloo",
+    "West Hampstead LU": "West Hampstead",
+}
 
 data_folder = Path("raw_excel")
 output_folder = Path("excel_filtered")
@@ -59,6 +66,7 @@ input_files = [
     "NBT24SUN_outputs.xlsx",
 ]
 
+map = lambda x : STATION_NAME_MAPPING.get(x,x)
 for file_name in input_files:
     input_path = data_folder / file_name
     print(f"Processing {input_path}...")
@@ -69,15 +77,15 @@ for file_name in input_files:
 
     df = xls["Station_Flows"]
     filtered_sheets["Station_Flows"] = df[
-        df["From Station"].isin(jubilee_stations)
-        | df["To Station"].isin(jubilee_stations)
+        df["From Station"].apply(map).isin(jubilee_stations)
+        | df["To Station"].apply(map).isin(jubilee_stations)
     ]
 
     df = xls["Station_Entries"]
-    filtered_sheets["Station_Entries"] = df[df["Station"].isin(jubilee_stations)]
+    filtered_sheets["Station_Entries"] = df[df["Station"].apply(map).isin(jubilee_stations)]
 
     df = xls["Station_Exits"]
-    filtered_sheets["Station_Exits"] = df[df["Station"].isin(jubilee_stations)]
+    filtered_sheets["Station_Exits"] = df[df["Station"].apply(map).isin(jubilee_stations)]
 
     df = xls["Station_Boarders"]
     # filtered_sheets["Station_Boarders"] = df[df["Station"].isin(jubilee_stations)]  # alternate filter by Station
