@@ -605,11 +605,11 @@ class EdgeManager:
       else:
         # [print(f"    {flow_rates.iloc[row - 2,[4,5,8,9]]}") if isinstance(row, int) else print(f"    {flow_rates.iloc[row[0] - 2,[4,5,8,9]]}") for row in inflow]
         # Offset indexes by -2 for direct translation from excel rows (1 for 0 indexing, 1 for column headers)]
-        inflow_rate = np.sum(np.array([flow_rates.iloc[row - 2,19:] if isinstance(row, int) 
-          else row[1]*flow_rates.iloc[row[0] - 2,19:] 
+        inflow_rate = np.sum(np.array([flow_rates.iloc[row - 2,18:] if isinstance(row, int) 
+          else row[1]*flow_rates.iloc[row[0] - 2,18:] 
           for row in inflow]).astype(np.float32),axis=0)
-        outflow_rate = np.sum(np.array([flow_rates.iloc[row - 2,19:] if isinstance(row, int) 
-          else row[1]*flow_rates.iloc[row[0] - 2,19:] 
+        outflow_rate = np.sum(np.array([flow_rates.iloc[row - 2,18:] if isinstance(row, int) 
+          else row[1]*flow_rates.iloc[row[0] - 2,18:] 
           for row in primary_outflow]).astype(np.float32),axis=0)
         
         flow_split = np.divide(outflow_rate, inflow_rate,out=np.zeros_like(outflow_rate), where=inflow_rate != 0)
