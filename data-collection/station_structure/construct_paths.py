@@ -69,7 +69,9 @@ class EdgeData:
     segments = []
     start_idx = []
     end_idx = []
+
     platforms = {}
+    entrances = {}
 
     last_fwd = -1
     last_rev = -1
@@ -78,13 +80,14 @@ class EdgeData:
       segments.append({"id":len(segments)+idx_offset,"type":"AREA_OUTFLOW","next":-1,"xk":1,"is_entrance":True})
       last_fwd = len(segments)-1
       start_idx.append(last_fwd + idx_offset)
-
-      end_idx = [last_fwd]
+      end_idx = [last_fwd + idx_offset]
+      
+      
       if self.reversible:
         segments.append({"id":len(segments)+idx_offset,"type":"AREA_INFLOW","prev":-1,"xk":2147483647})
         last_rev = len(segments)-1
         start_idx.append(last_rev + idx_offset)
-        end_idx = [*end_idx, last_rev]
+        end_idx = [*end_idx, last_rev + idx_offset]
     else:
       start_idx = [idx_offset]
       end_idx = [-1]
@@ -94,7 +97,7 @@ class EdgeData:
     
     distance = vincenty_sphere_distance(float(self.start_node["x"]),float(self.start_node["y"]),float(self.end_node["x"]),float(self.end_node["y"]))
     n_slices = max(1,math.ceil(distance / SLICE_LEN)) # Ensure there is always one segment, even for negligible length regions
-    # n_slices = 1
+    n_slices = 1
 
     for _ in range(n_slices):
       if last_fwd != -1: segments[last_fwd]["next"] = len(segments) + idx_offset
@@ -289,7 +292,6 @@ class EdgeManager:
         # Move forward one level if the start is an area
         if "AREA" in self.station_structure[existing_start_idx[0]]["type"]:
           existing_start_idx[0] = self.station_structure[existing_start_idx[0]]["prev"]
-        if "AREA" in self.station_structure[existing_start_idx[1]]["type"]:
           existing_start_idx[1] = self.station_structure[existing_start_idx[1]]["next"]
         
         while "SPLIT" in self.station_structure[existing_start_idx[0]]["type"]:
@@ -301,7 +303,6 @@ class EdgeManager:
         # Move forward one level if the start is an area
         if "AREA" in self.station_structure[existing_start_idx[0]]["type"]:
           existing_start_idx[0] = self.station_structure[existing_start_idx[0]]["next"]
-        if "AREA" in self.station_structure[existing_start_idx[1]]["type"]:
           existing_start_idx[1] = self.station_structure[existing_start_idx[1]]["prev"]
         
         while "SPLIT" in self.station_structure[existing_start_idx[0]]["type"]:
@@ -311,6 +312,7 @@ class EdgeManager:
 
 
       l = len(self.station_structure)
+      print(existing_start_idx)
 
       self.station_structure.extend([
         {"type":"SPLIT_OUTPUT","id":l,"prev":existing_start_idx[0],"next":l+2,"adjacent":l+1, "secondary":l+4,"split_ratio":SPLIT_R, "xk":SLICE_LEN},
@@ -346,8 +348,19 @@ class EdgeManager:
       # ---------------------------------
 
       # Fill in linking parameters in structure
-      self.station_structure[self.station_structure[existing_start_idx[0]]["next"]]["prev"] = l+2
-      self.station_structure[self.station_structure[existing_start_idx[1]]["prev"]]["next"] = l+3
+      print(self.station_structure[self.station_structure[existing_start_idx[0]]["next"]])
+      print(self.station_structure[self.station_structure[existing_start_idx[1]]["prev"]])
+
+      if self.station_structure[self.station_structure[existing_start_idx[0]]["next"]]["type"] == "SPLIT_INPUT":
+        self.station_structure[self.station_structure[existing_start_idx[0]]["next"]]["next"] = l+2
+        self.station_structure[self.station_structure[existing_start_idx[1]]["prev"]]["prev"] = l+3
+      else:
+        self.station_structure[self.station_structure[existing_start_idx[0]]["next"]]["prev"] = l+2
+        self.station_structure[self.station_structure[existing_start_idx[1]]["prev"]]["next"] = l+3
+      
+      # self.station_structure[self.station_structure[existing_start_idx[0]]["next"]]["prev"] = l+2
+      # self.station_structure[self.station_structure[existing_start_idx[1]]["prev"]]["next"] = l+3
+
       self.station_structure[existing_start_idx[0]]["next"] = l
       self.station_structure[existing_start_idx[1]]["prev"] = l+1
 
@@ -365,7 +378,7 @@ class EdgeManager:
       self.station_structure.extend(struc)
       self.edge_starts.append(start_idx)
       self.edge_ends.append(end_idx)
-      print(f"  Linked bidirectional edge as ending junction from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure [{prev} {next}]")
+      print(f"  Linked bidirectional edge as common starting junction from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure [{prev} {next}]")
           
     # Has a common ending node
     if start is None and end is not None:
@@ -381,7 +394,6 @@ class EdgeManager:
         existing_end_idx = self.edge_ends[end]
         if "AREA" in self.station_structure[existing_end_idx[0]]["type"]:
           existing_end_idx[0] = self.station_structure[existing_end_idx[0]]["prev"]
-        if "AREA" in self.station_structure[existing_end_idx[1]]["type"]:
           existing_end_idx[1] = self.station_structure[existing_end_idx[1]]["next"]
           
         while "SPLIT" in self.station_structure[existing_end_idx[0]]["type"]:
@@ -446,9 +458,12 @@ class EdgeManager:
       struc[end_idx[0]-l-6]["next"] = l+5
       struc[end_idx[1]-l-6]["prev"] = l+4
       if prev is not None: # Connect to prev (i.e disconnect old connection)
+        print(struc)
         struc[end_idx[0]-l-6]["prev"] = self.edge_ends[prev][0]
         struc[end_idx[1]-l-6]["next"] = self.edge_ends[prev][1]
+        print(struc)
 
+        print(self.edge_ends[prev])
         self.station_structure[self.edge_ends[prev][0]]["next"] = l+6
         self.station_structure[self.edge_ends[prev][1]]["prev"] = l+7
       
@@ -458,7 +473,7 @@ class EdgeManager:
       self.station_structure.extend(struc)
       self.edge_starts.append(start_idx)
       self.edge_ends.append(end_idx)
-      print(f"  Linked bidirectional edge as starting junction from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure [{prev} {next}]")
+      print(f"  Linked bidirectional edge as common ending junction from {self.edge_starts[-1]} to {self.edge_ends[-1]} in structure [{prev} {next}]")
 
     # Joins a pair of nodes
     if start is not None and end is not None:
