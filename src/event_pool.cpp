@@ -185,7 +185,7 @@ Function that erases other events the same train has dispatched that are now cla
 Probably should have a regular set now with different sorting criteria
 */
 int EventPool::eraseFirstNot(Event e) {
-  std::lock_guard<std::mutex> lock(this->polMutex);
+  std::lock_guard<std::mutex> lock(this->poolMutex);
   auto it = this->pool.begin();
     
   while (it != pool.end()) {
