@@ -165,7 +165,6 @@ class EdgeManager:
       self.split_nodes[start_edge_id_graph].outflow_edges.append(self_edge_id_graph) # type: ignore
       self.split_nodes[start_edge_id_graph].outflow_idxs.append(l) # type: ignore
       self.split_nodes[start_edge_id_graph].outflow_dirs.append("forward_flows") # type: ignore
-      # print(f"1. Added {l} to {start_edge_id_graph} (reverse)")
     else:
       self.split_nodes[start_edge_id_graph] = SegmentJunction([next_edge_id_graph, self_edge_id_graph],[l],"forward_flows",["forward_flows","forward_flows"])
 
@@ -174,7 +173,6 @@ class EdgeManager:
       self.split_nodes[next_edge_id_graph].outflow_edges.append(self_edge_id_graph) # type: ignore
       self.split_nodes[next_edge_id_graph].outflow_idxs.append(l+3) # type: ignore
       self.split_nodes[next_edge_id_graph].outflow_dirs.append("forward_flows" if self.split_nodes[next_edge_id_graph].dir == "reverse_flows" else "reverse_flows") # type: ignore
-      # print(f"2. Added {l+3} to {next_edge_id_graph} ({self.split_nodes[next_edge_id_graph].outflow_dirs[-1]})")
     else:
       self.split_nodes[next_edge_id_graph] = SegmentJunction([start_edge_id_graph, self_edge_id_graph],[l+3],"reverse_flows",["reverse_flows","forward_flows"])
 
@@ -184,17 +182,21 @@ class EdgeManager:
       self.split_nodes[start_edge_id_graph].outflow_edges.insert(0,self_edge_id_graph) # type: ignore
       self.split_nodes[start_edge_id_graph].outflow_idxs.insert(0,l+3) # type: ignore
       self.split_nodes[start_edge_id_graph].outflow_dirs.insert(0,self.split_nodes[start_edge_id_graph].dir) # type: ignore
+      # print(f"1. Added {l+3} to {start_edge_id_graph}")
     else:
-      self.split_nodes[start_edge_id_graph] = SegmentJunction([next_edge_id_graph, self_edge_id_graph],[l],"forward_flows",["forward_flows","forward_flows"])
+      self.split_nodes[start_edge_id_graph] = SegmentJunction([next_edge_id_graph, self_edge_id_graph],[l+3],"forward_flows",["forward_flows","forward_flows"])
+      # print(f"2. Created {start_edge_id_graph} with {l}")
 
     if next_edge_id_graph in self.split_nodes:
       assert isinstance(self.split_nodes[next_edge_id_graph],SegmentJunction)
       self.split_nodes[next_edge_id_graph].outflow_edges.append(self_edge_id_graph) # type: ignore
       self.split_nodes[next_edge_id_graph].outflow_idxs.append(l) # type: ignore
       self.split_nodes[next_edge_id_graph].outflow_dirs.append("reverse_flows" if self.split_nodes[next_edge_id_graph].dir == "reverse_flows" else "reverse_flows") # type: ignore
+      # print(f"3. Added {l} to {next_edge_id_graph}")
     else:
-      self.split_nodes[next_edge_id_graph] = SegmentJunction([start_edge_id_graph, self_edge_id_graph],[l+3],"reverse_flows",["reverse_flows","reverse_flows"])
-    
+      self.split_nodes[next_edge_id_graph] = SegmentJunction([start_edge_id_graph, self_edge_id_graph],[l],"reverse_flows",["reverse_flows","reverse_flows"])
+      # print(f"4. Created {next_edge_id_graph} with {l}")
+
   def register_edge(self, edge : EdgeData):
     edge_platforms = {}
     for e in self.edges:
@@ -602,7 +604,7 @@ class EdgeManager:
         self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = 1# if junc.dir != "reverse_flows" else 0
       else:
         # [print(f"    {flow_rates.iloc[row - 2,[4,5,8,9]]}") if isinstance(row, int) else print(f"    {flow_rates.iloc[row[0] - 2,[4,5,8,9]]}") for row in inflow]
-        # Offset indexes by -2 for direct translation from excel rows (1 for 0 indexing, 1 for column headers)
+        # Offset indexes by -2 for direct translation from excel rows (1 for 0 indexing, 1 for column headers)]
         inflow_rate = np.sum(np.array([flow_rates.iloc[row - 2,19:] if isinstance(row, int) 
           else row[1]*flow_rates.iloc[row[0] - 2,19:] 
           for row in inflow]).astype(np.float32),axis=0)
@@ -614,7 +616,7 @@ class EdgeManager:
         # if junc.dir == "reverse_flows":
         #   flow_split = np.abs(1 - flow_split) # Clean up -0 values
 
-        if np.all(flow_split == flow_split[0]):
+        if np.all(np.round(flow_split,6) == flow_split[0]):
           self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = float(flow_split[0])
         else:
           # Log to file
@@ -663,7 +665,7 @@ with open(path, "rb") as f:
   stations = pickle.load(f)
 assert stations is not None
 
-station_flows = pd.read_csv("data/presentation-data/csv_sheet/Station_Flows/NBT23FRI_filtered.csv")
+station_flows = pd.read_csv("data/presentation-data/csv_sheet/Station_Flows/NBT24FRI_filtered.csv")
 split_ratio_list = []
 
 station_structures = {}
