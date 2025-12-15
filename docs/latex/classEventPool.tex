@@ -3,31 +3,167 @@
 \doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\Hypertarget{classEventPool_a3e5d20af3dea352de9b49192702cd81b}\label{classEventPool_a3e5d20af3dea352de9b49192702cd81b} 
-{\bfseries Event\+Pool} (int time, int station\+Size, int trains\+Size, \mbox{\hyperlink{classState}{State}} \texorpdfstring{$\ast$}{*}loop)
-\item 
-\Hypertarget{classEventPool_a769ee166f88e2af7cf53eac3ac76b64b}\label{classEventPool_a769ee166f88e2af7cf53eac3ac76b64b} 
-int {\bfseries dispatch} (\mbox{\hyperlink{classEvent}{Event}} e)
-\item 
-\Hypertarget{classEventPool_ae03580ba2a9e62c1d534a6340ecbdc19}\label{classEventPool_ae03580ba2a9e62c1d534a6340ecbdc19} 
-int {\bfseries get\+Global\+Time} ()
-\item 
-\Hypertarget{classEventPool_a3928d9c2ef22bc55da3d0227275943e0}\label{classEventPool_a3928d9c2ef22bc55da3d0227275943e0} 
-std\+::vector$<$ int $>$ {\bfseries get\+Targets} ()
-\item 
-\Hypertarget{classEventPool_a2a87f713c94ea3d6efb23bd5849cf2eb}\label{classEventPool_a2a87f713c94ea3d6efb23bd5849cf2eb} 
-std\+::vector$<$ \mbox{\hyperlink{classEvent}{Event}} $>$ {\bfseries get\+Target\+Info} ()
-\item 
+\mbox{\hyperlink{classEventPool_a3e5d20af3dea352de9b49192702cd81b}{Event\+Pool}} (int time, int station\+Size, int trains\+Size, \mbox{\hyperlink{classState}{State}} \texorpdfstring{$\ast$}{*}loop)
+\begin{DoxyCompactList}\small\item\em \doxylink{classEvent}{Event} pool constructor. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classEventPool_a769ee166f88e2af7cf53eac3ac76b64b}{dispatch}} (\mbox{\hyperlink{classEvent}{Event}} e)
+\begin{DoxyCompactList}\small\item\em Dispatch new event to event pool. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classEventPool_af91c66f20dcb508ebb3d77369906490c}{erase\+First\+Not}} (\mbox{\hyperlink{classEvent}{Event}} e)
+\begin{DoxyCompactList}\small\item\em Erase function to get rid of conflicting predicted dispatched events. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classEventPool_ae03580ba2a9e62c1d534a6340ecbdc19}{get\+Global\+Time}} ()
+\begin{DoxyCompactList}\small\item\em Fetch pool global time. \end{DoxyCompactList}\item 
+std\+::vector$<$ int $>$ \mbox{\hyperlink{classEventPool_a3928d9c2ef22bc55da3d0227275943e0}{get\+Targets}} ()
+\begin{DoxyCompactList}\small\item\em Get event request targets. \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classEvent}{Event}} $>$ \mbox{\hyperlink{classEventPool_a2a87f713c94ea3d6efb23bd5849cf2eb}{get\+Target\+Info}} ()
+\begin{DoxyCompactList}\small\item\em Get event target info. \end{DoxyCompactList}\item 
 \Hypertarget{classEventPool_a3eca0ac2dc6ba93c00c94e83e2cf6bef}\label{classEventPool_a3eca0ac2dc6ba93c00c94e83e2cf6bef} 
 void {\bfseries empty\+Targets} ()
 \item 
-\Hypertarget{classEventPool_a11e028dac785812d58c6f66ded873a97}\label{classEventPool_a11e028dac785812d58c6f66ded873a97} 
-int {\bfseries progress\+Time} (std\+::barrier$<$$>$ \&sync\+Point)
-\item 
-\Hypertarget{classEventPool_aab6f6366d5b84bf300a3fb2fae11120c}\label{classEventPool_aab6f6366d5b84bf300a3fb2fae11120c} 
-int {\bfseries get\+Pool\+Empty} ()
-\end{DoxyCompactItemize}
+int \mbox{\hyperlink{classEventPool_a11e028dac785812d58c6f66ded873a97}{progress\+Time}} (std\+::barrier$<$$>$ \&sync\+Point)
+\begin{DoxyCompactList}\small\item\em Progress event pool to consume next set of events. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classEventPool_aab6f6366d5b84bf300a3fb2fae11120c}{get\+Pool\+Empty}} ()
+\begin{DoxyCompactList}\small\item\em Empty event pool. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classEventPool_a15760e15762a05ccd17ad1e8f67265ed}{\texorpdfstring{$\sim$}{\string~}\+Event\+Pool}} ()
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
+
+\label{doc-constructors}
+\Hypertarget{classEventPool_doc-constructors}
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classEventPool_a3e5d20af3dea352de9b49192702cd81b}\index{EventPool@{EventPool}!EventPool@{EventPool}}
+\index{EventPool@{EventPool}!EventPool@{EventPool}}
+\doxysubsubsection{\texorpdfstring{EventPool()}{EventPool()}}
+{\footnotesize\ttfamily \label{classEventPool_a3e5d20af3dea352de9b49192702cd81b} 
+Event\+Pool\+::\+Event\+Pool (\begin{DoxyParamCaption}\item[{int}]{time}{, }\item[{int}]{station\+Size}{, }\item[{int}]{trains\+Size}{, }\item[{\mbox{\hyperlink{classState}{State}} \texorpdfstring{$\ast$}{*}}]{state}{}\end{DoxyParamCaption})}
+
+
+
+\doxylink{classEvent}{Event} pool constructor. 
+
+Creates an empty event pool (containing an event with invalid target) 
+\begin{DoxyParams}{Parameters}
+{\em time} & int maximum simulation time \\
+\hline
+{\em station\+Size} & int number of stations to simulate \\
+\hline
+{\em trains\+Size} & int number of trains to simulate \\
+\hline
+{\em state} & State\texorpdfstring{$\ast$}{*} pointer to the global state object\\
+\hline
+\end{DoxyParams}
+Internally uses a multiset of \doxylink{classEvent}{Event} objects, which are sorted by time on insertion, nearest time first. Global time set to zero.
+
+The event system uses indices for accessing stations and trains in the state, so the order of the items in the state {\itshape must} be preserved. The number of stations and trains passed must be the number in the state or trains will be missed/out of bounds errors will occur.
+
+The logging file for the timestamps is also created in this constructor.
+
+Initial trains are set off here as well. \Hypertarget{classEventPool_a15760e15762a05ccd17ad1e8f67265ed}\index{EventPool@{EventPool}!````~EventPool@{\texorpdfstring{$\sim$}{\string~}EventPool}}
+\index{````~EventPool@{\texorpdfstring{$\sim$}{\string~}EventPool}!EventPool@{EventPool}}
+\doxysubsubsection{\texorpdfstring{\texorpdfstring{$\sim$}{\string~}EventPool()}{\string~EventPool()}}
+{\footnotesize\ttfamily \label{classEventPool_a15760e15762a05ccd17ad1e8f67265ed} 
+Event\+Pool\+::\texorpdfstring{$\sim$}{\string~}\+Event\+Pool (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+Destructor. 
+
+Set pool to empty pool, deallocate 
+
+\label{doc-func-members}
+\Hypertarget{classEventPool_doc-func-members}
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classEventPool_a769ee166f88e2af7cf53eac3ac76b64b}\index{EventPool@{EventPool}!dispatch@{dispatch}}
+\index{dispatch@{dispatch}!EventPool@{EventPool}}
+\doxysubsubsection{\texorpdfstring{dispatch()}{dispatch()}}
+{\footnotesize\ttfamily \label{classEventPool_a769ee166f88e2af7cf53eac3ac76b64b} 
+int Event\+Pool\+::dispatch (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classEvent}{Event}}}]{e}{}\end{DoxyParamCaption})}
+
+
+
+Dispatch new event to event pool. 
+
+Dispatch a new event to the event pool, insert into the multiset. Sorted by time 
+\begin{DoxyParams}{Parameters}
+{\em e} & \doxylink{classEvent}{Event} to be added to the pool Uses mutex to avoid race condition \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classEventPool_af91c66f20dcb508ebb3d77369906490c}\index{EventPool@{EventPool}!eraseFirstNot@{eraseFirstNot}}
+\index{eraseFirstNot@{eraseFirstNot}!EventPool@{EventPool}}
+\doxysubsubsection{\texorpdfstring{eraseFirstNot()}{eraseFirstNot()}}
+{\footnotesize\ttfamily \label{classEventPool_af91c66f20dcb508ebb3d77369906490c} 
+int Event\+Pool\+::erase\+First\+Not (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classEvent}{Event}}}]{e}{}\end{DoxyParamCaption})}
+
+
+
+Erase function to get rid of conflicting predicted dispatched events. 
+
+Function that erases other events the same train has dispatched that are now classed invalid \Hypertarget{classEventPool_ae03580ba2a9e62c1d534a6340ecbdc19}\index{EventPool@{EventPool}!getGlobalTime@{getGlobalTime}}
+\index{getGlobalTime@{getGlobalTime}!EventPool@{EventPool}}
+\doxysubsubsection{\texorpdfstring{getGlobalTime()}{getGlobalTime()}}
+{\footnotesize\ttfamily \label{classEventPool_ae03580ba2a9e62c1d534a6340ecbdc19} 
+int Event\+Pool\+::get\+Global\+Time (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+Fetch pool global time. 
+
+Get global time according to the pool \Hypertarget{classEventPool_aab6f6366d5b84bf300a3fb2fae11120c}\index{EventPool@{EventPool}!getPoolEmpty@{getPoolEmpty}}
+\index{getPoolEmpty@{getPoolEmpty}!EventPool@{EventPool}}
+\doxysubsubsection{\texorpdfstring{getPoolEmpty()}{getPoolEmpty()}}
+{\footnotesize\ttfamily \label{classEventPool_aab6f6366d5b84bf300a3fb2fae11120c} 
+int Event\+Pool\+::get\+Pool\+Empty (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+Empty event pool. 
+
+Empties the pool \Hypertarget{classEventPool_a2a87f713c94ea3d6efb23bd5849cf2eb}\index{EventPool@{EventPool}!getTargetInfo@{getTargetInfo}}
+\index{getTargetInfo@{getTargetInfo}!EventPool@{EventPool}}
+\doxysubsubsection{\texorpdfstring{getTargetInfo()}{getTargetInfo()}}
+{\footnotesize\ttfamily \label{classEventPool_a2a87f713c94ea3d6efb23bd5849cf2eb} 
+std\+::vector$<$ \mbox{\hyperlink{classEvent}{Event}} $>$ Event\+Pool\+::get\+Target\+Info (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+Get event target info. 
+
+Gets event target info
+
+Returns the event info member for the events at this timestep \Hypertarget{classEventPool_a3928d9c2ef22bc55da3d0227275943e0}\index{EventPool@{EventPool}!getTargets@{getTargets}}
+\index{getTargets@{getTargets}!EventPool@{EventPool}}
+\doxysubsubsection{\texorpdfstring{getTargets()}{getTargets()}}
+{\footnotesize\ttfamily \label{classEventPool_a3928d9c2ef22bc55da3d0227275943e0} 
+std\+::vector$<$ int $>$ Event\+Pool\+::get\+Targets (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+Get event request targets. 
+
+Gets event request targets
+
+Returns the member targets, which contains the station indexes of the event requests for this timestamp \Hypertarget{classEventPool_a11e028dac785812d58c6f66ded873a97}\index{EventPool@{EventPool}!progressTime@{progressTime}}
+\index{progressTime@{progressTime}!EventPool@{EventPool}}
+\doxysubsubsection{\texorpdfstring{progressTime()}{progressTime()}}
+{\footnotesize\ttfamily \label{classEventPool_a11e028dac785812d58c6f66ded873a97} 
+int Event\+Pool\+::progress\+Time (\begin{DoxyParamCaption}\item[{std\+::barrier$<$$>$ \&}]{sync\+Point}{}\end{DoxyParamCaption})}
+
+
+
+Progress event pool to consume next set of events. 
+
+progress\+Time consumes the event that is about to happen (and falls through multiple that have the same timestamp) 
+\begin{DoxyParams}{Parameters}
+{\em sync\+Point} & std\+::barrier$<$$>$\& reference to the barrier that synchronises the stations for lockstep execution\\
+\hline
+\end{DoxyParams}
+The consumed event is accessed and deleted inside the mutex lock scope, thus all necessary fields are copied into local variables.
+
+Dispatches an invalid event if the pool is empty to keep the program running Recursively calls multiple events that have the same timestamp, setting a flag multi to signal that the time shouldn\textquotesingle{}t be updated until all of the concurrent events are consumed.
+
+Closes the file and sends simulation time finished to the main program
+
+Sends request to the target station of the event
+
+Sets up next event to dispatch, does not listen whether request is accepted or rejected (BAD) 
 
 The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
 \item 

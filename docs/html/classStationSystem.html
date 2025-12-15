@@ -104,20 +104,24 @@ Inheritance diagram for StationSystem:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a58326095c84a2c4c37beb6fe41873b35" id="r_a58326095c84a2c4c37beb6fe41873b35"><td class="memItemLeft" align="right" valign="top"><a id="a58326095c84a2c4c37beb6fe41873b35" name="a58326095c84a2c4c37beb6fe41873b35"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>StationSystem</b> (boost::json::object data)</td></tr>
+<tr class="memitem:a71c909115ee1bc8b6ef619c0503218b9" id="r_a71c909115ee1bc8b6ef619c0503218b9"><td class="memItemLeft" align="right" valign="top"><a id="a71c909115ee1bc8b6ef619c0503218b9" name="a71c909115ee1bc8b6ef619c0503218b9"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>StationSystem</b> (boost::json::object data, std::ifstream &amp;split_ratios, double input_timestep=1)</td></tr>
 <tr class="memitem:a5a20f0b9e3100198efb1c2bd2f2d3c68" id="r_a5a20f0b9e3100198efb1c2bd2f2d3c68"><td class="memItemLeft" align="right" valign="top"><a id="a5a20f0b9e3100198efb1c2bd2f2d3c68" name="a5a20f0b9e3100198efb1c2bd2f2d3c68"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>StationSystem</b> (const <a class="el" href="classStationSystem.html">StationSystem</a> &amp;cpy)</td></tr>
 <tr class="memitem:a72066404423b87974d89103c3d633fd0" id="r_a72066404423b87974d89103c3d633fd0"><td class="memItemLeft" align="right" valign="top"><a id="a72066404423b87974d89103c3d633fd0" name="a72066404423b87974d89103c3d633fd0"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const ODE_Solver::Vector &amp;x, ODE_Solver::Vector &amp;dxdt, const double)</td></tr>
+<tr class="memitem:adc40b5058598762f4886795fb2747901" id="r_adc40b5058598762f4886795fb2747901"><td class="memItemLeft" align="right" valign="top"><a id="adc40b5058598762f4886795fb2747901" name="adc40b5058598762f4886795fb2747901"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>_check</b> ()</td></tr>
 <tr class="memitem:aa2d22c6de693a951e0dda2dd3c8f163a" id="r_aa2d22c6de693a951e0dda2dd3c8f163a"><td class="memItemLeft" align="right" valign="top"><a id="aa2d22c6de693a951e0dda2dd3c8f163a" name="aa2d22c6de693a951e0dda2dd3c8f163a"></a>
 ODE_Solver::Vector&#160;</td><td class="memItemRight" valign="bottom"><b>EntranceUpdateVector</b> (std::vector&lt; double &gt; n_people)</td></tr>
 <tr class="memitem:a43bf251935f8301a8e7addf010b1ffba" id="r_a43bf251935f8301a8e7addf010b1ffba"><td class="memItemLeft" align="right" valign="top">ODE_Solver::Vector&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a43bf251935f8301a8e7addf010b1ffba">PlatformUpdateVector</a> (double n_people, unsigned int platform_id)</td></tr>
 <tr class="memdesc:a43bf251935f8301a8e7addf010b1ffba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gives the vector for updating platform population from discrete events.  <br /></td></tr>
 <tr class="memitem:a699903c4c4272fbb178a624b58337a67" id="r_a699903c4c4272fbb178a624b58337a67"><td class="memItemLeft" align="right" valign="top"><a id="a699903c4c4272fbb178a624b58337a67" name="a699903c4c4272fbb178a624b58337a67"></a>
 <a class="el" href="structStationSystemInput.html">StationSystemInput</a>&#160;</td><td class="memItemRight" valign="bottom"><b>InputDriver</b> ()</td></tr>
-<tr class="memitem:ab03f50cd3613938b554582cb2e9c20e9" id="r_ab03f50cd3613938b554582cb2e9c20e9"><td class="memItemLeft" align="right" valign="top"><a id="ab03f50cd3613938b554582cb2e9c20e9" name="ab03f50cd3613938b554582cb2e9c20e9"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>platform_count</b> ()</td></tr>
+<tr class="memitem:a5dab707300ce7dc1e52477dd76920343" id="r_a5dab707300ce7dc1e52477dd76920343"><td class="memItemLeft" align="right" valign="top"><a id="a5dab707300ce7dc1e52477dd76920343" name="a5dab707300ce7dc1e52477dd76920343"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>entrance_count</b> ()</td></tr>
+<tr class="memitem:a49243048adb6b2bbfe886244b84864c8" id="r_a49243048adb6b2bbfe886244b84864c8"><td class="memItemLeft" align="right" valign="top"><a id="a49243048adb6b2bbfe886244b84864c8" name="a49243048adb6b2bbfe886244b84864c8"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>entrance_flow_index</b> (int i)</td></tr>
 <tr class="inherit_header pub_methods_classODE__Solver_1_1InitialStateSystem"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_classODE__Solver_1_1InitialStateSystem')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="classODE__Solver_1_1InitialStateSystem.html">ODE_Solver::InitialStateSystem&lt; ODE_Solver::Vector &gt;</a></td></tr>
 <tr class="memitem:a1dfb6b93fc53bd8b8c15ac0b8e1c123f inherit pub_methods_classODE__Solver_1_1InitialStateSystem" id="r_a1dfb6b93fc53bd8b8c15ac0b8e1c123f"><td class="memItemLeft" align="right" valign="top">
 ODE_Solver::Vector&#160;</td><td class="memItemRight" valign="bottom"><b>get_initialised_state</b> ()</td></tr>

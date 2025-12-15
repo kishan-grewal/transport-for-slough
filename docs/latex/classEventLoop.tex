@@ -3,18 +3,16 @@
 \doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\Hypertarget{classEventLoop_aa85fd003275892c28f3b115358697a4f}\label{classEventLoop_aa85fd003275892c28f3b115358697a4f} 
-{\bfseries Event\+Loop} (int time, \mbox{\hyperlink{classState}{State}} init\+State, int station\+Size)
-\item 
-\Hypertarget{classEventLoop_ae5b67d0e6db0b142a5e37280b42bd2a9}\label{classEventLoop_ae5b67d0e6db0b142a5e37280b42bd2a9} 
-void {\bfseries start} ()
-\item 
-\Hypertarget{classEventLoop_a6c3c78e283ef38929ccc3c199e321cfe}\label{classEventLoop_a6c3c78e283ef38929ccc3c199e321cfe} 
-void {\bfseries run} ()
-\item 
-\Hypertarget{classEventLoop_a83538de40ef25fe89d3aa11cab3afb62}\label{classEventLoop_a83538de40ef25fe89d3aa11cab3afb62} 
-void {\bfseries wait\+Barrier} ()
-\end{DoxyCompactItemize}
+\mbox{\hyperlink{classEventLoop_aa85fd003275892c28f3b115358697a4f}{Event\+Loop}} (int time, \mbox{\hyperlink{classState}{State}} init\+State, int station\+Size)
+\begin{DoxyCompactList}\small\item\em \doxylink{classEventLoop}{Event\+Loop} constructor. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classEventLoop_ae5b67d0e6db0b142a5e37280b42bd2a9}{start}} ()
+\begin{DoxyCompactList}\small\item\em Start the \doxylink{classEventLoop}{Event\+Loop}. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classEventLoop_a6c3c78e283ef38929ccc3c199e321cfe}{run}} ()
+\begin{DoxyCompactList}\small\item\em Main event loop function that repeats. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classEventLoop_a83538de40ef25fe89d3aa11cab3afb62}{wait\+Barrier}} ()
+\begin{DoxyCompactList}\small\item\em Helper to reach barrier early. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classEventLoop_acd0f2fd1a93194d07d2c9fe0c855b6a8}{\texorpdfstring{$\sim$}{\string~}\+Event\+Loop}} ()
+\begin{DoxyCompactList}\small\item\em \doxylink{classEvent}{Event} loop destructor, thread cleanup. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
@@ -22,6 +20,75 @@ void {\bfseries wait\+Barrier} ()
 \mbox{\hyperlink{classState}{State}} {\bfseries state}
 \end{DoxyCompactItemize}
 
+
+\label{doc-constructors}
+\Hypertarget{classEventLoop_doc-constructors}
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classEventLoop_aa85fd003275892c28f3b115358697a4f}\index{EventLoop@{EventLoop}!EventLoop@{EventLoop}}
+\index{EventLoop@{EventLoop}!EventLoop@{EventLoop}}
+\doxysubsubsection{\texorpdfstring{EventLoop()}{EventLoop()}}
+{\footnotesize\ttfamily \label{classEventLoop_aa85fd003275892c28f3b115358697a4f} 
+Event\+Loop\+::\+Event\+Loop (\begin{DoxyParamCaption}\item[{int}]{time}{, }\item[{\mbox{\hyperlink{classState}{State}}}]{init\+State}{, }\item[{int}]{station\+Size}{}\end{DoxyParamCaption})}
+
+
+
+\doxylink{classEventLoop}{Event\+Loop} constructor. 
+
+Create an \doxylink{classEventLoop}{Event\+Loop} object 
+\begin{DoxyParams}{Parameters}
+{\em time} & int maximum simulation time \\
+\hline
+{\em init\+State} & \doxylink{classState}{State} the initial program state of stations and trains \\
+\hline
+{\em station\+Size} & int the number of stations in the network being simulated\\
+\hline
+\end{DoxyParams}
+Creates a shared pointer to the event pool object. Creates a barrier with n\+\_\+stations + 1 \Hypertarget{classEventLoop_acd0f2fd1a93194d07d2c9fe0c855b6a8}\index{EventLoop@{EventLoop}!````~EventLoop@{\texorpdfstring{$\sim$}{\string~}EventLoop}}
+\index{````~EventLoop@{\texorpdfstring{$\sim$}{\string~}EventLoop}!EventLoop@{EventLoop}}
+\doxysubsubsection{\texorpdfstring{\texorpdfstring{$\sim$}{\string~}EventLoop()}{\string~EventLoop()}}
+{\footnotesize\ttfamily \label{classEventLoop_acd0f2fd1a93194d07d2c9fe0c855b6a8} 
+Event\+Loop\+::\texorpdfstring{$\sim$}{\string~}\+Event\+Loop (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+\doxylink{classEvent}{Event} loop destructor, thread cleanup. 
+
+Stop and join all threads 
+
+\label{doc-func-members}
+\Hypertarget{classEventLoop_doc-func-members}
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classEventLoop_a6c3c78e283ef38929ccc3c199e321cfe}\index{EventLoop@{EventLoop}!run@{run}}
+\index{run@{run}!EventLoop@{EventLoop}}
+\doxysubsubsection{\texorpdfstring{run()}{run()}}
+{\footnotesize\ttfamily \label{classEventLoop_a6c3c78e283ef38929ccc3c199e321cfe} 
+void Event\+Loop\+::run (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+Main event loop function that repeats. 
+
+While running, progress the event pool by consuming events at the next timestamp If the simulation reaches max time, res = -\/2 and the loop will break Otherwise load the current event pool (atomically) Fetch the stations which will receive event requests Fetch the corresponding event requests Depending on the event type, send a leave/entry request to corresponding station If the request is denied, a propogated request is returned, adding a fixed time on top of the time the request was made Add this to the event pool and remove the predicted event that wasn\textquotesingle{}t taken Otherwise event is processed by the station Empty the targets for this timestamp and wait at double barrier before repeating the loop \Hypertarget{classEventLoop_ae5b67d0e6db0b142a5e37280b42bd2a9}\index{EventLoop@{EventLoop}!start@{start}}
+\index{start@{start}!EventLoop@{EventLoop}}
+\doxysubsubsection{\texorpdfstring{start()}{start()}}
+{\footnotesize\ttfamily \label{classEventLoop_ae5b67d0e6db0b142a5e37280b42bd2a9} 
+void Event\+Loop\+::start (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+Start the \doxylink{classEventLoop}{Event\+Loop}. 
+
+Creates new thread for each station\textquotesingle{}s listen function, passing the barrier Creates a new thread for the eventloop run function \Hypertarget{classEventLoop_a83538de40ef25fe89d3aa11cab3afb62}\index{EventLoop@{EventLoop}!waitBarrier@{waitBarrier}}
+\index{waitBarrier@{waitBarrier}!EventLoop@{EventLoop}}
+\doxysubsubsection{\texorpdfstring{waitBarrier()}{waitBarrier()}}
+{\footnotesize\ttfamily \label{classEventLoop_a83538de40ef25fe89d3aa11cab3afb62} 
+void Event\+Loop\+::wait\+Barrier (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+Helper to reach barrier early. 
+
+Wait at barrier 
 
 The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
 \item 

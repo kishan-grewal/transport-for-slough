@@ -4,117 +4,242 @@
 \begin{DoxyCode}{0}
 \DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ STATION\_ODE\_HPP}}
 \DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ STATION\_ODE\_HPP}}
-\DoxyCodeLine{00003\ }
-\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}ode/ode\_system.hpp"{}}}
-\DoxyCodeLine{00005\ }
-\DoxyCodeLine{00006\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classStationSystem}{StationSystem}};}
-\DoxyCodeLine{00007\ \textcolor{keyword}{struct\ }StationSystemInput\ \{}
-\DoxyCodeLine{00008\ \ \ \mbox{\hyperlink{classStationSystem}{StationSystem}}\ *system;}
-\DoxyCodeLine{00009\ \ \ \textcolor{keywordtype}{double}\ timestep\ =\ 1;}
-\DoxyCodeLine{00010\ }
-\DoxyCodeLine{00011\ \ \ \textcolor{keywordtype}{double}\ input\_n;}
-\DoxyCodeLine{00012\ }
-\DoxyCodeLine{00013\ \ \ StationSystemInput(\textcolor{keyword}{const}\ StationSystemInput\ \&cpy,\ \mbox{\hyperlink{classStationSystem}{StationSystem}}\ *\textcolor{keyword}{override}\ =\ NULL)}
-\DoxyCodeLine{00014\ \ \ \ \ \ \ :\ system(cpy.system),\ input\_n(cpy.input\_n)\ \{}
-\DoxyCodeLine{00015\ \ \ \ \ \textcolor{keywordflow}{if}\ (\textcolor{keyword}{override}\ !=\ NULL)}
-\DoxyCodeLine{00016\ \ \ \ \ \ \ this-\/>system\ =\ \textcolor{keyword}{override};}
-\DoxyCodeLine{00017\ \ \ \}}
-\DoxyCodeLine{00018\ \ \ StationSystemInput(\mbox{\hyperlink{classStationSystem}{StationSystem}}\ *system\ =\ NULL,\ \textcolor{keywordtype}{int}\ input\ =\ -\/1)}
-\DoxyCodeLine{00019\ \ \ \ \ \ \ :\ system(system),\ input\_n(input)\ \{\}}
-\DoxyCodeLine{00020\ }
-\DoxyCodeLine{00021\ \ \ \textcolor{keywordtype}{void}\ operator()(ODE\_Solver::Vector\ \&x,\ \textcolor{keywordtype}{double}\ t);}
-\DoxyCodeLine{00022\ \};}
-\DoxyCodeLine{00023\ }
-\DoxyCodeLine{00024\ \textcolor{keyword}{class\ }StationSystem\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classODE__Solver_1_1InitialStateSystem}{ODE\_Solver::InitialStateSystem}}<ODE\_Solver::Vector>\ \{}
-\DoxyCodeLine{00025\ \ \ \textcolor{keyword}{public}:}
-\DoxyCodeLine{00026\ \ \ StationSystem(boost::json::object\ data);}
-\DoxyCodeLine{00027\ \ \ \textcolor{comment}{//\ Override\ copy\ constructor\ to\ make\ sure\ the\ input\ system\ pointer\ updates\ correctly}}
-\DoxyCodeLine{00028\ \ \ StationSystem(\textcolor{keyword}{const}\ StationSystem\ \&cpy)}
-\DoxyCodeLine{00029\ \ \ \ \ \ \ :\ segments(cpy.segments),}
-\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ input\_segment\_index(cpy.input\_segment\_index),}
-\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ platform\_alight\_segment\_mapping(cpy.platform\_alight\_segment\_mapping),}
-\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ platform\_board\_segment\_mapping(cpy.platform\_board\_segment\_mapping)\ \{}
-\DoxyCodeLine{00033\ \ \ \ \ this-\/>input\_driver\ =\ \mbox{\hyperlink{structStationSystemInput}{StationSystemInput}}(cpy.input\_driver,\ \textcolor{keyword}{this});}
-\DoxyCodeLine{00034\ \ \ \}}
-\DoxyCodeLine{00035\ }
-\DoxyCodeLine{00036\ \ \ \textcolor{keywordtype}{void}\ operator()(\textcolor{keyword}{const}\ ODE\_Solver::Vector\ \&x,\ ODE\_Solver::Vector\ \&dxdt,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \textcolor{comment}{/*\ t\ */});}
-\DoxyCodeLine{00037\ }
-\DoxyCodeLine{00038\ \ \ \textcolor{comment}{//\ Return\ the\ state\ update\ vector\ which\ should\ be\ added\ to\ the\ current\ state}}
-\DoxyCodeLine{00039\ \ \ ODE\_Solver::Vector\ EntranceUpdateVector(std::vector<double>\ n\_people);}
-\DoxyCodeLine{00040\ \ \ ODE\_Solver::Vector\ \mbox{\hyperlink{classStationSystem_a43bf251935f8301a8e7addf010b1ffba}{PlatformUpdateVector}}(\textcolor{keywordtype}{double}\ n\_people,\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{int}\ platform\_id);}
-\DoxyCodeLine{00041\ \ \ \mbox{\hyperlink{structStationSystemInput}{StationSystemInput}}\ InputDriver()\ \{\ \textcolor{keywordflow}{return}\ this-\/>input\_driver;\ \}}
-\DoxyCodeLine{00042\ }
-\DoxyCodeLine{00043\ \ \ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{int}\ platform\_count()\ \{\ \textcolor{keywordflow}{return}\ platform\_board\_segment\_mapping.size();\ \}}
-\DoxyCodeLine{00044\ }
-\DoxyCodeLine{00045\ \ \ \textcolor{keyword}{private}:}
-\DoxyCodeLine{00046\ \ \ \textcolor{comment}{//\ Standard\ pedestrian\ parameters}}
-\DoxyCodeLine{00047\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ v0\ =\ 1.3;}
-\DoxyCodeLine{00048\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ p\_max\ =\ 4;}
-\DoxyCodeLine{00049\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ t\_gap\ =\ 0.5;}
-\DoxyCodeLine{00050\ }
-\DoxyCodeLine{00051\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ l\_eff\ =\ 1\ /\ p\_max;}
-\DoxyCodeLine{00052\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ p\_cap\ =\ 1\ /\ (v0\ *\ t\_gap\ +\ l\_eff);}
-\DoxyCodeLine{00053\ }
-\DoxyCodeLine{00054\ \ \ \mbox{\hyperlink{structStationSystemInput}{StationSystemInput}}\ input\_driver;}
-\DoxyCodeLine{00055\ \ \ std::vector<int>\ input\_segment\_index;}
-\DoxyCodeLine{00056\ }
-\DoxyCodeLine{00057\ \ \ std::vector<int>\ platform\_board\_segment\_mapping;\ \ \ \textcolor{comment}{//\ Platform\ segments\ that\ you\ board\ from}}
-\DoxyCodeLine{00058\ \ \ std::vector<int>\ platform\_alight\_segment\_mapping;\ \ \textcolor{comment}{//\ Platform\ segments\ that\ you\ alight\ onto}}
-\DoxyCodeLine{00059\ }
-\DoxyCodeLine{00060\ \ \ \textcolor{comment}{//\ -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/}}
-\DoxyCodeLine{00061\ \ \ \textcolor{comment}{//\ \ Flow\ rate\ equations}}
-\DoxyCodeLine{00062\ \ \ \textcolor{comment}{//\ -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/}}
-\DoxyCodeLine{00063\ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ Qb\_out(\textcolor{keywordtype}{double}\ p)\ \{}
-\DoxyCodeLine{00064\ \ \ \ \ \textcolor{keywordflow}{return}\ v0\ *\ p\ *\ (0\ <=\ p\ \&\&\ p\ <=\ p\_cap)\ +\ v0\ *\ p\_cap\ *\ (p\ >\ p\_cap);}
-\DoxyCodeLine{00065\ \ \ \}}
-\DoxyCodeLine{00066\ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ Qb\_in(\textcolor{keywordtype}{double}\ p)\ \{}
-\DoxyCodeLine{00067\ \ \ \ \ \textcolor{keywordflow}{return}\ v0\ *\ p\_cap\ *\ (0\ <=\ p\ \&\&\ p\ <=\ p\_cap)\ +}
-\DoxyCodeLine{00068\ \ \ \ \ \ \ \ \ \ \ \ (1\ /\ t\_gap\ *\ (1\ -\/\ p\ *\ l\_eff))\ *\ (p\_cap\ <\ p\ \&\&\ p\ <=\ p\_max);}
-\DoxyCodeLine{00069\ \ \ \}}
-\DoxyCodeLine{00070\ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ dQe(\textcolor{keywordtype}{double}\ p1\_in,\ \textcolor{keywordtype}{double}\ p2\_full,\ \textcolor{keywordtype}{double}\ p2\_in,\ \textcolor{keywordtype}{double}\ p3\_full)\ \{}
-\DoxyCodeLine{00071\ \ \ \ \ \textcolor{keywordflow}{return}\ fmin(Qb\_out(p1\_in),\ Qb\_in(p2\_full))\ -\/\ fmin(Qb\_out(p2\_in),\ Qb\_in(p3\_full));}
-\DoxyCodeLine{00072\ \ \ \}}
-\DoxyCodeLine{00073\ }
-\DoxyCodeLine{00074\ \ \ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \_in\_density\_factor(\textcolor{keywordtype}{int}\ i)\ \{}
-\DoxyCodeLine{00075\ \ \ \ \ \textcolor{keywordflow}{return}\ segments[i].linked\_to\_area\ \&\ AreaLink::FROM\ ?\ segments[segments[i].prev].xk\ :\ 1;}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ <fstream>}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ "{}ode/ode\_solver.hpp"{}}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ "{}ode/ode\_system.hpp"{}}}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classStationSystem}{StationSystem}};}
+\DoxyCodeLine{00009\ \textcolor{keyword}{struct\ }StationSystemInput\ \{}
+\DoxyCodeLine{00010\ \ \ \textcolor{keywordtype}{double}\ timestep\ =\ 1;}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \ \ \mbox{\hyperlink{classStationSystem}{StationSystem}}\ *system;}
+\DoxyCodeLine{00013\ \ \ \textcolor{keywordtype}{double}\ input\_n\ =\ -\/1;\ \ \textcolor{comment}{//\ Const\ input,\ used\ for\ testing\ (default\ to\ negative,\ which\ is\ ignored)}}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \ \ StationSystemInput(\textcolor{keyword}{const}\ StationSystemInput\ \&cpy,\ \mbox{\hyperlink{classStationSystem}{StationSystem}}\ *\textcolor{keyword}{override}\ =\ NULL)}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ :\ system(cpy.system),}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ input\_n(cpy.input\_n),}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ timestep(cpy.timestep),}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ last\_update\_t(cpy.last\_update\_t),}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ target\_inputs(cpy.target\_inputs),}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ accumulated(cpy.accumulated),}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ interp\_t(cpy.interp\_t),}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ inflows(cpy.inflows)\ \{}
+\DoxyCodeLine{00025\ \ \ \ \ \textcolor{keywordflow}{if}\ (\textcolor{keyword}{override}\ !=\ NULL)}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ this-\/>system\ =\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00027\ \ \ \}}
+\DoxyCodeLine{00028\ \ \ StationSystemInput(\mbox{\hyperlink{classStationSystem}{StationSystem}}\ *system\ =\ NULL,\ \textcolor{keywordtype}{int}\ input\ =\ -\/1);}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \ \ \textcolor{keywordtype}{void}\ operator()(ODE\_Solver::Vector\ \&x,\ \textcolor{keywordtype}{double}\ t);}
+\DoxyCodeLine{00031\ }
+\DoxyCodeLine{00032\ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00033\ \ \ \textcolor{keywordtype}{int}\ last\_update\_t;}
+\DoxyCodeLine{00034\ }
+\DoxyCodeLine{00035\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{int}\ TIME\_SERIES\_TIMESTEP\ =\ 15\ *\ 60;}
+\DoxyCodeLine{00036\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{int}\ TIME\_SERIES\_ENTRY\_COUNT\ =}
+\DoxyCodeLine{00037\ \ \ \ \ (24\ *\ 60)\ /\ 15\ -\/\ 1;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ 15\ minute\ slices\ across\ a\ day}}
+\DoxyCodeLine{00038\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{int}\ TIME\_SERIES\_ENTRY\_LEN\ =\ 9;\ \ \textcolor{comment}{//\ 9\ characters}}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00040\ \ \ std::vector<double>\ accumulated;}
+\DoxyCodeLine{00041\ \ \ std::vector<double>\ target\_inputs;}
+\DoxyCodeLine{00042\ \ \ std::vector<double>\ interp\_t;}
+\DoxyCodeLine{00043\ }
+\DoxyCodeLine{00044\ \ \ std::ifstream\ *inflows;}
+\DoxyCodeLine{00045\ \};}
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00047\ \textcolor{keyword}{struct\ }StationFileObserverCache\ \{}
+\DoxyCodeLine{00048\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{int}\ CACHE\_SIZE\ =\ 50;}
+\DoxyCodeLine{00049\ \ \ StationFileObserverCache(std::string\ path)\ :\ f(path),\ fpath(path),\ cache(50),\ cache\_ptr(0)\ \{}
+\DoxyCodeLine{00050\ \ \ \ \ \textcolor{keywordflow}{if}\ (!f.is\_open())}
+\DoxyCodeLine{00051\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}WARN\ -\/\ failed\ to\ open\ logging\ file\ ["{}}\ +\ path\ +\ \textcolor{stringliteral}{"{}]"{}});}
+\DoxyCodeLine{00052\ \ \ \};}
+\DoxyCodeLine{00053\ \ \ \string~StationFileObserverCache()\ \{}
+\DoxyCodeLine{00054\ \ \ \ \ \textcolor{keywordflow}{if}\ (f.is\_open())}
+\DoxyCodeLine{00055\ \ \ \ \ \ \ f.close();}
+\DoxyCodeLine{00056\ \ \ \}}
+\DoxyCodeLine{00057\ }
+\DoxyCodeLine{00058\ \ \ \textcolor{keywordtype}{void}\ push(ODE\_Solver::Vector\ x)\ \{}
+\DoxyCodeLine{00059\ \ \ \ \ cache[cache\_ptr++]\ =\ ODE\_Solver::Vector(x);}
+\DoxyCodeLine{00060\ \ \ \ \ \textcolor{keywordflow}{if}\ (cache\_ptr\ ==\ CACHE\_SIZE)}
+\DoxyCodeLine{00061\ \ \ \ \ \ \ fdump();}
+\DoxyCodeLine{00062\ \ \ \}}
+\DoxyCodeLine{00063\ }
+\DoxyCodeLine{00064\ \ \ \textcolor{keywordtype}{void}\ finalise()\ \{}
+\DoxyCodeLine{00065\ \ \ \ \ \textcolor{comment}{//\ Dump\ anything\ remaining\ in\ cache}}
+\DoxyCodeLine{00066\ \ \ \ \ \textcolor{keywordflow}{if}\ (!f.is\_open())\ \{}
+\DoxyCodeLine{00067\ \ \ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}No\ file\ to\ finalise\ to"{}}\ <<\ std::endl;}
+\DoxyCodeLine{00068\ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{00069\ \ \ \ \ \}}
+\DoxyCodeLine{00070\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =\ 0;\ i\ <\ cache\_ptr;\ ++i)\ \{}
+\DoxyCodeLine{00071\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ val\ =\ cache[i].begin();\ val\ !=\ cache[i].end();\ ++val)}
+\DoxyCodeLine{00072\ \ \ \ \ \ \ \ \ f\ <<\ *val\ <<\ \textcolor{stringliteral}{"{},"{}};}
+\DoxyCodeLine{00073\ \ \ \ \ \ \ f\ <<\ std::endl;}
+\DoxyCodeLine{00074\ \ \ \ \ \}}
+\DoxyCodeLine{00075\ \ \ \ \ f.close();}
 \DoxyCodeLine{00076\ \ \ \}}
-\DoxyCodeLine{00077\ \ \ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \_out\_density\_factor(\textcolor{keywordtype}{int}\ i)\ \{}
-\DoxyCodeLine{00078\ \ \ \ \ \textcolor{keywordflow}{return}\ segments[i].linked\_to\_area\ \&\ AreaLink::TO\ ?\ segments[segments[i].next].xk\ :\ 1;}
-\DoxyCodeLine{00079\ \ \ \}}
-\DoxyCodeLine{00080\ }
-\DoxyCodeLine{00081\ \ \ \textcolor{keyword}{enum}\ SegmentType\ :\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{char}\ \{}
-\DoxyCodeLine{00082\ \ \ \ \ INVALID,}
-\DoxyCodeLine{00083\ \ \ \ \ \textcolor{comment}{//\ Straight\ corridor}}
-\DoxyCodeLine{00084\ \ \ \ \ DIRECT,}
-\DoxyCodeLine{00085\ \ \ \ \ \textcolor{comment}{//\ Upstream\ inflow\ comes\ from\ a\ junction}}
-\DoxyCodeLine{00086\ \ \ \ \ SPLIT\_INPUT,}
-\DoxyCodeLine{00087\ \ \ \ \ \textcolor{comment}{//\ Diverging\ paths\ at\ end\ of\ segment}}
-\DoxyCodeLine{00088\ \ \ \ \ SPLIT\_OUTPUT,}
-\DoxyCodeLine{00089\ \ \ \ \ \textcolor{comment}{//\ Platform}}
-\DoxyCodeLine{00090\ \ \ \ \ AREA\_INFLOW,}
-\DoxyCodeLine{00091\ \ \ \ \ \textcolor{comment}{//\ Entrance}}
-\DoxyCodeLine{00092\ \ \ \ \ AREA\_OUTFLOW}
-\DoxyCodeLine{00093\ \ \ \};}
-\DoxyCodeLine{00094\ \ \ \textcolor{keyword}{enum}\ AreaLink\ :\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{char}\ \{\ NONE\ =\ 0,\ FROM\ =\ 1,\ TO\ =\ 2,\ BOTH\ =\ FROM\ |\ TO\ \};}
-\DoxyCodeLine{00095\ }
-\DoxyCodeLine{00096\ \ \ \textcolor{keyword}{struct\ }SegmentData\ \{}
-\DoxyCodeLine{00097\ \ \ \ \ SegmentType\ type;}
-\DoxyCodeLine{00098\ \ \ \ \ AreaLink\ linked\_to\_area;}
-\DoxyCodeLine{00099\ \ \ \ \ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{int}\ prev,\ next;}
-\DoxyCodeLine{00100\ \ \ \ \ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{int}\ adjacent\ =\ -\/1;}
-\DoxyCodeLine{00101\ \ \ \ \ \textcolor{keywordtype}{double}\ xk;}
-\DoxyCodeLine{00102\ }
-\DoxyCodeLine{00103\ \ \ \ \ \textcolor{comment}{//\ SPLIT\_OUTPUT\ fields}}
-\DoxyCodeLine{00104\ \ \ \ \ \textcolor{comment}{//\ These\ then\ get\ read\ back\ by\ SPLIT\_INPUT\ structures\ in\ calculations,\ to\ avoid\ data\ duplication}}
-\DoxyCodeLine{00105\ \ \ \ \ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{int}\ secondary;}
-\DoxyCodeLine{00106\ \ \ \ \ \textcolor{keywordtype}{double}\ split\_ratio\ =\ 1;}
-\DoxyCodeLine{00107\ }
-\DoxyCodeLine{00108\ \ \ \ \ SegmentData();}
-\DoxyCodeLine{00109\ \ \ \ \ SegmentData(boost::json::object\ data);}
-\DoxyCodeLine{00110\ \ \ \};}
-\DoxyCodeLine{00111\ \ \ std::vector<SegmentData>\ segments;}
-\DoxyCodeLine{00112\ \};}
-\DoxyCodeLine{00113\ }
-\DoxyCodeLine{00114\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00077\ }
+\DoxyCodeLine{00078\ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00079\ \ \ std::ofstream\ f;}
+\DoxyCodeLine{00080\ \ \ std::string\ fpath;}
+\DoxyCodeLine{00081\ \ \ std::vector<ODE\_Solver::Vector>\ cache;}
+\DoxyCodeLine{00082\ \ \ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{int}\ cache\_ptr\ =\ 0;}
+\DoxyCodeLine{00083\ }
+\DoxyCodeLine{00084\ \ \ \textcolor{keywordtype}{void}\ fdump()\ \{}
+\DoxyCodeLine{00085\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ vec\ =\ cache.begin();\ vec\ !=\ cache.end();\ ++vec)\ \{}
+\DoxyCodeLine{00086\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ val\ =\ vec-\/>begin();\ val\ !=\ vec-\/>end();\ ++val)}
+\DoxyCodeLine{00087\ \ \ \ \ \ \ \ \ f\ <<\ std::fixed\ <<\ std::setprecision(5)\ <<\ *val\ <<\ \textcolor{stringliteral}{"{},"{}};}
+\DoxyCodeLine{00088\ \ \ \ \ \ \ f\ <<\ std::endl;}
+\DoxyCodeLine{00089\ \ \ \ \ \}}
+\DoxyCodeLine{00090\ \ \ \ \ cache\_ptr\ =\ 0;}
+\DoxyCodeLine{00091\ \ \ \}}
+\DoxyCodeLine{00092\ \};}
+\DoxyCodeLine{00093\ \textcolor{keyword}{struct\ }StationFileObserver\ :\ \mbox{\hyperlink{classODE__Solver_1_1GlobalTimeObserverTemplate}{ODE\_Solver::GlobalTimeObserverTemplate}}\ \{}
+\DoxyCodeLine{00094\ \ \ StationFileObserver(std::string\ path)\ :\ cache(std::make\_shared<StationFileObserverCache>(path))\ \{}
+\DoxyCodeLine{00095\ \ \ \ \ this-\/>timestep\ =\ 5;}
+\DoxyCodeLine{00096\ \ \ \}}
+\DoxyCodeLine{00097\ \ \ StationFileObserver(StationFileObserver\ \&cpy)\ :\ cache(cpy.cache)\ \{}
+\DoxyCodeLine{00098\ \ \ \ \ this-\/>timestep\ =\ cpy.timestep;}
+\DoxyCodeLine{00099\ \ \ \ \ this-\/>skip\_next\ =\ cpy.skip\_next;}
+\DoxyCodeLine{00100\ \ \ \};}
+\DoxyCodeLine{00101\ }
+\DoxyCodeLine{00102\ \ \ \textcolor{keywordtype}{void}\ operator()(\textcolor{keyword}{const}\ ODE\_Solver::Vector\ \&x,\ \textcolor{keywordtype}{double}\ t)\ \{}
+\DoxyCodeLine{00103\ \ \ \ \ \textcolor{keywordflow}{if}\ (this-\/>skip\_next)\ \{}
+\DoxyCodeLine{00104\ \ \ \ \ \ \ this-\/>skip\_next\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00105\ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{00106\ \ \ \ \ \}}
+\DoxyCodeLine{00107\ \ \ \ \ cache-\/>push(x);}
+\DoxyCodeLine{00108\ \ \ \};}
+\DoxyCodeLine{00109\ \ \ \textcolor{keywordtype}{void}\ finalise()\ \{\ cache-\/>finalise();\ \}}
+\DoxyCodeLine{00110\ }
+\DoxyCodeLine{00111\ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00112\ \ \ std::shared\_ptr<StationFileObserverCache>\ cache;}
+\DoxyCodeLine{00113\ \};}
+\DoxyCodeLine{00114\ }
+\DoxyCodeLine{00115\ \textcolor{keyword}{class\ }StationSystem\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classODE__Solver_1_1InitialStateSystem}{ODE\_Solver::InitialStateSystem}}<ODE\_Solver::Vector>\ \{}
+\DoxyCodeLine{00116\ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00117\ \ \ StationSystem(boost::json::object\ data,\ std::ifstream\ \&split\_ratios,\ \textcolor{keywordtype}{double}\ input\_timestep\ =\ 1);}
+\DoxyCodeLine{00118\ \ \ \textcolor{comment}{//\ Override\ copy\ constructor\ to\ make\ sure\ the\ input\ system\ pointer\ updates\ correctly}}
+\DoxyCodeLine{00119\ \ \ StationSystem(\textcolor{keyword}{const}\ StationSystem\ \&cpy)}
+\DoxyCodeLine{00120\ \ \ \ \ \ \ :\ segments(cpy.segments),}
+\DoxyCodeLine{00121\ \ \ \ \ \ \ \ \ input\_segment\_index(cpy.input\_segment\_index),}
+\DoxyCodeLine{00122\ \ \ \ \ \ \ \ \ platform\_alight\_segment\_mapping(cpy.platform\_alight\_segment\_mapping),}
+\DoxyCodeLine{00123\ \ \ \ \ \ \ \ \ platform\_board\_segment\_mapping(cpy.platform\_board\_segment\_mapping),}
+\DoxyCodeLine{00124\ \ \ \ \ \ \ \ \ split\_ratios(cpy.split\_ratios)\ \{}
+\DoxyCodeLine{00125\ \ \ \ \ this-\/>input\_driver\ =\ \mbox{\hyperlink{structStationSystemInput}{StationSystemInput}}(cpy.input\_driver,\ \textcolor{keyword}{this});}
+\DoxyCodeLine{00126\ \ \ \}}
+\DoxyCodeLine{00127\ }
+\DoxyCodeLine{00128\ \ \ \textcolor{keywordtype}{void}\ operator()(\textcolor{keyword}{const}\ ODE\_Solver::Vector\ \&x,\ ODE\_Solver::Vector\ \&dxdt,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \textcolor{comment}{/*\ t\ */});}
+\DoxyCodeLine{00129\ \ \ \textcolor{keywordtype}{void}\ \_check();}
+\DoxyCodeLine{00130\ }
+\DoxyCodeLine{00131\ \ \ \textcolor{comment}{//\ Return\ the\ state\ update\ vector\ which\ should\ be\ added\ to\ the\ current\ state}}
+\DoxyCodeLine{00132\ \ \ ODE\_Solver::Vector\ EntranceUpdateVector(std::vector<double>\ n\_people);}
+\DoxyCodeLine{00133\ \ \ ODE\_Solver::Vector\ \mbox{\hyperlink{classStationSystem_a43bf251935f8301a8e7addf010b1ffba}{PlatformUpdateVector}}(\textcolor{keywordtype}{double}\ n\_people,\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{int}\ platform\_id);}
+\DoxyCodeLine{00134\ \ \ \mbox{\hyperlink{structStationSystemInput}{StationSystemInput}}\ InputDriver()\ \{\ \textcolor{keywordflow}{return}\ this-\/>input\_driver;\ \}}
+\DoxyCodeLine{00135\ }
+\DoxyCodeLine{00136\ \ \ \textcolor{keywordtype}{int}\ entrance\_count()\ \{\ \textcolor{keywordflow}{return}\ this-\/>input\_segment\_index.size();\ \}}
+\DoxyCodeLine{00137\ \ \ \textcolor{keywordtype}{int}\ entrance\_flow\_index(\textcolor{keywordtype}{int}\ i)\ \{}
+\DoxyCodeLine{00138\ \ \ \ \ \textcolor{keywordflow}{if}\ (i\ >=\ this-\/>entrance\_flow\_rate\_indexes.size())}
+\DoxyCodeLine{00139\ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ -\/1;}
+\DoxyCodeLine{00140\ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00141\ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ this-\/>entrance\_flow\_rate\_indexes[i];}
+\DoxyCodeLine{00142\ \ \ \}}
+\DoxyCodeLine{00143\ }
+\DoxyCodeLine{00144\ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00145\ \ \ \textcolor{comment}{//\ Standard\ pedestrian\ parameters}}
+\DoxyCodeLine{00146\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ v0\ =\ 1.3;}
+\DoxyCodeLine{00147\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ p\_max\ =\ 4;}
+\DoxyCodeLine{00148\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ t\_gap\ =\ 0.5;}
+\DoxyCodeLine{00149\ }
+\DoxyCodeLine{00150\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ l\_eff\ =\ 1\ /\ p\_max;}
+\DoxyCodeLine{00151\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ p\_cap\ =\ 1\ /\ (v0\ *\ t\_gap\ +\ l\_eff);}
+\DoxyCodeLine{00152\ }
+\DoxyCodeLine{00153\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{int}\ TIME\_SERIES\_ENTRY\_COUNT\ =}
+\DoxyCodeLine{00154\ \ \ \ \ (24\ *\ 60)\ /\ 15\ -\/\ 1;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ 15\ minute\ slices\ across\ a\ day}}
+\DoxyCodeLine{00155\ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{int}\ TIME\_SERIES\_ENTRY\_LEN\ =\ 9;\ \ \textcolor{comment}{//\ 9\ characters}}
+\DoxyCodeLine{00156\ }
+\DoxyCodeLine{00157\ \ \ \mbox{\hyperlink{structStationSystemInput}{StationSystemInput}}\ input\_driver;}
+\DoxyCodeLine{00158\ \ \ std::vector<int>\ input\_segment\_index;}
+\DoxyCodeLine{00159\ }
+\DoxyCodeLine{00160\ \ \ std::vector<int>\ platform\_board\_segment\_mapping;\ \ \ \textcolor{comment}{//\ Platform\ segments\ that\ you\ board\ from}}
+\DoxyCodeLine{00161\ \ \ std::vector<int>\ platform\_alight\_segment\_mapping;\ \ \textcolor{comment}{//\ Platform\ segments\ that\ you\ alight\ onto}}
+\DoxyCodeLine{00162\ }
+\DoxyCodeLine{00163\ \ \ std::vector<int>\ entrance\_flow\_rate\_indexes;}
+\DoxyCodeLine{00164\ }
+\DoxyCodeLine{00165\ \ \ std::basic\_ifstream<char>\ \&split\_ratios;}
+\DoxyCodeLine{00166\ }
+\DoxyCodeLine{00167\ \ \ \textcolor{comment}{//\ -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/}}
+\DoxyCodeLine{00168\ \ \ \textcolor{comment}{//\ \ Flow\ rate\ equations}}
+\DoxyCodeLine{00169\ \ \ \textcolor{comment}{//\ -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/}}
+\DoxyCodeLine{00170\ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ Qb\_out(\textcolor{keywordtype}{double}\ p)\ \{}
+\DoxyCodeLine{00171\ \ \ \ \ \textcolor{keywordflow}{return}\ v0\ *\ p\ *\ (0\ <=\ p\ \&\&\ p\ <=\ p\_cap)\ +\ v0\ *\ p\_cap\ *\ (p\ >\ p\_cap);}
+\DoxyCodeLine{00172\ \ \ \}}
+\DoxyCodeLine{00173\ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ Qb\_in(\textcolor{keywordtype}{double}\ p)\ \{}
+\DoxyCodeLine{00174\ \ \ \ \ \textcolor{keywordflow}{return}\ v0\ *\ p\_cap\ *\ (0\ <=\ p\ \&\&\ p\ <=\ p\_cap)\ +}
+\DoxyCodeLine{00175\ \ \ \ \ \ \ \ \ \ \ \ (1\ /\ t\_gap\ *\ (1\ -\/\ p\ *\ l\_eff))\ *\ (p\_cap\ <\ p\ \&\&\ p\ <=\ p\_max);}
+\DoxyCodeLine{00176\ \ \ \}}
+\DoxyCodeLine{00177\ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ dQe(\textcolor{keywordtype}{double}\ p1\_in,\ \textcolor{keywordtype}{double}\ p2\_full,\ \textcolor{keywordtype}{double}\ p2\_in,\ \textcolor{keywordtype}{double}\ p3\_full)\ \{}
+\DoxyCodeLine{00178\ \ \ \ \ \textcolor{keywordflow}{return}\ fmin(Qb\_out(p1\_in),\ Qb\_in(p2\_full))\ -\/\ fmin(Qb\_out(p2\_in),\ Qb\_in(p3\_full));}
+\DoxyCodeLine{00179\ \ \ \}}
+\DoxyCodeLine{00180\ }
+\DoxyCodeLine{00181\ \ \ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \_density\_factor(\textcolor{keywordtype}{int}\ i)\ \{}
+\DoxyCodeLine{00182\ \ \ \ \ \textcolor{keywordflow}{return}\ (segments[i].type\ ==\ AREA\_INFLOW\ ||\ segments[i].type\ ==\ AREA\_OUTFLOW)\ ?\ segments[i].xk}
+\DoxyCodeLine{00183\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ :\ 1;}
+\DoxyCodeLine{00184\ \ \ \}}
+\DoxyCodeLine{00185\ \ \ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \_split\_ratio(\textcolor{keywordtype}{int}\ i,\ \textcolor{keywordtype}{double}\ t)\ \{}
+\DoxyCodeLine{00186\ \ \ \ \ \textcolor{keywordflow}{if}\ (segments[i].split\_ratio\ !=\ -\/1)}
+\DoxyCodeLine{00187\ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ segments[i].split\_ratio;}
+\DoxyCodeLine{00188\ }
+\DoxyCodeLine{00189\ \ \ \ \ \textcolor{keywordflow}{if}\ (segments[i].split\_ratio\_series\_index\ ==\ -\/1)}
+\DoxyCodeLine{00190\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}No\ valid\ split\ ratio\ found"{}});}
+\DoxyCodeLine{00191\ \ \ \ \ \textcolor{comment}{//\ \ \ \ \ \ \ \ \ \ \ (minutes\ \%\ minutes\ in\ a\ day)\ /\ entry\ count\ per\ day}}
+\DoxyCodeLine{00192\ \ \ \ \ \textcolor{keywordtype}{int}\ slice\ =\ ((int)floor(t\ /\ 60)\ \%\ (24\ *\ 60))\ /\ 15;}
+\DoxyCodeLine{00193\ \ \ \ \ \textcolor{keywordtype}{int}\ foffset\ =}
+\DoxyCodeLine{00194\ \ \ \ \ \ \ (segments[i].split\_ratio\_series\_index\ *\ (TIME\_SERIES\_ENTRY\_COUNT\ *\ TIME\_SERIES\_ENTRY\_LEN))\ +}
+\DoxyCodeLine{00195\ \ \ \ \ \ \ (slice\ *\ TIME\_SERIES\_ENTRY\_LEN);}
+\DoxyCodeLine{00196\ }
+\DoxyCodeLine{00197\ \ \ \ \ this-\/>split\_ratios.seekg(foffset,\ std::ios\_base::beg);}
+\DoxyCodeLine{00198\ \ \ \ \ this-\/>split\_ratios.clear();}
+\DoxyCodeLine{00199\ \ \ \ \ \textcolor{keywordtype}{char}\ read[9]\ =\ \textcolor{stringliteral}{"{}\(\backslash\)0\(\backslash\)0\(\backslash\)0\(\backslash\)0\(\backslash\)0\(\backslash\)0\(\backslash\)0\(\backslash\)0"{}};}
+\DoxyCodeLine{00200\ \ \ \ \ this-\/>split\_ratios.read(read,\ 8);}
+\DoxyCodeLine{00201\ \ \ \ \ \textcolor{keywordflow}{if}\ (atof(read)\ >\ 1\ ||\ atof(read)\ <\ 0)}
+\DoxyCodeLine{00202\ \ \ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}WARN\ -\/\ read\ at\ "{}}\ <<\ segments[i].split\_ratio\_series\_index\ <<\ \textcolor{stringliteral}{"{}\ "{}}\ <<\ t\ <<\ \textcolor{stringliteral}{"{}("{}}}
+\DoxyCodeLine{00203\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <<\ slice\ <<\ \textcolor{stringliteral}{"{}\ "{}}\ <<\ foffset\ <<\ \textcolor{stringliteral}{"{})"{}}\ <<\ \textcolor{stringliteral}{"{}\ returned\ invalid\ "{}}\ <<\ read\ <<\ std::endl;}
+\DoxyCodeLine{00204\ \ \ \ \ \textcolor{keywordflow}{return}\ atof(read);}
+\DoxyCodeLine{00205\ \ \ \}}
+\DoxyCodeLine{00206\ }
+\DoxyCodeLine{00207\ \ \ \textcolor{keyword}{enum}\ SegmentType\ :\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{char}\ \{}
+\DoxyCodeLine{00208\ \ \ \ \ INVALID,}
+\DoxyCodeLine{00209\ \ \ \ \ \textcolor{comment}{//\ Straight\ corridor}}
+\DoxyCodeLine{00210\ \ \ \ \ DIRECT,}
+\DoxyCodeLine{00211\ \ \ \ \ \textcolor{comment}{//\ Upstream\ inflow\ comes\ from\ a\ junction}}
+\DoxyCodeLine{00212\ \ \ \ \ SPLIT\_INPUT,}
+\DoxyCodeLine{00213\ \ \ \ \ \textcolor{comment}{//\ Diverging\ paths\ at\ end\ of\ segment}}
+\DoxyCodeLine{00214\ \ \ \ \ SPLIT\_OUTPUT,}
+\DoxyCodeLine{00215\ \ \ \ \ \textcolor{comment}{//\ Platform}}
+\DoxyCodeLine{00216\ \ \ \ \ AREA\_INFLOW,}
+\DoxyCodeLine{00217\ \ \ \ \ \textcolor{comment}{//\ Entrance}}
+\DoxyCodeLine{00218\ \ \ \ \ AREA\_OUTFLOW}
+\DoxyCodeLine{00219\ \ \ \};}
+\DoxyCodeLine{00220\ }
+\DoxyCodeLine{00221\ \ \ \textcolor{keyword}{struct\ }SegmentData\ \{}
+\DoxyCodeLine{00222\ \ \ \ \ SegmentType\ type;}
+\DoxyCodeLine{00223\ \ \ \ \ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{int}\ prev,\ next;}
+\DoxyCodeLine{00224\ \ \ \ \ \textcolor{keywordtype}{int}\ adjacent\ =\ -\/1;}
+\DoxyCodeLine{00225\ \ \ \ \ \textcolor{keywordtype}{double}\ xk;}
+\DoxyCodeLine{00226\ }
+\DoxyCodeLine{00227\ \ \ \ \ \textcolor{comment}{//\ SPLIT\_OUTPUT\ fields}}
+\DoxyCodeLine{00228\ \ \ \ \ \textcolor{comment}{//\ These\ then\ get\ read\ back\ by\ SPLIT\_INPUT\ structures\ in\ calculations,\ to\ avoid\ data\ duplication}}
+\DoxyCodeLine{00229\ \ \ \ \ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{int}\ secondary;}
+\DoxyCodeLine{00230\ \ \ \ \ \textcolor{keywordtype}{double}\ split\_ratio\ =\ -\/1;}
+\DoxyCodeLine{00231\ \ \ \ \ \textcolor{keywordtype}{int}\ split\_ratio\_series\_index\ =\ -\/1;}
+\DoxyCodeLine{00232\ }
+\DoxyCodeLine{00233\ \ \ \ \ SegmentData();}
+\DoxyCodeLine{00234\ \ \ \ \ SegmentData(boost::json::object\ data);}
+\DoxyCodeLine{00235\ \ \ \};}
+\DoxyCodeLine{00236\ \ \ std::vector<SegmentData>\ segments;}
+\DoxyCodeLine{00237\ \};}
+\DoxyCodeLine{00238\ }
+\DoxyCodeLine{00239\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

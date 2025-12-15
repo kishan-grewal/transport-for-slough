@@ -9,14 +9,17 @@ Inheritance diagram for Station\+System\+:\begin{figure}[H]
 \doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\Hypertarget{classStationSystem_a58326095c84a2c4c37beb6fe41873b35}\label{classStationSystem_a58326095c84a2c4c37beb6fe41873b35} 
-{\bfseries Station\+System} (boost\+::json\+::object data)
+\Hypertarget{classStationSystem_a71c909115ee1bc8b6ef619c0503218b9}\label{classStationSystem_a71c909115ee1bc8b6ef619c0503218b9} 
+{\bfseries Station\+System} (boost\+::json\+::object data, std\+::ifstream \&split\+\_\+ratios, double input\+\_\+timestep=1)
 \item 
 \Hypertarget{classStationSystem_a5a20f0b9e3100198efb1c2bd2f2d3c68}\label{classStationSystem_a5a20f0b9e3100198efb1c2bd2f2d3c68} 
 {\bfseries Station\+System} (const \mbox{\hyperlink{classStationSystem}{Station\+System}} \&cpy)
 \item 
 \Hypertarget{classStationSystem_a72066404423b87974d89103c3d633fd0}\label{classStationSystem_a72066404423b87974d89103c3d633fd0} 
 void {\bfseries operator()} (const ODE\+\_\+\+Solver\+::\+Vector \&x, ODE\+\_\+\+Solver\+::\+Vector \&dxdt, const double)
+\item 
+\Hypertarget{classStationSystem_adc40b5058598762f4886795fb2747901}\label{classStationSystem_adc40b5058598762f4886795fb2747901} 
+void {\bfseries \+\_\+check} ()
 \item 
 \Hypertarget{classStationSystem_aa2d22c6de693a951e0dda2dd3c8f163a}\label{classStationSystem_aa2d22c6de693a951e0dda2dd3c8f163a} 
 ODE\+\_\+\+Solver\+::\+Vector {\bfseries Entrance\+Update\+Vector} (std\+::vector$<$ double $>$ n\+\_\+people)
@@ -26,8 +29,11 @@ ODE\+\_\+\+Solver\+::\+Vector \mbox{\hyperlink{classStationSystem_a43bf251935f83
 \Hypertarget{classStationSystem_a699903c4c4272fbb178a624b58337a67}\label{classStationSystem_a699903c4c4272fbb178a624b58337a67} 
 \mbox{\hyperlink{structStationSystemInput}{Station\+System\+Input}} {\bfseries Input\+Driver} ()
 \item 
-\Hypertarget{classStationSystem_ab03f50cd3613938b554582cb2e9c20e9}\label{classStationSystem_ab03f50cd3613938b554582cb2e9c20e9} 
-unsigned int {\bfseries platform\+\_\+count} ()
+\Hypertarget{classStationSystem_a5dab707300ce7dc1e52477dd76920343}\label{classStationSystem_a5dab707300ce7dc1e52477dd76920343} 
+int {\bfseries entrance\+\_\+count} ()
+\item 
+\Hypertarget{classStationSystem_a49243048adb6b2bbfe886244b84864c8}\label{classStationSystem_a49243048adb6b2bbfe886244b84864c8} 
+int {\bfseries entrance\+\_\+flow\+\_\+index} (int i)
 \end{DoxyCompactItemize}
 \doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classODE__Solver_1_1InitialStateSystem}{ODE\+\_\+\+Solver\+::\+Initial\+State\+System$<$ ODE\+\_\+\+Solver\+::\+Vector $>$}}}
 \begin{DoxyCompactItemize}

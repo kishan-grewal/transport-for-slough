@@ -95,23 +95,252 @@ $(function(){initNavTree('classEventPool.html','','classEventPool-members'); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a3e5d20af3dea352de9b49192702cd81b" id="r_a3e5d20af3dea352de9b49192702cd81b"><td class="memItemLeft" align="right" valign="top"><a id="a3e5d20af3dea352de9b49192702cd81b" name="a3e5d20af3dea352de9b49192702cd81b"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>EventPool</b> (int time, int stationSize, int trainsSize, <a class="el" href="classState.html">State</a> *loop)</td></tr>
-<tr class="memitem:a769ee166f88e2af7cf53eac3ac76b64b" id="r_a769ee166f88e2af7cf53eac3ac76b64b"><td class="memItemLeft" align="right" valign="top"><a id="a769ee166f88e2af7cf53eac3ac76b64b" name="a769ee166f88e2af7cf53eac3ac76b64b"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>dispatch</b> (<a class="el" href="classEvent.html">Event</a> e)</td></tr>
-<tr class="memitem:ae03580ba2a9e62c1d534a6340ecbdc19" id="r_ae03580ba2a9e62c1d534a6340ecbdc19"><td class="memItemLeft" align="right" valign="top"><a id="ae03580ba2a9e62c1d534a6340ecbdc19" name="ae03580ba2a9e62c1d534a6340ecbdc19"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>getGlobalTime</b> ()</td></tr>
-<tr class="memitem:a3928d9c2ef22bc55da3d0227275943e0" id="r_a3928d9c2ef22bc55da3d0227275943e0"><td class="memItemLeft" align="right" valign="top"><a id="a3928d9c2ef22bc55da3d0227275943e0" name="a3928d9c2ef22bc55da3d0227275943e0"></a>
-std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>getTargets</b> ()</td></tr>
-<tr class="memitem:a2a87f713c94ea3d6efb23bd5849cf2eb" id="r_a2a87f713c94ea3d6efb23bd5849cf2eb"><td class="memItemLeft" align="right" valign="top"><a id="a2a87f713c94ea3d6efb23bd5849cf2eb" name="a2a87f713c94ea3d6efb23bd5849cf2eb"></a>
-std::vector&lt; <a class="el" href="classEvent.html">Event</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>getTargetInfo</b> ()</td></tr>
+<tr class="memitem:a3e5d20af3dea352de9b49192702cd81b" id="r_a3e5d20af3dea352de9b49192702cd81b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3e5d20af3dea352de9b49192702cd81b">EventPool</a> (int time, int stationSize, int trainsSize, <a class="el" href="classState.html">State</a> *loop)</td></tr>
+<tr class="memdesc:a3e5d20af3dea352de9b49192702cd81b"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classEvent.html">Event</a> pool constructor.  <br /></td></tr>
+<tr class="memitem:a769ee166f88e2af7cf53eac3ac76b64b" id="r_a769ee166f88e2af7cf53eac3ac76b64b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a769ee166f88e2af7cf53eac3ac76b64b">dispatch</a> (<a class="el" href="classEvent.html">Event</a> e)</td></tr>
+<tr class="memdesc:a769ee166f88e2af7cf53eac3ac76b64b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dispatch new event to event pool.  <br /></td></tr>
+<tr class="memitem:af91c66f20dcb508ebb3d77369906490c" id="r_af91c66f20dcb508ebb3d77369906490c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af91c66f20dcb508ebb3d77369906490c">eraseFirstNot</a> (<a class="el" href="classEvent.html">Event</a> e)</td></tr>
+<tr class="memdesc:af91c66f20dcb508ebb3d77369906490c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Erase function to get rid of conflicting predicted dispatched events.  <br /></td></tr>
+<tr class="memitem:ae03580ba2a9e62c1d534a6340ecbdc19" id="r_ae03580ba2a9e62c1d534a6340ecbdc19"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae03580ba2a9e62c1d534a6340ecbdc19">getGlobalTime</a> ()</td></tr>
+<tr class="memdesc:ae03580ba2a9e62c1d534a6340ecbdc19"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fetch pool global time.  <br /></td></tr>
+<tr class="memitem:a3928d9c2ef22bc55da3d0227275943e0" id="r_a3928d9c2ef22bc55da3d0227275943e0"><td class="memItemLeft" align="right" valign="top">std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3928d9c2ef22bc55da3d0227275943e0">getTargets</a> ()</td></tr>
+<tr class="memdesc:a3928d9c2ef22bc55da3d0227275943e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get event request targets.  <br /></td></tr>
+<tr class="memitem:a2a87f713c94ea3d6efb23bd5849cf2eb" id="r_a2a87f713c94ea3d6efb23bd5849cf2eb"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classEvent.html">Event</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2a87f713c94ea3d6efb23bd5849cf2eb">getTargetInfo</a> ()</td></tr>
+<tr class="memdesc:a2a87f713c94ea3d6efb23bd5849cf2eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get event target info.  <br /></td></tr>
 <tr class="memitem:a3eca0ac2dc6ba93c00c94e83e2cf6bef" id="r_a3eca0ac2dc6ba93c00c94e83e2cf6bef"><td class="memItemLeft" align="right" valign="top"><a id="a3eca0ac2dc6ba93c00c94e83e2cf6bef" name="a3eca0ac2dc6ba93c00c94e83e2cf6bef"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>emptyTargets</b> ()</td></tr>
-<tr class="memitem:a11e028dac785812d58c6f66ded873a97" id="r_a11e028dac785812d58c6f66ded873a97"><td class="memItemLeft" align="right" valign="top"><a id="a11e028dac785812d58c6f66ded873a97" name="a11e028dac785812d58c6f66ded873a97"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>progressTime</b> (std::barrier&lt;&gt; &amp;syncPoint)</td></tr>
-<tr class="memitem:aab6f6366d5b84bf300a3fb2fae11120c" id="r_aab6f6366d5b84bf300a3fb2fae11120c"><td class="memItemLeft" align="right" valign="top"><a id="aab6f6366d5b84bf300a3fb2fae11120c" name="aab6f6366d5b84bf300a3fb2fae11120c"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>getPoolEmpty</b> ()</td></tr>
+<tr class="memitem:a11e028dac785812d58c6f66ded873a97" id="r_a11e028dac785812d58c6f66ded873a97"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a11e028dac785812d58c6f66ded873a97">progressTime</a> (std::barrier&lt;&gt; &amp;syncPoint)</td></tr>
+<tr class="memdesc:a11e028dac785812d58c6f66ded873a97"><td class="mdescLeft">&#160;</td><td class="mdescRight">Progress event pool to consume next set of events.  <br /></td></tr>
+<tr class="memitem:aab6f6366d5b84bf300a3fb2fae11120c" id="r_aab6f6366d5b84bf300a3fb2fae11120c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aab6f6366d5b84bf300a3fb2fae11120c">getPoolEmpty</a> ()</td></tr>
+<tr class="memdesc:aab6f6366d5b84bf300a3fb2fae11120c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Empty event pool.  <br /></td></tr>
+<tr class="memitem:a15760e15762a05ccd17ad1e8f67265ed" id="r_a15760e15762a05ccd17ad1e8f67265ed"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a15760e15762a05ccd17ad1e8f67265ed">~EventPool</a> ()</td></tr>
+<tr class="memdesc:a15760e15762a05ccd17ad1e8f67265ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor.  <br /></td></tr>
 </table>
+<a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a3e5d20af3dea352de9b49192702cd81b" name="a3e5d20af3dea352de9b49192702cd81b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e5d20af3dea352de9b49192702cd81b">&#9670;&#160;</a></span>EventPool()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">EventPool::EventPool </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>time</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>stationSize</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>trainsSize</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classState.html">State</a> *</td>          <td class="paramname"><span class="paramname"><em>state</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classEvent.html">Event</a> pool constructor. </p>
+<p>Creates an empty event pool (containing an event with invalid target) </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">time</td><td>int maximum simulation time </td></tr>
+    <tr><td class="paramname">stationSize</td><td>int number of stations to simulate </td></tr>
+    <tr><td class="paramname">trainsSize</td><td>int number of trains to simulate </td></tr>
+    <tr><td class="paramname">state</td><td>State* pointer to the global state object</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Internally uses a multiset of <a class="el" href="classEvent.html">Event</a> objects, which are sorted by time on insertion, nearest time first. Global time set to zero.</p>
+<p>The event system uses indices for accessing stations and trains in the state, so the order of the items in the state <em>must</em> be preserved. The number of stations and trains passed must be the number in the state or trains will be missed/out of bounds errors will occur.</p>
+<p>The logging file for the timestamps is also created in this constructor.</p>
+<p>Initial trains are set off here as well. </p>
+
+</div>
+</div>
+<a id="a15760e15762a05ccd17ad1e8f67265ed" name="a15760e15762a05ccd17ad1e8f67265ed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a15760e15762a05ccd17ad1e8f67265ed">&#9670;&#160;</a></span>~EventPool()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">EventPool::~EventPool </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Destructor. </p>
+<p>Set pool to empty pool, deallocate </p>
+
+</div>
+</div>
+<a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
+<a id="a769ee166f88e2af7cf53eac3ac76b64b" name="a769ee166f88e2af7cf53eac3ac76b64b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a769ee166f88e2af7cf53eac3ac76b64b">&#9670;&#160;</a></span>dispatch()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int EventPool::dispatch </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classEvent.html">Event</a></td>          <td class="paramname"><span class="paramname"><em>e</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Dispatch new event to event pool. </p>
+<p>Dispatch a new event to the event pool, insert into the multiset. Sorted by time </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">e</td><td><a class="el" href="classEvent.html">Event</a> to be added to the pool Uses mutex to avoid race condition </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="af91c66f20dcb508ebb3d77369906490c" name="af91c66f20dcb508ebb3d77369906490c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af91c66f20dcb508ebb3d77369906490c">&#9670;&#160;</a></span>eraseFirstNot()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int EventPool::eraseFirstNot </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classEvent.html">Event</a></td>          <td class="paramname"><span class="paramname"><em>e</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Erase function to get rid of conflicting predicted dispatched events. </p>
+<p>Function that erases other events the same train has dispatched that are now classed invalid </p>
+
+</div>
+</div>
+<a id="ae03580ba2a9e62c1d534a6340ecbdc19" name="ae03580ba2a9e62c1d534a6340ecbdc19"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae03580ba2a9e62c1d534a6340ecbdc19">&#9670;&#160;</a></span>getGlobalTime()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int EventPool::getGlobalTime </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Fetch pool global time. </p>
+<p>Get global time according to the pool </p>
+
+</div>
+</div>
+<a id="aab6f6366d5b84bf300a3fb2fae11120c" name="aab6f6366d5b84bf300a3fb2fae11120c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aab6f6366d5b84bf300a3fb2fae11120c">&#9670;&#160;</a></span>getPoolEmpty()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int EventPool::getPoolEmpty </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Empty event pool. </p>
+<p>Empties the pool </p>
+
+</div>
+</div>
+<a id="a2a87f713c94ea3d6efb23bd5849cf2eb" name="a2a87f713c94ea3d6efb23bd5849cf2eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2a87f713c94ea3d6efb23bd5849cf2eb">&#9670;&#160;</a></span>getTargetInfo()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="classEvent.html">Event</a> &gt; EventPool::getTargetInfo </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get event target info. </p>
+<p>Gets event target info</p>
+<p>Returns the event info member for the events at this timestep </p>
+
+</div>
+</div>
+<a id="a3928d9c2ef22bc55da3d0227275943e0" name="a3928d9c2ef22bc55da3d0227275943e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3928d9c2ef22bc55da3d0227275943e0">&#9670;&#160;</a></span>getTargets()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; int &gt; EventPool::getTargets </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get event request targets. </p>
+<p>Gets event request targets</p>
+<p>Returns the member targets, which contains the station indexes of the event requests for this timestamp </p>
+
+</div>
+</div>
+<a id="a11e028dac785812d58c6f66ded873a97" name="a11e028dac785812d58c6f66ded873a97"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a11e028dac785812d58c6f66ded873a97">&#9670;&#160;</a></span>progressTime()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int EventPool::progressTime </td>
+          <td>(</td>
+          <td class="paramtype">std::barrier&lt;&gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>syncPoint</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Progress event pool to consume next set of events. </p>
+<p>progressTime consumes the event that is about to happen (and falls through multiple that have the same timestamp) </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">syncPoint</td><td>std::barrier&lt;&gt;&amp; reference to the barrier that synchronises the stations for lockstep execution</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>The consumed event is accessed and deleted inside the mutex lock scope, thus all necessary fields are copied into local variables.</p>
+<p>Dispatches an invalid event if the pool is empty to keep the program running Recursively calls multiple events that have the same timestamp, setting a flag multi to signal that the time shouldn't be updated until all of the concurrent events are consumed.</p>
+<p>Closes the file and sends simulation time finished to the main program</p>
+<p>Sends request to the target station of the event</p>
+<p>Sets up next event to dispatch, does not listen whether request is accepted or rejected (BAD) </p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>include/<a class="el" href="event__pool_8hpp_source.html">event_pool.hpp</a></li>
 <li>src/<b>event_pool.cpp</b></li>

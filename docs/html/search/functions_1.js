@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['platformupdatevector_0',['PlatformUpdateVector',['../classStationSystem.html#a43bf251935f8301a8e7addf010b1ffba',1,'StationSystem']]]
+  ['dispatch_0',['dispatch',['../classEventPool.html#a769ee166f88e2af7cf53eac3ac76b64b',1,'EventPool']]]
 ];

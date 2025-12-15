@@ -10,7 +10,7 @@
 \DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ <fstream>}}
 \DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}event.hpp"{}}}
 \DoxyCodeLine{00008\ }
-\DoxyCodeLine{00009\ \textcolor{keyword}{class\ }EventPool\ \{}
+\DoxyCodeLine{00009\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classEventPool_a3e5d20af3dea352de9b49192702cd81b}{EventPool}}\ \{}
 \DoxyCodeLine{00010\ \textcolor{keyword}{private}:}
 \DoxyCodeLine{00011\ \ \ \ \ std::multiset<Event>\ pool;}
 \DoxyCodeLine{00012\ \ \ \ \ std::mutex\ poolMutex;}
@@ -32,17 +32,18 @@
 \DoxyCodeLine{00028\ \ \ \ \ \textcolor{keywordtype}{int}\ sendRequest(\textcolor{keywordtype}{int}\ target,\ \mbox{\hyperlink{classEvent}{Event}}\ e);}
 \DoxyCodeLine{00029\ }
 \DoxyCodeLine{00030\ \textcolor{keyword}{public}:}
-\DoxyCodeLine{00031\ \ \ \ \ EventPool(\textcolor{keywordtype}{int}\ time,\ \textcolor{keywordtype}{int}\ stationSize,\ \textcolor{keywordtype}{int}\ trainsSize,\ \mbox{\hyperlink{classState}{State}}*\ loop);}
-\DoxyCodeLine{00032\ \ \ \ \ \textcolor{keywordtype}{int}\ dispatch(\mbox{\hyperlink{classEvent}{Event}}\ e);}
-\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keywordtype}{int}\ getGlobalTime();}
-\DoxyCodeLine{00034\ \ \ \ \ std::vector<int>\ getTargets();}
-\DoxyCodeLine{00035\ \ \ \ \ std::vector<Event>\ getTargetInfo();}
-\DoxyCodeLine{00036\ \ \ \ \ \textcolor{keywordtype}{void}\ emptyTargets()\ \{this-\/>target\ =\ \{-\/1\};\ this-\/>targetInfo\ =\ \{\mbox{\hyperlink{classEvent}{Event}}(0,-\/1,-\/1,\textcolor{keyword}{false})\};\}}
-\DoxyCodeLine{00037\ \ \ \ \ \textcolor{keywordtype}{int}\ progressTime(std::barrier<>\&\ syncPoint);}
-\DoxyCodeLine{00038\ \ \ \ \ \textcolor{keywordtype}{int}\ getPoolEmpty();}
-\DoxyCodeLine{00039\ \ \ \ \ \string~EventPool();}
-\DoxyCodeLine{00040\ \};}
-\DoxyCodeLine{00041\ }
-\DoxyCodeLine{00042\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00031\ \ \ \ \ \mbox{\hyperlink{classEventPool_a3e5d20af3dea352de9b49192702cd81b}{EventPool}}(\textcolor{keywordtype}{int}\ time,\ \textcolor{keywordtype}{int}\ stationSize,\ \textcolor{keywordtype}{int}\ trainsSize,\ \mbox{\hyperlink{classState}{State}}*\ loop);}
+\DoxyCodeLine{00032\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classEventPool_a769ee166f88e2af7cf53eac3ac76b64b}{dispatch}}(\mbox{\hyperlink{classEvent}{Event}}\ e);}
+\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classEventPool_af91c66f20dcb508ebb3d77369906490c}{eraseFirstNot}}(\mbox{\hyperlink{classEvent}{Event}}\ e);}
+\DoxyCodeLine{00034\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classEventPool_ae03580ba2a9e62c1d534a6340ecbdc19}{getGlobalTime}}();}
+\DoxyCodeLine{00035\ \ \ \ \ std::vector<int>\ \mbox{\hyperlink{classEventPool_a3928d9c2ef22bc55da3d0227275943e0}{getTargets}}();}
+\DoxyCodeLine{00036\ \ \ \ \ std::vector<Event>\ \mbox{\hyperlink{classEventPool_a2a87f713c94ea3d6efb23bd5849cf2eb}{getTargetInfo}}();}
+\DoxyCodeLine{00037\ \ \ \ \ \textcolor{keywordtype}{void}\ emptyTargets()\ \{this-\/>target\ =\ \{-\/1\};\ this-\/>targetInfo\ =\ \{\mbox{\hyperlink{classEvent}{Event}}(0,-\/1,-\/1,\textcolor{keyword}{false})\};\}}
+\DoxyCodeLine{00038\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classEventPool_a11e028dac785812d58c6f66ded873a97}{progressTime}}(std::barrier<>\&\ syncPoint);}
+\DoxyCodeLine{00039\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classEventPool_aab6f6366d5b84bf300a3fb2fae11120c}{getPoolEmpty}}();}
+\DoxyCodeLine{00040\ \ \ \ \ \mbox{\hyperlink{classEventPool_a15760e15762a05ccd17ad1e8f67265ed}{\string~EventPool}}();}
+\DoxyCodeLine{00041\ \};}
+\DoxyCodeLine{00042\ }
+\DoxyCodeLine{00043\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

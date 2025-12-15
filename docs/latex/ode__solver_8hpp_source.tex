@@ -19,255 +19,296 @@
 \DoxyCodeLine{00015\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classODE__Solver_1_1GlobalTimeObserverTemplate}{GlobalTimeObserverTemplate}}\ \{}
 \DoxyCodeLine{00016\ \ \ \textcolor{keyword}{public}:}
 \DoxyCodeLine{00017\ \ \ \textcolor{keywordtype}{double}\ timestep;}
-\DoxyCodeLine{00018\ }
-\DoxyCodeLine{00019\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ operator()(\textcolor{keyword}{const}\ ODE\_Solver::Vector\ \&x,\ \textcolor{keywordtype}{double}\ t)\ =\ 0;}
-\DoxyCodeLine{00020\ \};}
-\DoxyCodeLine{00021\ }
-\DoxyCodeLine{00022\ \textcolor{keyword}{template}\ <\textcolor{keyword}{class}\ Stepper,\ \textcolor{keyword}{class}\ System,\ \textcolor{keyword}{class}\ State,\ \textcolor{keyword}{class}\ GlobalObserver\ =\ EmptyObserver>}
-\DoxyCodeLine{00023\ \textcolor{keyword}{class\ }Solver\ \{}
-\DoxyCodeLine{00024\ \ \ \textcolor{keyword}{private}:}
-\DoxyCodeLine{00025\ \ \ Stepper\ system\_stepper;}
-\DoxyCodeLine{00026\ \ \ GlobalObserver\ global\_time\_observer;}
-\DoxyCodeLine{00027\ }
-\DoxyCodeLine{00028\ \ \ \textcolor{keywordtype}{double}\ last\_update\_time;}
-\DoxyCodeLine{00029\ \ \ \mbox{\hyperlink{classState}{State}}\ last\_update\_state;}
-\DoxyCodeLine{00030\ }
-\DoxyCodeLine{00031\ \ \ \textcolor{keyword}{public}:}
-\DoxyCodeLine{00032\ \ \ System\ system;}
-\DoxyCodeLine{00033\ }
-\DoxyCodeLine{00034\ \ \ \textcolor{comment}{//\ Using\ std::forward<T>\ to\ allow\ use\ of\ both\ lvalues\ and\ rvalues\ in\ the\ constructure\ for\ the}}
-\DoxyCodeLine{00035\ \ \ \textcolor{comment}{//\ system\ -\/\ this\ means\ you\ can\ both\ directly\ instantiate\ the\ system\ in\ the\ constructor,\ OR\ use\ a}}
-\DoxyCodeLine{00036\ \ \ \textcolor{comment}{//\ reference\ to\ it\ (where\ a\ standard\ copy\ constructor\ would\ then\ break\ the\ reference)}}
-\DoxyCodeLine{00037\ \ \ \textcolor{keyword}{explicit}\ Solver(Stepper\ stepper,\ System\ \&\&system,\ GlobalObserver\ observer\ =\ \mbox{\hyperlink{classODE__Solver_1_1EmptyObserver}{EmptyObserver}}())}
-\DoxyCodeLine{00038\ \ \ \ \ \ \ :\ system\_stepper(stepper),}
-\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ system(std::forward<System>(system)),}
-\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ last\_update\_state(system.get\_initialised\_state()),}
-\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ global\_time\_observer(observer)\ \{}
-\DoxyCodeLine{00042\ \ \ \ \ this-\/>last\_update\_time\ =\ 0;}
-\DoxyCodeLine{00043\ \ \ \};}
-\DoxyCodeLine{00044\ \ \ \textcolor{keyword}{explicit}\ Solver(Stepper\ stepper,\ System\ \&\&system,\ \mbox{\hyperlink{classState}{State}}\ state,}
-\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ GlobalObserver\ observer\ =\ \mbox{\hyperlink{classODE__Solver_1_1EmptyObserver}{EmptyObserver}}())}
-\DoxyCodeLine{00046\ \ \ \ \ \ \ :\ system\_stepper(stepper),}
-\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ system(std::forward<System>(system)),}
-\DoxyCodeLine{00048\ \ \ \ \ \ \ \ \ last\_update\_state(state),}
-\DoxyCodeLine{00049\ \ \ \ \ \ \ \ \ global\_time\_observer(observer)\ \{}
-\DoxyCodeLine{00050\ \ \ \ \ this-\/>last\_update\_time\ =\ 0;}
-\DoxyCodeLine{00051\ \ \ \};}
-\DoxyCodeLine{00052\ }
-\DoxyCodeLine{00053\ \ \ \textcolor{comment}{//\ \string~ODE\_System();}}
-\DoxyCodeLine{00054\ }
-\DoxyCodeLine{00073\ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{class}\ Observer>}
-\DoxyCodeLine{00074\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}{SolveToTime}}(\textcolor{keywordtype}{double}\ t,\ Observer\ observer,\ \textcolor{keywordtype}{double}\ observer\_timestep)\ \{}
-\DoxyCodeLine{00075\ \ \ \ \ \textcolor{keywordflow}{if}\ (t\ <\ this-\/>last\_update\_time)}
-\DoxyCodeLine{00076\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Attempting\ to\ run\ ODE\ solver\ to\ target\ time\ before\ stored\ time"{}});}
-\DoxyCodeLine{00077\ }
-\DoxyCodeLine{00078\ \ \ \ \ \textcolor{comment}{//\ Run\ observer\ on\ dynamic\ timestep,\ based\ on\ solver}}
-\DoxyCodeLine{00079\ \ \ \ \ \textcolor{keywordflow}{if}\ (observer\_timestep\ <=\ 0)\ \{}
-\DoxyCodeLine{00080\ \ \ \ \ \ \ boost::numeric::odeint::integrate\_adaptive(this-\/>system\_stepper,\ this-\/>system,}
-\DoxyCodeLine{00081\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>last\_update\_state,\ this-\/>last\_update\_time,\ t,}
-\DoxyCodeLine{00082\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ 0.1,\ observer);}
-\DoxyCodeLine{00083\ \ \ \ \ \}}
-\DoxyCodeLine{00084\ \ \ \ \ \textcolor{comment}{//\ Use\ integrate\_cost\ to\ have\ the\ observer\ run\ at\ a\ fixed\ time\ step}}
-\DoxyCodeLine{00085\ \ \ \ \ \textcolor{comment}{//\ \ Still\ allows\ controlled/error\ steppers,\ and\ fixed\ step\ observer\ for\ plotting/\ recording\ etc}}
-\DoxyCodeLine{00086\ \ \ \ \ \textcolor{keywordflow}{else}\ \{}
-\DoxyCodeLine{00087\ \ \ \ \ \ \ boost::numeric::odeint::integrate\_const(this-\/>system\_stepper,\ this-\/>system,}
-\DoxyCodeLine{00088\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>last\_update\_state,\ this-\/>last\_update\_time,\ t,}
-\DoxyCodeLine{00089\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ observer\_timestep,\ observer);}
-\DoxyCodeLine{00090\ \ \ \ \ \}}
-\DoxyCodeLine{00091\ \ \ \ \ this-\/>last\_update\_time\ =\ t;}
-\DoxyCodeLine{00092\ \ \ \}}
-\DoxyCodeLine{00093\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}{SolveToTime}}(\textcolor{keywordtype}{double}\ t)\ \{}
-\DoxyCodeLine{00094\ \ \ \ \ \textcolor{keywordflow}{if}\ (t\ <\ this-\/>last\_update\_time)}
-\DoxyCodeLine{00095\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Attempting\ to\ run\ ODE\ solver\ to\ target\ time\ before\ stored\ time"{}});}
-\DoxyCodeLine{00096\ }
-\DoxyCodeLine{00097\ \ \ \ \ \textcolor{keywordflow}{if}\ \textcolor{keyword}{constexpr}\ (std::is\_same<GlobalObserver,\ EmptyObserver>::value)\ \{}
-\DoxyCodeLine{00098\ \ \ \ \ \ \ \textcolor{comment}{//\ No\ need\ for\ integrate\_const\ to\ force\ observer\ timestep}}
-\DoxyCodeLine{00099\ \ \ \ \ \ \ boost::numeric::odeint::integrate\_adaptive(this-\/>system\_stepper,\ this-\/>system,}
-\DoxyCodeLine{00100\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>last\_update\_state,\ this-\/>last\_update\_time,\ t,}
-\DoxyCodeLine{00101\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ 0.1);}
-\DoxyCodeLine{00102\ \ \ \ \ \ \ this-\/>last\_update\_time\ =\ t;}
-\DoxyCodeLine{00103\ \ \ \ \ \}}
-\DoxyCodeLine{00104\ \ \ \ \ \textcolor{keywordflow}{else}\ \{}
-\DoxyCodeLine{00105\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (std::fmod(this-\/>last\_update\_time,\ this-\/>global\_time\_observer.timestep)\ !=\ 0)\ \{}
-\DoxyCodeLine{00106\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Fast-\/forward\ the\ simulation\ to\ the\ next\ observer\ timestep,\ without\ observation}}
-\DoxyCodeLine{00107\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ new\_time\ =\ (int)(this-\/>last\_update\_time\ /\ this-\/>global\_time\_observer.timestep)\ +\ 1;}
-\DoxyCodeLine{00108\ \ \ \ \ \ \ \ \ new\_time\ *=\ this-\/>global\_time\_observer.timestep;}
-\DoxyCodeLine{00109\ }
-\DoxyCodeLine{00110\ \ \ \ \ \ \ \ \ boost::numeric::odeint::integrate\_adaptive(this-\/>system\_stepper,\ this-\/>system,}
-\DoxyCodeLine{00111\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>last\_update\_state,\ this-\/>last\_update\_time,}
-\DoxyCodeLine{00112\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ new\_time,\ 0.1);}
-\DoxyCodeLine{00113\ \ \ \ \ \ \ \ \ this-\/>last\_update\_time\ =\ new\_time;}
-\DoxyCodeLine{00114\ \ \ \ \ \ \ \}}
-\DoxyCodeLine{00115\ \ \ \ \ \ \ boost::numeric::odeint::integrate\_const(}
-\DoxyCodeLine{00116\ \ \ \ \ \ \ \ \ this-\/>system\_stepper,\ this-\/>system,\ this-\/>last\_update\_state,\ this-\/>last\_update\_time,\ t,}
-\DoxyCodeLine{00117\ \ \ \ \ \ \ \ \ this-\/>global\_time\_observer.timestep,\ this-\/>global\_time\_observer);}
-\DoxyCodeLine{00118\ \ \ \ \ \ \ this-\/>last\_update\_time\ =\ t;}
-\DoxyCodeLine{00119\ \ \ \ \ \}}
-\DoxyCodeLine{00120\ \ \ \}}
-\DoxyCodeLine{00121\ }
-\DoxyCodeLine{00122\ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{class}\ Observer,\ \textcolor{keyword}{class}\ InputDriver>}
-\DoxyCodeLine{00123\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}{SolveToTime}}(\textcolor{keywordtype}{double}\ t,\ Observer\ observer,\ \textcolor{keywordtype}{double}\ observer\_timestep,\ InputDriver\ input)\ \{}
-\DoxyCodeLine{00124\ \ \ \ \ \textcolor{keywordflow}{if}\ (t\ <\ this-\/>last\_update\_time)}
-\DoxyCodeLine{00125\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Attempting\ to\ run\ ODE\ solver\ to\ target\ time\ before\ stored\ time"{}});}
-\DoxyCodeLine{00126\ \ \ \ \ \textcolor{keywordflow}{if}\ (input.timestep\ <=\ 0)}
-\DoxyCodeLine{00127\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(}
-\DoxyCodeLine{00128\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}Attempting\ to\ run\ ODE\ solver\ with\ an\ invalid\ input\ timestep\ -\/\ must\ be\ >\ 0"{}});}
-\DoxyCodeLine{00129\ }
-\DoxyCodeLine{00130\ \ \ \ \ \textcolor{keywordtype}{double}\ tmp\_t\ =\ this-\/>last\_update\_time;}
-\DoxyCodeLine{00131\ \ \ \ \ input(last\_update\_state,\ tmp\_t);\ \ \textcolor{comment}{//\ Initialise\ input\ signal}}
-\DoxyCodeLine{00132\ }
-\DoxyCodeLine{00133\ \ \ \ \ \textcolor{keywordflow}{while}\ (tmp\_t\ <\ t)\ \{}
-\DoxyCodeLine{00134\ \ \ \ \ \ \ \textcolor{comment}{//\ Update\ internal\ time}}
-\DoxyCodeLine{00135\ \ \ \ \ \ \ tmp\_t\ =\ std::clamp(tmp\_t\ +\ input.timestep,\ 0.0,\ t);}
-\DoxyCodeLine{00136\ \ \ \ \ \ \ this-\/>\mbox{\hyperlink{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}{SolveToTime}}(tmp\_t,\ observer,\ observer\_timestep);}
-\DoxyCodeLine{00137\ }
-\DoxyCodeLine{00138\ \ \ \ \ \ \ input(last\_update\_state,\ tmp\_t);\ \ \textcolor{comment}{//\ Update\ input\ signal\ after\ running\ solver}}
-\DoxyCodeLine{00139\ \ \ \ \ \}}
-\DoxyCodeLine{00140\ \ \ \ \ this-\/>last\_update\_time\ =\ t;}
-\DoxyCodeLine{00141\ \ \ \}}
-\DoxyCodeLine{00142\ }
-\DoxyCodeLine{00143\ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{class}\ InputDriver>}
-\DoxyCodeLine{00144\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}{SolveToTime}}(\textcolor{keywordtype}{double}\ t,\ InputDriver\ input)\ \{}
-\DoxyCodeLine{00145\ \ \ \ \ \textcolor{keywordflow}{if}\ (t\ <\ this-\/>last\_update\_time)}
-\DoxyCodeLine{00146\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Attempting\ to\ run\ ODE\ solver\ to\ target\ time\ before\ stored\ time"{}});}
-\DoxyCodeLine{00147\ \ \ \ \ \textcolor{keywordflow}{if}\ (input.timestep\ <=\ 0)}
-\DoxyCodeLine{00148\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(}
-\DoxyCodeLine{00149\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}Attempting\ to\ run\ ODE\ solver\ with\ an\ invalid\ input\ timestep\ -\/\ must\ be\ >\ 0"{}});}
+\DoxyCodeLine{00018\ \ \ \textcolor{keywordtype}{bool}\ skip\_next\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ operator()(\textcolor{keyword}{const}\ ODE\_Solver::Vector\ \&x,\ \textcolor{keywordtype}{double}\ t)\ =\ 0;}
+\DoxyCodeLine{00021\ \};}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \textcolor{keyword}{template}\ <\textcolor{keyword}{class}\ Stepper,\ \textcolor{keyword}{class}\ System,\ \textcolor{keyword}{class}\ State,\ \textcolor{keyword}{class}\ GlobalObserver\ =\ EmptyObserver>}
+\DoxyCodeLine{00024\ \textcolor{keyword}{class\ }Solver\ \{}
+\DoxyCodeLine{00025\ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00026\ \ \ Stepper\ system\_stepper;}
+\DoxyCodeLine{00027\ \ \ GlobalObserver\ global\_time\_observer;}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \ \ \textcolor{keywordtype}{double}\ last\_update\_time;}
+\DoxyCodeLine{00030\ \ \ \mbox{\hyperlink{classState}{State}}\ last\_update\_state;}
+\DoxyCodeLine{00031\ }
+\DoxyCodeLine{00032\ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00033\ \ \ System\ system;}
+\DoxyCodeLine{00034\ }
+\DoxyCodeLine{00035\ \ \ \textcolor{comment}{//\ Using\ std::forward<T>\ to\ allow\ use\ of\ both\ lvalues\ and\ rvalues\ in\ the\ constructure\ for\ the}}
+\DoxyCodeLine{00036\ \ \ \textcolor{comment}{//\ system\ -\/\ this\ means\ you\ can\ both\ directly\ instantiate\ the\ system\ in\ the\ constructor,\ OR\ use\ a}}
+\DoxyCodeLine{00037\ \ \ \textcolor{comment}{//\ reference\ to\ it\ (where\ a\ standard\ copy\ constructor\ would\ then\ break\ the\ reference)}}
+\DoxyCodeLine{00038\ \ \ \textcolor{keyword}{explicit}\ Solver(Stepper\ stepper,\ System\ \&\&system,\ GlobalObserver\ \&\&observer\ =\ \mbox{\hyperlink{classODE__Solver_1_1EmptyObserver}{EmptyObserver}}())}
+\DoxyCodeLine{00039\ \ \ \ \ \ \ :\ system\_stepper(stepper),}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ system(std::forward<System>(system)),}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ last\_update\_state(system.get\_initialised\_state()),}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ global\_time\_observer(observer)\ \{}
+\DoxyCodeLine{00043\ \ \ \ \ this-\/>last\_update\_time\ =\ 0;}
+\DoxyCodeLine{00044\ \ \ \};}
+\DoxyCodeLine{00045\ \ \ \textcolor{keyword}{explicit}\ Solver(Stepper\ stepper,\ System\ \&\&system,\ \mbox{\hyperlink{classState}{State}}\ state,}
+\DoxyCodeLine{00046\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ GlobalObserver\ observer\ =\ \mbox{\hyperlink{classODE__Solver_1_1EmptyObserver}{EmptyObserver}}())}
+\DoxyCodeLine{00047\ \ \ \ \ \ \ :\ system\_stepper(stepper),}
+\DoxyCodeLine{00048\ \ \ \ \ \ \ \ \ system(std::forward<System>(system)),}
+\DoxyCodeLine{00049\ \ \ \ \ \ \ \ \ last\_update\_state(state),}
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ global\_time\_observer(observer)\ \{}
+\DoxyCodeLine{00051\ \ \ \ \ this-\/>last\_update\_time\ =\ 0;}
+\DoxyCodeLine{00052\ \ \ \};}
+\DoxyCodeLine{00053\ }
+\DoxyCodeLine{00054\ \ \ \textcolor{comment}{//\ \string~ODE\_System();}}
+\DoxyCodeLine{00055\ }
+\DoxyCodeLine{00074\ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{class}\ Observer>}
+\DoxyCodeLine{00075\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}{SolveToTime}}(\textcolor{keywordtype}{double}\ t,\ Observer\ observer,\ \textcolor{keywordtype}{double}\ observer\_timestep)\ \{}
+\DoxyCodeLine{00076\ \ \ \ \ \textcolor{keywordflow}{if}\ (t\ <\ this-\/>last\_update\_time)}
+\DoxyCodeLine{00077\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Attempting\ to\ run\ ODE\ solver\ to\ target\ time\ before\ stored\ time"{}});}
+\DoxyCodeLine{00078\ }
+\DoxyCodeLine{00079\ \ \ \ \ \textcolor{comment}{//\ Run\ observer\ on\ dynamic\ timestep,\ based\ on\ solver}}
+\DoxyCodeLine{00080\ \ \ \ \ \textcolor{keywordflow}{if}\ (observer\_timestep\ <=\ 0)\ \{}
+\DoxyCodeLine{00081\ \ \ \ \ \ \ boost::numeric::odeint::integrate\_adaptive(this-\/>system\_stepper,\ this-\/>system,}
+\DoxyCodeLine{00082\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>last\_update\_state,\ this-\/>last\_update\_time,\ t,}
+\DoxyCodeLine{00083\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ 0.1,\ observer);}
+\DoxyCodeLine{00084\ \ \ \ \ \}}
+\DoxyCodeLine{00085\ \ \ \ \ \textcolor{comment}{//\ Use\ integrate\_cost\ to\ have\ the\ observer\ run\ at\ a\ fixed\ time\ step}}
+\DoxyCodeLine{00086\ \ \ \ \ \textcolor{comment}{//\ \ Still\ allows\ controlled/error\ steppers,\ and\ fixed\ step\ observer\ for\ plotting/\ recording\ etc}}
+\DoxyCodeLine{00087\ \ \ \ \ \textcolor{keywordflow}{else}\ \{}
+\DoxyCodeLine{00088\ \ \ \ \ \ \ boost::numeric::odeint::integrate\_const(this-\/>system\_stepper,\ this-\/>system,}
+\DoxyCodeLine{00089\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>last\_update\_state,\ this-\/>last\_update\_time,\ t,}
+\DoxyCodeLine{00090\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ observer\_timestep,\ observer);}
+\DoxyCodeLine{00091\ \ \ \ \ \}}
+\DoxyCodeLine{00092\ \ \ \ \ this-\/>last\_update\_time\ =\ t;}
+\DoxyCodeLine{00093\ \ \ \}}
+\DoxyCodeLine{00094\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}{SolveToTime}}(\textcolor{keywordtype}{double}\ t)\ \{}
+\DoxyCodeLine{00095\ \ \ \ \ \textcolor{keywordflow}{if}\ (t\ <\ this-\/>last\_update\_time)}
+\DoxyCodeLine{00096\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Attempting\ to\ run\ ODE\ solver\ to\ target\ time\ before\ stored\ time"{}});}
+\DoxyCodeLine{00097\ }
+\DoxyCodeLine{00098\ \ \ \ \ \textcolor{keywordflow}{if}\ \textcolor{keyword}{constexpr}\ (std::is\_same<GlobalObserver,\ EmptyObserver>::value)\ \{}
+\DoxyCodeLine{00099\ \ \ \ \ \ \ \textcolor{comment}{//\ No\ need\ for\ integrate\_const\ to\ force\ observer\ timestep}}
+\DoxyCodeLine{00100\ \ \ \ \ \ \ boost::numeric::odeint::integrate\_adaptive(this-\/>system\_stepper,\ this-\/>system,}
+\DoxyCodeLine{00101\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>last\_update\_state,\ this-\/>last\_update\_time,\ t,}
+\DoxyCodeLine{00102\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ 0.1);}
+\DoxyCodeLine{00103\ \ \ \ \ \ \ this-\/>last\_update\_time\ =\ t;}
+\DoxyCodeLine{00104\ \ \ \ \ \}}
+\DoxyCodeLine{00105\ \ \ \ \ \textcolor{keywordflow}{else}\ \{}
+\DoxyCodeLine{00106\ \ \ \ \ \ \ \textcolor{comment}{//\ this-\/>global\_time\_observer.skip\_next\ =\ false;}}
+\DoxyCodeLine{00107\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (std::fmod(this-\/>last\_update\_time,\ this-\/>global\_time\_observer.timestep)\ !=\ 0)\ \{}
+\DoxyCodeLine{00108\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Fast-\/forward\ the\ simulation\ to\ the\ next\ observer\ timestep,\ without\ observation}}
+\DoxyCodeLine{00109\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ new\_time\ =\ (int)(this-\/>last\_update\_time\ /\ this-\/>global\_time\_observer.timestep)\ +\ 1;}
+\DoxyCodeLine{00110\ \ \ \ \ \ \ \ \ new\_time\ =\ std::clamp(new\_time\ *\ this-\/>global\_time\_observer.timestep,\ 0.0,\ t);}
+\DoxyCodeLine{00111\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ std::cout\ <<\ "{}Fast\ forward\ from\ "{}\ <<\ this-\/>last\_update\_time\ <<\ "{}\ to\ "{}\ <<\ new\_time}}
+\DoxyCodeLine{00112\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ \ \ \ \ \ \ \ \ \ \ <<\ std::endl;}}
+\DoxyCodeLine{00113\ }
+\DoxyCodeLine{00114\ \ \ \ \ \ \ \ \ boost::numeric::odeint::integrate\_adaptive(this-\/>system\_stepper,\ this-\/>system,}
+\DoxyCodeLine{00115\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>last\_update\_state,\ this-\/>last\_update\_time,}
+\DoxyCodeLine{00116\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ new\_time,\ 0.1);}
+\DoxyCodeLine{00117\ \ \ \ \ \ \ \ \ this-\/>last\_update\_time\ =\ new\_time;}
+\DoxyCodeLine{00118\ }
+\DoxyCodeLine{00119\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Re-\/enable\ log,\ since\ we've\ forwarded\ the\ time}}
+\DoxyCodeLine{00120\ \ \ \ \ \ \ \ \ this-\/>global\_time\_observer.skip\_next\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00121\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (this-\/>last\_update\_time\ ==\ t\ \&\&\ std::fmod(t,\ this-\/>global\_time\_observer.timestep)\ ==\ 0)\ \{}
+\DoxyCodeLine{00122\ \ \ \ \ \ \ \ \ \ \ this-\/>global\_time\_observer(this-\/>last\_update\_state,\ this-\/>last\_update\_time);}
+\DoxyCodeLine{00123\ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Now\ skip\ the\ next\ one}}
+\DoxyCodeLine{00124\ \ \ \ \ \ \ \ \ \ \ this-\/>global\_time\_observer.skip\_next\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00125\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00126\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00127\ }
+\DoxyCodeLine{00128\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (this-\/>last\_update\_time\ <\ t)\ \{}
+\DoxyCodeLine{00129\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ std::cout\ <<\ "{}Running\ observer\ from\ "{}\ <<\ this-\/>last\_update\_time\ <<\ "{}\ to\ "{}\ <<\ t\ <<}}
+\DoxyCodeLine{00130\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ std::endl;}}
+\DoxyCodeLine{00131\ }
+\DoxyCodeLine{00132\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Check\ if\ the\ observer\ actually\ can\ run\ in\ the\ given\ time\ (and\ run\ it\ anyways\ once\ at\ the}}
+\DoxyCodeLine{00133\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ start,\ even\ if\ not)}}
+\DoxyCodeLine{00134\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ \ -\/\ This\ is\ because\ calling\ integrate\_const\ (below)\ with\ a\ timestep\ >\ the\ time\ delta}}
+\DoxyCodeLine{00135\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ \ causes\ no\ steps\ to\ be\ taken,\ stalling\ the\ simulation\ for\ this\ update}}
+\DoxyCodeLine{00136\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (this-\/>global\_time\_observer.timestep\ >\ t\ -\/\ this-\/>last\_update\_time)\ \{}
+\DoxyCodeLine{00137\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (this-\/>last\_update\_time\ ==\ 0)\ \{}
+\DoxyCodeLine{00138\ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>global\_time\_observer(this-\/>last\_update\_state,\ this-\/>last\_update\_time);}
+\DoxyCodeLine{00139\ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00140\ }
+\DoxyCodeLine{00141\ \ \ \ \ \ \ \ \ \ \ boost::numeric::odeint::integrate\_adaptive(this-\/>system\_stepper,\ this-\/>system,}
+\DoxyCodeLine{00142\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>last\_update\_state,}
+\DoxyCodeLine{00143\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>last\_update\_time,\ t,\ 0.1);}
+\DoxyCodeLine{00144\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00145\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}\ \{}
+\DoxyCodeLine{00146\ \ \ \ \ \ \ \ \ \ \ boost::numeric::odeint::integrate\_const(}
+\DoxyCodeLine{00147\ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>system\_stepper,\ this-\/>system,\ this-\/>last\_update\_state,\ this-\/>last\_update\_time,\ t,}
+\DoxyCodeLine{00148\ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>global\_time\_observer.timestep,\ this-\/>global\_time\_observer);}
+\DoxyCodeLine{00149\ \ \ \ \ \ \ \ \ \}}
 \DoxyCodeLine{00150\ }
-\DoxyCodeLine{00151\ \ \ \ \ \textcolor{keywordtype}{double}\ tmp\_t\ =\ this-\/>last\_update\_time;}
-\DoxyCodeLine{00152\ \ \ \ \ input(last\_update\_state,\ tmp\_t);\ \ \textcolor{comment}{//\ Initialise\ input\ signal}}
-\DoxyCodeLine{00153\ }
-\DoxyCodeLine{00154\ \ \ \ \ \textcolor{keywordflow}{while}\ (tmp\_t\ <\ t)\ \{}
-\DoxyCodeLine{00155\ \ \ \ \ \ \ \textcolor{comment}{//\ Update\ internal\ time}}
-\DoxyCodeLine{00156\ \ \ \ \ \ \ tmp\_t\ =\ std::clamp(tmp\_t\ +\ input.timestep,\ 0.0,\ t);}
-\DoxyCodeLine{00157\ \ \ \ \ \ \ this-\/>\mbox{\hyperlink{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}{SolveToTime}}(tmp\_t);}
+\DoxyCodeLine{00151\ \ \ \ \ \ \ \ \ this-\/>last\_update\_time\ =\ t;}
+\DoxyCodeLine{00152\ }
+\DoxyCodeLine{00153\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (fmod(this-\/>last\_update\_time,\ this-\/>global\_time\_observer.timestep)\ ==\ 0)}
+\DoxyCodeLine{00154\ \ \ \ \ \ \ \ \ \ \ this-\/>global\_time\_observer.skip\_next\ =\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00155\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00156\ \ \ \ \ \}}
+\DoxyCodeLine{00157\ \ \ \}}
 \DoxyCodeLine{00158\ }
-\DoxyCodeLine{00159\ \ \ \ \ \ \ input(last\_update\_state,\ tmp\_t);\ \ \textcolor{comment}{//\ Update\ input\ signal\ after\ running\ solver}}
-\DoxyCodeLine{00160\ \ \ \ \ \}}
-\DoxyCodeLine{00161\ \ \ \ \ this-\/>last\_update\_time\ =\ t;}
-\DoxyCodeLine{00162\ \ \ \}}
-\DoxyCodeLine{00163\ }
-\DoxyCodeLine{00164\ \ \ \textcolor{keywordtype}{double}\ LastTime()\ \{\ \textcolor{keywordflow}{return}\ this-\/>last\_update\_time;\ \}}
-\DoxyCodeLine{00165\ \ \ State\ \&LastState()\ \{\ \textcolor{keywordflow}{return}\ this-\/>last\_update\_state;\ \}}
-\DoxyCodeLine{00166\ \};}
-\DoxyCodeLine{00167\ }
-\DoxyCodeLine{00168\ \textcolor{keyword}{template}\ <\textcolor{keyword}{class}\ Stepper>}
-\DoxyCodeLine{00169\ \mbox{\hyperlink{classODE__Solver_1_1Solver}{Solver<Stepper,\ LinearSystem,\ Vector>}}\ LinearSysFromJSON(Stepper\ stepper,}
-\DoxyCodeLine{00170\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ boost::json::value\ system\_definition)\ \{}
-\DoxyCodeLine{00171\ \ \ \textcolor{keywordflow}{if}\ (system\_definition.kind()\ !=\ boost::json::kind::object)\ \{}
-\DoxyCodeLine{00172\ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Invalid\ JSON\ object\ provided\ in\ equation\ system\ initialisation\(\backslash\)n"{}});}
-\DoxyCodeLine{00173\ \ \ \}}
-\DoxyCodeLine{00174\ \ \ \textcolor{keyword}{auto}\ \textcolor{keyword}{const}\ \&system\_def\_object\ =\ system\_definition.get\_object();}
-\DoxyCodeLine{00175\ \ \ \textcolor{keywordflow}{if}\ (system\_def\_object.empty())}
-\DoxyCodeLine{00176\ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Empty\ JSON\ object\ provided\ in\ equation\ system\ initialisation\(\backslash\)n"{}});}
-\DoxyCodeLine{00177\ }
-\DoxyCodeLine{00178\ \ \ \textcolor{keywordflow}{if}\ (system\_def\_object.contains(\textcolor{stringliteral}{"{}system"{}}))}
-\DoxyCodeLine{00179\ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}WARN\ -\/\ System\ arguments\ provided\ in\ JSON\ definition\ is\ overriden\ by\ system\ "{}}}
-\DoxyCodeLine{00180\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}argument\ in\ function\ call"{}}}
-\DoxyCodeLine{00181\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <<\ std::endl;}
-\DoxyCodeLine{00182\ }
-\DoxyCodeLine{00183\ \ \ \textcolor{keywordtype}{int}\ sys\_size\ =\ 0;}
-\DoxyCodeLine{00184\ \ \ boost::json::value\ val\ =\ system\_def\_object.at(\textcolor{stringliteral}{"{}size"{}});}
-\DoxyCodeLine{00185\ \ \ \textcolor{keywordflow}{switch}\ (val.kind())\ \{}
-\DoxyCodeLine{00186\ \ \ \ \ \textcolor{keywordflow}{case}\ boost::json::kind::int64:}
-\DoxyCodeLine{00187\ \ \ \ \ \ \ sys\_size\ =\ val.as\_int64();}
-\DoxyCodeLine{00188\ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
-\DoxyCodeLine{00189\ \ \ \ \ \textcolor{keywordflow}{case}\ boost::json::kind::uint64:}
-\DoxyCodeLine{00190\ \ \ \ \ \ \ sys\_size\ =\ val.as\_uint64();}
-\DoxyCodeLine{00191\ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
-\DoxyCodeLine{00192\ \ \ \ \ \textcolor{keywordflow}{default}:}
-\DoxyCodeLine{00193\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Invalid\ JSON\ value\ for\ key\ [size]\ in\ equation\ "{}}}
-\DoxyCodeLine{00194\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}system\ initialisation\(\backslash\)n"{}});}
-\DoxyCodeLine{00195\ \ \ \}}
-\DoxyCodeLine{00196\ \ \ \textcolor{keywordflow}{if}\ (sys\_size\ <=\ 0)}
-\DoxyCodeLine{00197\ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Invalid\ size\ for\ ODE\ system:\ "{}}\ +\ std::to\_string(sys\_size)\ +\ \textcolor{stringliteral}{"{}\(\backslash\)n"{}});}
-\DoxyCodeLine{00198\ }
-\DoxyCodeLine{00199\ \ \ val\ =\ system\_def\_object.at(\textcolor{stringliteral}{"{}A"{}});}
-\DoxyCodeLine{00200\ \ \ \textcolor{keywordflow}{if}\ (val.kind()\ !=\ boost::json::kind::array)}
-\DoxyCodeLine{00201\ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Invalid\ JSON\ value\ for\ key\ [A]\ in\ equation\ "{}}}
-\DoxyCodeLine{00202\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}system\ initialisation\(\backslash\)n"{}});}
-\DoxyCodeLine{00203\ \ \ Matrix\ A\ =\ Matrix(sys\_size,\ sys\_size);}
-\DoxyCodeLine{00204\ \ \ \{}
-\DoxyCodeLine{00205\ \ \ \ \ boost::json::array\ \textcolor{keyword}{const}\ \&arr\ =\ val.get\_array();}
-\DoxyCodeLine{00206\ \ \ \ \ \textcolor{keywordflow}{if}\ (!arr.empty())\ \{}
-\DoxyCodeLine{00207\ \ \ \ \ \ \ \textcolor{keyword}{auto}\ it\ =\ arr.begin();}
-\DoxyCodeLine{00208\ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ i;}
-\DoxyCodeLine{00209\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (i\ =\ 0;\ i\ <\ sys\_size\ *\ sys\_size;\ ++i)\ \{}
-\DoxyCodeLine{00210\ \ \ \ \ \ \ \ \ JSON\_ParseNumericToDouble(A(i),\ it);}
-\DoxyCodeLine{00211\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (++it\ ==\ arr.end())}
-\DoxyCodeLine{00212\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
-\DoxyCodeLine{00213\ \ \ \ \ \ \ \}}
-\DoxyCodeLine{00214\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (i\ ==\ sys\_size\ *\ sys\_size)\ \{}
-\DoxyCodeLine{00215\ \ \ \ \ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}WARN\ -\/\ Ignoring\ values\ in\ [A]\ array\ in\ equation\ system\ "{}}}
-\DoxyCodeLine{00216\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}initialision\ due\ to\ configured\ system\ size"{}}}
-\DoxyCodeLine{00217\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <<\ std::endl;}
-\DoxyCodeLine{00218\ \ \ \ \ \ \ \}}
-\DoxyCodeLine{00219\ \ \ \ \ \}}
-\DoxyCodeLine{00220\ \ \ \}}
-\DoxyCodeLine{00221\ }
-\DoxyCodeLine{00222\ \ \ val\ =\ system\_def\_object.at(\textcolor{stringliteral}{"{}B"{}});}
-\DoxyCodeLine{00223\ \ \ \textcolor{keywordflow}{if}\ (val.kind()\ !=\ boost::json::kind::array)}
-\DoxyCodeLine{00224\ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Invalid\ JSON\ value\ for\ key\ [B]\ in\ equation\ "{}}}
-\DoxyCodeLine{00225\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}system\ initialisation\(\backslash\)n"{}});}
-\DoxyCodeLine{00226\ \ \ Vector\ B\ =\ Vector(sys\_size);}
-\DoxyCodeLine{00227\ \ \ \{}
-\DoxyCodeLine{00228\ \ \ \ \ boost::json::array\ \textcolor{keyword}{const}\ \&arr\ =\ val.get\_array();}
-\DoxyCodeLine{00229\ \ \ \ \ \textcolor{keywordflow}{if}\ (!arr.empty())\ \{}
-\DoxyCodeLine{00230\ \ \ \ \ \ \ \textcolor{keyword}{auto}\ it\ =\ arr.begin();}
-\DoxyCodeLine{00231\ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ i;}
-\DoxyCodeLine{00232\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (i\ =\ 0;;\ ++i)\ \{}
-\DoxyCodeLine{00233\ \ \ \ \ \ \ \ \ JSON\_ParseNumericToDouble(B(i),\ it);}
-\DoxyCodeLine{00234\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (++it\ ==\ arr.end())}
-\DoxyCodeLine{00235\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
-\DoxyCodeLine{00236\ \ \ \ \ \ \ \}}
-\DoxyCodeLine{00237\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (i\ ==\ sys\_size\ *\ sys\_size)\ \{}
-\DoxyCodeLine{00238\ \ \ \ \ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}WARN\ -\/\ Ignoring\ values\ in\ [A]\ array\ in\ equation\ system\ "{}}}
-\DoxyCodeLine{00239\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}initialision\ due\ to\ configured\ system\ size"{}}}
-\DoxyCodeLine{00240\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <<\ std::endl;}
-\DoxyCodeLine{00241\ \ \ \ \ \ \ \}}
-\DoxyCodeLine{00242\ \ \ \ \ \}}
-\DoxyCodeLine{00243\ \ \ \}}
-\DoxyCodeLine{00244\ }
-\DoxyCodeLine{00245\ \ \ val\ =\ system\_def\_object.at(\textcolor{stringliteral}{"{}initial"{}});}
-\DoxyCodeLine{00246\ \ \ \textcolor{keywordflow}{if}\ (val.kind()\ !=\ boost::json::kind::array)}
-\DoxyCodeLine{00247\ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Invalid\ JSON\ value\ for\ key\ [initial]\ in\ equation\ "{}}}
-\DoxyCodeLine{00248\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}system\ initialisation\(\backslash\)n"{}});}
-\DoxyCodeLine{00249\ \ \ Vector\ x0\ =\ Vector(sys\_size);}
-\DoxyCodeLine{00250\ \ \ \{}
-\DoxyCodeLine{00251\ \ \ \ \ boost::json::array\ \textcolor{keyword}{const}\ \&arr\ =\ val.get\_array();}
-\DoxyCodeLine{00252\ \ \ \ \ \textcolor{keywordflow}{if}\ (!arr.empty())\ \{}
-\DoxyCodeLine{00253\ \ \ \ \ \ \ \textcolor{keyword}{auto}\ it\ =\ arr.begin();}
-\DoxyCodeLine{00254\ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ i;}
-\DoxyCodeLine{00255\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (i\ =\ 0;;\ ++i)\ \{}
-\DoxyCodeLine{00256\ \ \ \ \ \ \ \ \ JSON\_ParseNumericToDouble(x0(i),\ it);}
-\DoxyCodeLine{00257\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (++it\ ==\ arr.end())}
-\DoxyCodeLine{00258\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00159\ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{class}\ Observer,\ \textcolor{keyword}{class}\ InputDriver>}
+\DoxyCodeLine{00160\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}{SolveToTime}}(\textcolor{keywordtype}{double}\ t,\ Observer\ observer,\ \textcolor{keywordtype}{double}\ observer\_timestep,\ InputDriver\ input)\ \{}
+\DoxyCodeLine{00161\ \ \ \ \ \textcolor{keywordflow}{if}\ (t\ <\ this-\/>last\_update\_time)}
+\DoxyCodeLine{00162\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Attempting\ to\ run\ ODE\ solver\ to\ target\ time\ before\ stored\ time"{}});}
+\DoxyCodeLine{00163\ \ \ \ \ \textcolor{keywordflow}{if}\ (input.timestep\ <=\ 0)}
+\DoxyCodeLine{00164\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(}
+\DoxyCodeLine{00165\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}Attempting\ to\ run\ ODE\ solver\ with\ an\ invalid\ input\ timestep\ -\/\ must\ be\ >\ 0"{}});}
+\DoxyCodeLine{00166\ }
+\DoxyCodeLine{00167\ \ \ \ \ \textcolor{keywordtype}{double}\ tmp\_t\ =\ this-\/>last\_update\_time;}
+\DoxyCodeLine{00168\ \ \ \ \ input(last\_update\_state,\ tmp\_t);\ \ \textcolor{comment}{//\ Initialise\ input\ signal}}
+\DoxyCodeLine{00169\ }
+\DoxyCodeLine{00170\ \ \ \ \ \textcolor{keywordflow}{while}\ (tmp\_t\ <\ t)\ \{}
+\DoxyCodeLine{00171\ \ \ \ \ \ \ \textcolor{comment}{//\ Update\ internal\ time}}
+\DoxyCodeLine{00172\ \ \ \ \ \ \ tmp\_t\ =\ std::clamp(tmp\_t\ +\ input.timestep,\ 0.0,\ t);}
+\DoxyCodeLine{00173\ \ \ \ \ \ \ this-\/>\mbox{\hyperlink{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}{SolveToTime}}(tmp\_t,\ observer,\ observer\_timestep);}
+\DoxyCodeLine{00174\ }
+\DoxyCodeLine{00175\ \ \ \ \ \ \ input(last\_update\_state,\ tmp\_t);\ \ \textcolor{comment}{//\ Update\ input\ signal\ after\ running\ solver}}
+\DoxyCodeLine{00176\ \ \ \ \ \}}
+\DoxyCodeLine{00177\ \ \ \ \ this-\/>last\_update\_time\ =\ t;}
+\DoxyCodeLine{00178\ \ \ \}}
+\DoxyCodeLine{00179\ }
+\DoxyCodeLine{00180\ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{class}\ InputDriver>}
+\DoxyCodeLine{00181\ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}{SolveToTime}}(\textcolor{keywordtype}{double}\ t,\ InputDriver\ input)\ \{}
+\DoxyCodeLine{00182\ \ \ \ \ \textcolor{keywordflow}{if}\ (t\ <\ this-\/>last\_update\_time)}
+\DoxyCodeLine{00183\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Attempting\ to\ run\ ODE\ solver\ to\ target\ time\ before\ stored\ time"{}});}
+\DoxyCodeLine{00184\ \ \ \ \ \textcolor{keywordflow}{if}\ (input.timestep\ <=\ 0)}
+\DoxyCodeLine{00185\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(}
+\DoxyCodeLine{00186\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}Attempting\ to\ run\ ODE\ solver\ with\ an\ invalid\ input\ timestep\ -\/\ must\ be\ >\ 0"{}});}
+\DoxyCodeLine{00187\ }
+\DoxyCodeLine{00188\ \ \ \ \ \textcolor{keywordtype}{double}\ tmp\_t\ =\ this-\/>last\_update\_time;}
+\DoxyCodeLine{00189\ }
+\DoxyCodeLine{00190\ \ \ \ \ \textcolor{keywordflow}{if}\ (fmod(this-\/>last\_update\_time,\ input.timestep)\ !=\ 0)\ \{}
+\DoxyCodeLine{00191\ \ \ \ \ \ \ tmp\_t\ =\ std::ceil(this-\/>last\_update\_time\ /\ input.timestep)\ *\ input.timestep;}
+\DoxyCodeLine{00192\ \ \ \ \ \ \ this-\/>\mbox{\hyperlink{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}{SolveToTime}}(tmp\_t);}
+\DoxyCodeLine{00193\ \ \ \ \ \}}
+\DoxyCodeLine{00194\ \ \ \ \ \textcolor{keywordflow}{while}\ (tmp\_t\ <\ t)\ \{}
+\DoxyCodeLine{00195\ \ \ \ \ \ \ input(last\_update\_state,\ this-\/>last\_update\_time);\ \ \textcolor{comment}{//\ Update\ input\ signal\ after\ running\ solver}}
+\DoxyCodeLine{00196\ }
+\DoxyCodeLine{00197\ \ \ \ \ \ \ \textcolor{comment}{//\ Update\ internal\ time}}
+\DoxyCodeLine{00198\ \ \ \ \ \ \ tmp\_t\ =\ std::clamp(this-\/>last\_update\_time\ +\ input.timestep,\ 0.0,\ t);}
+\DoxyCodeLine{00199\ \ \ \ \ \ \ this-\/>\mbox{\hyperlink{classODE__Solver_1_1Solver_a33354b23f456d6a8015636a563273fa1}{SolveToTime}}(tmp\_t);}
+\DoxyCodeLine{00200\ \ \ \ \ \}}
+\DoxyCodeLine{00201\ \ \ \ \ \textcolor{comment}{//\ this-\/>last\_update\_time\ =\ t;}}
+\DoxyCodeLine{00202\ \ \ \}}
+\DoxyCodeLine{00203\ }
+\DoxyCodeLine{00204\ \ \ \textcolor{keywordtype}{double}\ LastTime()\ \{\ \textcolor{keywordflow}{return}\ this-\/>last\_update\_time;\ \}}
+\DoxyCodeLine{00205\ \ \ State\ \&LastState()\ \{\ \textcolor{keywordflow}{return}\ this-\/>last\_update\_state;\ \}}
+\DoxyCodeLine{00206\ \ \ \textcolor{keyword}{inline}\ GlobalObserver\ GetGlobalObserver()\ \{\ \textcolor{keywordflow}{return}\ global\_time\_observer;\ \}}
+\DoxyCodeLine{00207\ \};}
+\DoxyCodeLine{00208\ }
+\DoxyCodeLine{00209\ \textcolor{keyword}{template}\ <\textcolor{keyword}{class}\ Stepper>}
+\DoxyCodeLine{00210\ \mbox{\hyperlink{classODE__Solver_1_1Solver}{Solver<Stepper,\ LinearSystem,\ Vector>}}\ LinearSysFromJSON(Stepper\ stepper,}
+\DoxyCodeLine{00211\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ boost::json::value\ system\_definition)\ \{}
+\DoxyCodeLine{00212\ \ \ \textcolor{keywordflow}{if}\ (system\_definition.kind()\ !=\ boost::json::kind::object)\ \{}
+\DoxyCodeLine{00213\ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Invalid\ JSON\ object\ provided\ in\ equation\ system\ initialisation\(\backslash\)n"{}});}
+\DoxyCodeLine{00214\ \ \ \}}
+\DoxyCodeLine{00215\ \ \ \textcolor{keyword}{auto}\ \textcolor{keyword}{const}\ \&system\_def\_object\ =\ system\_definition.get\_object();}
+\DoxyCodeLine{00216\ \ \ \textcolor{keywordflow}{if}\ (system\_def\_object.empty())}
+\DoxyCodeLine{00217\ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Empty\ JSON\ object\ provided\ in\ equation\ system\ initialisation\(\backslash\)n"{}});}
+\DoxyCodeLine{00218\ }
+\DoxyCodeLine{00219\ \ \ \textcolor{keywordflow}{if}\ (system\_def\_object.contains(\textcolor{stringliteral}{"{}system"{}}))}
+\DoxyCodeLine{00220\ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}WARN\ -\/\ System\ arguments\ provided\ in\ JSON\ definition\ is\ overriden\ by\ system\ "{}}}
+\DoxyCodeLine{00221\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}argument\ in\ function\ call"{}}}
+\DoxyCodeLine{00222\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <<\ std::endl;}
+\DoxyCodeLine{00223\ }
+\DoxyCodeLine{00224\ \ \ \textcolor{keywordtype}{int}\ sys\_size\ =\ 0;}
+\DoxyCodeLine{00225\ \ \ boost::json::value\ val\ =\ system\_def\_object.at(\textcolor{stringliteral}{"{}size"{}});}
+\DoxyCodeLine{00226\ \ \ \textcolor{keywordflow}{switch}\ (val.kind())\ \{}
+\DoxyCodeLine{00227\ \ \ \ \ \textcolor{keywordflow}{case}\ boost::json::kind::int64:}
+\DoxyCodeLine{00228\ \ \ \ \ \ \ sys\_size\ =\ val.as\_int64();}
+\DoxyCodeLine{00229\ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00230\ \ \ \ \ \textcolor{keywordflow}{case}\ boost::json::kind::uint64:}
+\DoxyCodeLine{00231\ \ \ \ \ \ \ sys\_size\ =\ val.as\_uint64();}
+\DoxyCodeLine{00232\ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00233\ \ \ \ \ \textcolor{keywordflow}{default}:}
+\DoxyCodeLine{00234\ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Invalid\ JSON\ value\ for\ key\ [size]\ in\ equation\ "{}}}
+\DoxyCodeLine{00235\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}system\ initialisation\(\backslash\)n"{}});}
+\DoxyCodeLine{00236\ \ \ \}}
+\DoxyCodeLine{00237\ \ \ \textcolor{keywordflow}{if}\ (sys\_size\ <=\ 0)}
+\DoxyCodeLine{00238\ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Invalid\ size\ for\ ODE\ system:\ "{}}\ +\ std::to\_string(sys\_size)\ +\ \textcolor{stringliteral}{"{}\(\backslash\)n"{}});}
+\DoxyCodeLine{00239\ }
+\DoxyCodeLine{00240\ \ \ val\ =\ system\_def\_object.at(\textcolor{stringliteral}{"{}A"{}});}
+\DoxyCodeLine{00241\ \ \ \textcolor{keywordflow}{if}\ (val.kind()\ !=\ boost::json::kind::array)}
+\DoxyCodeLine{00242\ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Invalid\ JSON\ value\ for\ key\ [A]\ in\ equation\ "{}}}
+\DoxyCodeLine{00243\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}system\ initialisation\(\backslash\)n"{}});}
+\DoxyCodeLine{00244\ \ \ Matrix\ A\ =\ Matrix(sys\_size,\ sys\_size);}
+\DoxyCodeLine{00245\ \ \ \{}
+\DoxyCodeLine{00246\ \ \ \ \ boost::json::array\ \textcolor{keyword}{const}\ \&arr\ =\ val.get\_array();}
+\DoxyCodeLine{00247\ \ \ \ \ \textcolor{keywordflow}{if}\ (!arr.empty())\ \{}
+\DoxyCodeLine{00248\ \ \ \ \ \ \ \textcolor{keyword}{auto}\ it\ =\ arr.begin();}
+\DoxyCodeLine{00249\ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ i;}
+\DoxyCodeLine{00250\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (i\ =\ 0;\ i\ <\ sys\_size\ *\ sys\_size;\ ++i)\ \{}
+\DoxyCodeLine{00251\ \ \ \ \ \ \ \ \ JSON\_ParseNumericToDouble(A(i),\ it);}
+\DoxyCodeLine{00252\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (++it\ ==\ arr.end())}
+\DoxyCodeLine{00253\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00254\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00255\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (i\ ==\ sys\_size\ *\ sys\_size)\ \{}
+\DoxyCodeLine{00256\ \ \ \ \ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}WARN\ -\/\ Ignoring\ values\ in\ [A]\ array\ in\ equation\ system\ "{}}}
+\DoxyCodeLine{00257\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}initialision\ due\ to\ configured\ system\ size"{}}}
+\DoxyCodeLine{00258\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <<\ std::endl;}
 \DoxyCodeLine{00259\ \ \ \ \ \ \ \}}
-\DoxyCodeLine{00260\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (i\ ==\ sys\_size\ *\ sys\_size)\ \{}
-\DoxyCodeLine{00261\ \ \ \ \ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}WARN\ -\/\ Ignoring\ values\ in\ [initial]\ array\ in\ equation\ system\ "{}}}
-\DoxyCodeLine{00262\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}initialision\ due\ to\ configured\ system\ size"{}}}
-\DoxyCodeLine{00263\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <<\ std::endl;}
-\DoxyCodeLine{00264\ \ \ \ \ \ \ \}}
-\DoxyCodeLine{00265\ \ \ \ \ \}}
-\DoxyCodeLine{00266\ \ \ \}}
-\DoxyCodeLine{00267\ }
-\DoxyCodeLine{00268\ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classODE__Solver_1_1Solver}{Solver<Stepper,\ LinearSystem,\ Vector>}}(stepper,\ \mbox{\hyperlink{classODE__Solver_1_1LinearSystem}{LinearSystem}}(A,\ B),\ x0);}
-\DoxyCodeLine{00269\ \}}
-\DoxyCodeLine{00270\ }
-\DoxyCodeLine{00271\ \mbox{\hyperlink{classODE__Solver_1_1Solver}{Solver}}<boost::numeric::odeint::controlled\_runge\_kutta<}
-\DoxyCodeLine{00272\ \ \ \ \ \ \ \ \ \ boost::numeric::odeint::runge\_kutta\_dopri5<Vector>>,}
-\DoxyCodeLine{00273\ \ \ \ \ \ \ \ \mbox{\hyperlink{classODE__Solver_1_1LinearSystem}{LinearSystem}},\ Vector>}
-\DoxyCodeLine{00274\ LinearSysFromJSON(boost::json::value\ system\_definition);}
-\DoxyCodeLine{00275\ }
-\DoxyCodeLine{00276\ \textcolor{comment}{//\ Deduction\ guide}}
-\DoxyCodeLine{00277\ \textcolor{comment}{//\ \ For\ InitialStateSystem\ which\ contains\ the\ initial\ state\ internally}}
-\DoxyCodeLine{00278\ \textcolor{keyword}{template}\ <\textcolor{keyword}{class}\ Stepper,\ \textcolor{keyword}{class}\ GlobalObserver,\ \textcolor{keyword}{class}\ State>}
-\DoxyCodeLine{00279\ \mbox{\hyperlink{classODE__Solver_1_1Solver}{Solver}}(Stepper\ stepper,\ \mbox{\hyperlink{classODE__Solver_1_1InitialStateSystem}{InitialStateSystem<State>}}\ \&\&system,}
-\DoxyCodeLine{00280\ \ \ \ \ \ \ \ GlobalObserver\ observer\ =\ \mbox{\hyperlink{classODE__Solver_1_1EmptyObserver}{EmptyObserver}}())}
-\DoxyCodeLine{00281\ \ \ -\/>\ \mbox{\hyperlink{classODE__Solver_1_1Solver}{Solver<Stepper,\ InitialStateSystem<State>}},\ State,\ GlobalObserver>;}
-\DoxyCodeLine{00282\ }
-\DoxyCodeLine{00283\ \}\ \ \textcolor{comment}{//\ namespace\ ODE\_Solver}}
-\DoxyCodeLine{00284\ }
-\DoxyCodeLine{00285\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00260\ \ \ \ \ \}}
+\DoxyCodeLine{00261\ \ \ \}}
+\DoxyCodeLine{00262\ }
+\DoxyCodeLine{00263\ \ \ val\ =\ system\_def\_object.at(\textcolor{stringliteral}{"{}B"{}});}
+\DoxyCodeLine{00264\ \ \ \textcolor{keywordflow}{if}\ (val.kind()\ !=\ boost::json::kind::array)}
+\DoxyCodeLine{00265\ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Invalid\ JSON\ value\ for\ key\ [B]\ in\ equation\ "{}}}
+\DoxyCodeLine{00266\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}system\ initialisation\(\backslash\)n"{}});}
+\DoxyCodeLine{00267\ \ \ Vector\ B\ =\ Vector(sys\_size);}
+\DoxyCodeLine{00268\ \ \ \{}
+\DoxyCodeLine{00269\ \ \ \ \ boost::json::array\ \textcolor{keyword}{const}\ \&arr\ =\ val.get\_array();}
+\DoxyCodeLine{00270\ \ \ \ \ \textcolor{keywordflow}{if}\ (!arr.empty())\ \{}
+\DoxyCodeLine{00271\ \ \ \ \ \ \ \textcolor{keyword}{auto}\ it\ =\ arr.begin();}
+\DoxyCodeLine{00272\ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ i;}
+\DoxyCodeLine{00273\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (i\ =\ 0;;\ ++i)\ \{}
+\DoxyCodeLine{00274\ \ \ \ \ \ \ \ \ JSON\_ParseNumericToDouble(B(i),\ it);}
+\DoxyCodeLine{00275\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (++it\ ==\ arr.end())}
+\DoxyCodeLine{00276\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00277\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00278\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (i\ ==\ sys\_size\ *\ sys\_size)\ \{}
+\DoxyCodeLine{00279\ \ \ \ \ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}WARN\ -\/\ Ignoring\ values\ in\ [A]\ array\ in\ equation\ system\ "{}}}
+\DoxyCodeLine{00280\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}initialision\ due\ to\ configured\ system\ size"{}}}
+\DoxyCodeLine{00281\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <<\ std::endl;}
+\DoxyCodeLine{00282\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00283\ \ \ \ \ \}}
+\DoxyCodeLine{00284\ \ \ \}}
+\DoxyCodeLine{00285\ }
+\DoxyCodeLine{00286\ \ \ val\ =\ system\_def\_object.at(\textcolor{stringliteral}{"{}initial"{}});}
+\DoxyCodeLine{00287\ \ \ \textcolor{keywordflow}{if}\ (val.kind()\ !=\ boost::json::kind::array)}
+\DoxyCodeLine{00288\ \ \ \ \ \textcolor{keywordflow}{throw}\ std::runtime\_error(\textcolor{stringliteral}{"{}Invalid\ JSON\ value\ for\ key\ [initial]\ in\ equation\ "{}}}
+\DoxyCodeLine{00289\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}system\ initialisation\(\backslash\)n"{}});}
+\DoxyCodeLine{00290\ \ \ Vector\ x0\ =\ Vector(sys\_size);}
+\DoxyCodeLine{00291\ \ \ \{}
+\DoxyCodeLine{00292\ \ \ \ \ boost::json::array\ \textcolor{keyword}{const}\ \&arr\ =\ val.get\_array();}
+\DoxyCodeLine{00293\ \ \ \ \ \textcolor{keywordflow}{if}\ (!arr.empty())\ \{}
+\DoxyCodeLine{00294\ \ \ \ \ \ \ \textcolor{keyword}{auto}\ it\ =\ arr.begin();}
+\DoxyCodeLine{00295\ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ i;}
+\DoxyCodeLine{00296\ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (i\ =\ 0;;\ ++i)\ \{}
+\DoxyCodeLine{00297\ \ \ \ \ \ \ \ \ JSON\_ParseNumericToDouble(x0(i),\ it);}
+\DoxyCodeLine{00298\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (++it\ ==\ arr.end())}
+\DoxyCodeLine{00299\ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{break};}
+\DoxyCodeLine{00300\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00301\ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (i\ ==\ sys\_size\ *\ sys\_size)\ \{}
+\DoxyCodeLine{00302\ \ \ \ \ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}WARN\ -\/\ Ignoring\ values\ in\ [initial]\ array\ in\ equation\ system\ "{}}}
+\DoxyCodeLine{00303\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}initialision\ due\ to\ configured\ system\ size"{}}}
+\DoxyCodeLine{00304\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <<\ std::endl;}
+\DoxyCodeLine{00305\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00306\ \ \ \ \ \}}
+\DoxyCodeLine{00307\ \ \ \}}
+\DoxyCodeLine{00308\ }
+\DoxyCodeLine{00309\ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classODE__Solver_1_1Solver}{Solver<Stepper,\ LinearSystem,\ Vector>}}(stepper,\ \mbox{\hyperlink{classODE__Solver_1_1LinearSystem}{LinearSystem}}(A,\ B),\ x0);}
+\DoxyCodeLine{00310\ \}}
+\DoxyCodeLine{00311\ }
+\DoxyCodeLine{00312\ \mbox{\hyperlink{classODE__Solver_1_1Solver}{Solver}}<boost::numeric::odeint::controlled\_runge\_kutta<}
+\DoxyCodeLine{00313\ \ \ \ \ \ \ \ \ \ boost::numeric::odeint::runge\_kutta\_dopri5<Vector>>,}
+\DoxyCodeLine{00314\ \ \ \ \ \ \ \ \mbox{\hyperlink{classODE__Solver_1_1LinearSystem}{LinearSystem}},\ Vector>}
+\DoxyCodeLine{00315\ LinearSysFromJSON(boost::json::value\ system\_definition);}
+\DoxyCodeLine{00316\ }
+\DoxyCodeLine{00317\ \textcolor{comment}{//\ Deduction\ guide}}
+\DoxyCodeLine{00318\ \textcolor{comment}{//\ \ For\ InitialStateSystem\ which\ contains\ the\ initial\ state\ internally}}
+\DoxyCodeLine{00319\ \textcolor{keyword}{template}\ <\textcolor{keyword}{class}\ Stepper,\ \textcolor{keyword}{class}\ GlobalObserver,\ \textcolor{keyword}{class}\ State>}
+\DoxyCodeLine{00320\ \mbox{\hyperlink{classODE__Solver_1_1Solver}{Solver}}(Stepper\ stepper,\ \mbox{\hyperlink{classODE__Solver_1_1InitialStateSystem}{InitialStateSystem<State>}}\ \&\&system,}
+\DoxyCodeLine{00321\ \ \ \ \ \ \ \ GlobalObserver\ observer\ =\ \mbox{\hyperlink{classODE__Solver_1_1EmptyObserver}{EmptyObserver}}())}
+\DoxyCodeLine{00322\ \ \ -\/>\ \mbox{\hyperlink{classODE__Solver_1_1Solver}{Solver<Stepper,\ InitialStateSystem<State>}},\ State,\ GlobalObserver>;}
+\DoxyCodeLine{00323\ }
+\DoxyCodeLine{00324\ \}\ \ \textcolor{comment}{//\ namespace\ ODE\_Solver}}
+\DoxyCodeLine{00325\ }
+\DoxyCodeLine{00326\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

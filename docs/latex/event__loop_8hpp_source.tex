@@ -23,7 +23,7 @@
 \DoxyCodeLine{00019\ }
 \DoxyCodeLine{00020\ \textcolor{comment}{//we\ want\ to\ just\ pass\ a\ bunch\ of\ trains\ and\ stations,\ and\ the\ event\ loop\ automatically\ manages\ them}}
 \DoxyCodeLine{00021\ }
-\DoxyCodeLine{00022\ \textcolor{keyword}{class\ }EventLoop\ \{}
+\DoxyCodeLine{00022\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classEventLoop_aa85fd003275892c28f3b115358697a4f}{EventLoop}}\ \{}
 \DoxyCodeLine{00023\ \textcolor{keyword}{private}:}
 \DoxyCodeLine{00024\ \ \ \ \ std::atomic<std::shared\_ptr<EventPool>>\ events;}
 \DoxyCodeLine{00025\ \ \ \ \ std::vector<std::thread>\ stationThreads\{\};}
@@ -31,12 +31,12 @@
 \DoxyCodeLine{00027\ \ \ \ \ std::barrier<>\ barrier;}
 \DoxyCodeLine{00028\ \ \ \ \ std::atomic<bool>\ running\ =\ \textcolor{keyword}{true};}
 \DoxyCodeLine{00029\ \textcolor{keyword}{public}:}
-\DoxyCodeLine{00030\ \ \ \ \ EventLoop(\textcolor{keywordtype}{int}\ time,\ \mbox{\hyperlink{classState}{State}}\ initState,\ \textcolor{keywordtype}{int}\ stationSize);}
+\DoxyCodeLine{00030\ \ \ \ \ \mbox{\hyperlink{classEventLoop_aa85fd003275892c28f3b115358697a4f}{EventLoop}}(\textcolor{keywordtype}{int}\ time,\ \mbox{\hyperlink{classState}{State}}\ initState,\ \textcolor{keywordtype}{int}\ stationSize);}
 \DoxyCodeLine{00031\ \ \ \ \ \mbox{\hyperlink{classState}{State}}\ state;\ \textcolor{comment}{//for\ now\ global\ state\ is\ public}}
-\DoxyCodeLine{00032\ \ \ \ \ \textcolor{keywordtype}{void}\ start();\ \textcolor{comment}{//spawn\ thread\ for\ EventPool\ operations}}
-\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keywordtype}{void}\ run();}
-\DoxyCodeLine{00034\ \ \ \ \ \textcolor{keywordtype}{void}\ waitBarrier();}
-\DoxyCodeLine{00035\ \ \ \ \ \string~EventLoop();}
+\DoxyCodeLine{00032\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classEventLoop_ae5b67d0e6db0b142a5e37280b42bd2a9}{start}}();\ \textcolor{comment}{//spawn\ thread\ for\ EventPool\ operations}}
+\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classEventLoop_a6c3c78e283ef38929ccc3c199e321cfe}{run}}();}
+\DoxyCodeLine{00034\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classEventLoop_a83538de40ef25fe89d3aa11cab3afb62}{waitBarrier}}();}
+\DoxyCodeLine{00035\ \ \ \ \ \mbox{\hyperlink{classEventLoop_acd0f2fd1a93194d07d2c9fe0c855b6a8}{\string~EventLoop}}();}
 \DoxyCodeLine{00036\ \};}
 \DoxyCodeLine{00037\ }
 \DoxyCodeLine{00038\ \textcolor{preprocessor}{\#endif}}

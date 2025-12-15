@@ -42,7 +42,7 @@ EventPool::EventPool(int time, int stationSize, int trainsSize, State* state) {
   }
 }
 
-//! progress event pool function
+//! Progress event pool to consume next set of events
 /*!
 progressTime consumes the event that is about to happen (and falls through multiple that have the same timestamp)
 \param syncPoint std::barrier<>& reference to the barrier that synchronises the stations for lockstep execution
@@ -162,16 +162,30 @@ int EventPool::progressTime(std::barrier<>& syncPoint) {
   return 0;
 }
 
+//! Fetch pool global time
+/*!
+Get global time according to the pool
+*/
 int EventPool::getGlobalTime() {
   std::lock_guard<std::mutex> lock(this->poolMutex);
   return this->globalTime;
 }
 
+//! Empty event pool
+/*!
+Empties the pool
+*/
 int EventPool::getPoolEmpty() {
   std::lock_guard<std::mutex> lock(this->poolMutex);
   return this->pool.empty();
 }
 
+//! Dispatch new event to event pool
+/*!
+Dispatch a new event to the event pool, insert into the multiset. Sorted by time
+\param e Event to be added to the pool
+Uses mutex to avoid race condition
+*/
 int EventPool::dispatch(Event e) {
   std::lock_guard<std::mutex> lock(this->poolMutex);
   this->pool.insert(e);
@@ -181,8 +195,6 @@ int EventPool::dispatch(Event e) {
 //! Erase function to get rid of conflicting predicted dispatched events
 /*!
 Function that erases other events the same train has dispatched that are now classed invalid
-
-Probably should have a regular set now with different sorting criteria
 */
 int EventPool::eraseFirstNot(Event e) {
   std::lock_guard<std::mutex> lock(this->poolMutex);
@@ -198,6 +210,14 @@ int EventPool::eraseFirstNot(Event e) {
   }
 }
 
+//! Forward event to station via event loop
+/*!
+Send request to tell event loop that event has been consumed, forward request to station
+\param target int index of station to forward event to
+\param e Event event to be passed to station
+
+Modifies member variables target and targetInfo
+*/
 int EventPool::sendRequest(int target, Event e) {
   // send request to station at target index
   this->target.push_back(target);
@@ -205,10 +225,26 @@ int EventPool::sendRequest(int target, Event e) {
   return 0;
 }
 
+//! Get event request targets
+/*!
+Gets event request targets
+
+Returns the member targets, which contains the station indexes of the event requests for this timestamp
+*/
 std::vector<int> EventPool::getTargets() { return this->target; }
 
+//! Get event target info
+/*!
+Gets event target info
+
+Returns the event info member for the events at this timestep
+*/
 std::vector<Event> EventPool::getTargetInfo() { return this->targetInfo; }
 
+//! Destructor
+/*!
+Set pool to empty pool, deallocate
+*/
 EventPool::~EventPool() {
   this->pool = std::multiset<Event>();
   // deallocate and clean up threads

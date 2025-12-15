@@ -114,7 +114,7 @@ $(function(){initNavTree('event__loop_8hpp_source.html','',''); });
 <div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="comment">//we want to just pass a bunch of trains and stations, and the event loop automatically manages them</span></div>
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
 <div class="foldopen" id="foldopen00022" data-start="{" data-end="};">
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno"><a class="line" href="classEventLoop.html">   22</a></span><span class="keyword">class </span>EventLoop {</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno"><a class="line" href="classEventLoop.html">   22</a></span><span class="keyword">class </span><a class="code hl_function" href="classEventLoop.html#aa85fd003275892c28f3b115358697a4f">EventLoop</a> {</div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="keyword">private</span>:</div>
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    std::atomic&lt;std::shared_ptr&lt;EventPool&gt;&gt; events;</div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    std::vector&lt;std::thread&gt; stationThreads{};</div>
@@ -122,16 +122,21 @@ $(function(){initNavTree('event__loop_8hpp_source.html','',''); });
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    std::barrier&lt;&gt; barrier;</div>
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    std::atomic&lt;bool&gt; running = <span class="keyword">true</span>;</div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    EventLoop(<span class="keywordtype">int</span> time, <a class="code hl_class" href="classState.html">State</a> initState, <span class="keywordtype">int</span> stationSize);</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <a class="code hl_function" href="classEventLoop.html#aa85fd003275892c28f3b115358697a4f">EventLoop</a>(<span class="keywordtype">int</span> time, <a class="code hl_class" href="classState.html">State</a> initState, <span class="keywordtype">int</span> stationSize);</div>
 <div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    <a class="code hl_class" href="classState.html">State</a> state; <span class="comment">//for now global state is public</span></div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <span class="keywordtype">void</span> start(); <span class="comment">//spawn thread for EventPool operations</span></div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <span class="keywordtype">void</span> run();</div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="keywordtype">void</span> waitBarrier();</div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    ~EventLoop();</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classEventLoop.html#ae5b67d0e6db0b142a5e37280b42bd2a9">start</a>(); <span class="comment">//spawn thread for EventPool operations</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classEventLoop.html#a6c3c78e283ef38929ccc3c199e321cfe">run</a>();</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classEventLoop.html#a83538de40ef25fe89d3aa11cab3afb62">waitBarrier</a>();</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <a class="code hl_function" href="classEventLoop.html#acd0f2fd1a93194d07d2c9fe0c855b6a8">~EventLoop</a>();</div>
 <div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>};</div>
 </div>
 <div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
 <div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="aclassEventLoop_html_a6c3c78e283ef38929ccc3c199e321cfe"><div class="ttname"><a href="classEventLoop.html#a6c3c78e283ef38929ccc3c199e321cfe">EventLoop::run</a></div><div class="ttdeci">void run()</div><div class="ttdoc">Main event loop function that repeats.</div><div class="ttdef"><b>Definition</b> event_loop.cpp:47</div></div>
+<div class="ttc" id="aclassEventLoop_html_a83538de40ef25fe89d3aa11cab3afb62"><div class="ttname"><a href="classEventLoop.html#a83538de40ef25fe89d3aa11cab3afb62">EventLoop::waitBarrier</a></div><div class="ttdeci">void waitBarrier()</div><div class="ttdoc">Helper to reach barrier early.</div><div class="ttdef"><b>Definition</b> event_loop.cpp:108</div></div>
+<div class="ttc" id="aclassEventLoop_html_aa85fd003275892c28f3b115358697a4f"><div class="ttname"><a href="classEventLoop.html#aa85fd003275892c28f3b115358697a4f">EventLoop::EventLoop</a></div><div class="ttdeci">EventLoop(int time, State initState, int stationSize)</div><div class="ttdoc">EventLoop constructor.</div><div class="ttdef"><b>Definition</b> event_loop.cpp:14</div></div>
+<div class="ttc" id="aclassEventLoop_html_acd0f2fd1a93194d07d2c9fe0c855b6a8"><div class="ttname"><a href="classEventLoop.html#acd0f2fd1a93194d07d2c9fe0c855b6a8">EventLoop::~EventLoop</a></div><div class="ttdeci">~EventLoop()</div><div class="ttdoc">Event loop destructor, thread cleanup.</div><div class="ttdef"><b>Definition</b> event_loop.cpp:114</div></div>
+<div class="ttc" id="aclassEventLoop_html_ae5b67d0e6db0b142a5e37280b42bd2a9"><div class="ttname"><a href="classEventLoop.html#ae5b67d0e6db0b142a5e37280b42bd2a9">EventLoop::start</a></div><div class="ttdeci">void start()</div><div class="ttdoc">Start the EventLoop.</div><div class="ttdef"><b>Definition</b> event_loop.cpp:26</div></div>
 <div class="ttc" id="aclassState_html"><div class="ttname"><a href="classState.html">State</a></div><div class="ttdef"><b>Definition</b> state.hpp:8</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
