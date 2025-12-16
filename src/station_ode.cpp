@@ -8,6 +8,8 @@
 //  Station Input System
 // ----------------------------------------
 
+extern double time_offset;
+
 // Default constructor, has NULL and -1 as defaults
 StationSystemInput::StationSystemInput(std::string log_path, StationSystem *system, int input)
     : system(system),
@@ -62,7 +64,7 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
       }
 
       else {
-        this->target_inputs[i] += this->read_inflow(flow_index, t);
+        this->target_inputs[i] += this->read_inflow(flow_index, t + time_offset);
         this->target_inputs[i] -= this->accumulated[i];
         this->accumulated[i] = 0;
       }

@@ -220,7 +220,8 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
     if (segments[i].split_ratio_series_index == -1)
       throw std::runtime_error("No valid split ratio found");
     //           (minutes % minutes in a day) / entry count per day
-    int slice = ((int)floor(t) % (24 * 60)) / 15;
+    extern double time_offset;
+    int slice = ((int)floor(t + time_offset) % (24 * 60)) / 15;
 
     // Use cached value rather than reading from file again
     if (this->cached_split_slice[i] == slice)

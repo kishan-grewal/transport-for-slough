@@ -8,29 +8,18 @@
 #include "station.hpp"
 #include "train.hpp"
 
-// void load_settings() {
-//   std::ifstream conf("config/config.json", std::ios_base::in);
-//   assert(conf.is_open());
-//   boost::json::object j = boost::json::parse(conf).as_object();
-//   conf.close();
+double time_offset, sim_time;
+void load_settings() {
+  std::ifstream conf("config/config.json", std::ios_base::in);
+  assert(conf.is_open());
+  boost::json::object j = boost::json::parse(conf).as_object();
+  conf.close();
 
-//   JSON_ParseNumericToDouble(input_noise, &j.at("input_noise"));
-//   JSON_ParseNumericToDouble(time_offset, &j.at("time_offset"));
-//   JSON_ParseNumericToDouble(sim_time, &j.at("sim_time"));
-
-//   settings_loaded = true;
-// }
+  JSON_ParseNumericToDouble(time_offset, &j.at("time_offset"));
+  JSON_ParseNumericToDouble(sim_time, &j.at("sim_time"));
+}
 
 int main(int argc, char** argv) {
-  int simTime = 40000;
-
-  for (int i = 0; i < argc; ++i) {
-    std::string arg = argv[i];
-    if (arg.substr(0, 2) == "-t") {
-      simTime = std::stoi(arg.substr(2));
-    }
-  }
-
   std::ifstream station_config_f("config/station_structures_compressed.json");
   assert(station_config_f.is_open());
   boost::json::value station_structures = boost::json::parse(station_config_f);
@@ -108,7 +97,7 @@ int main(int argc, char** argv) {
   initialState.trains.reserve(1);
   initialState.trains.emplace_back(0, 5, 10, 1, station_probabilities);
 
-  EventLoop loop = EventLoop(simTime, std::move(initialState), initialState.stations.size());
+  EventLoop loop = EventLoop(sim_time, std::move(initialState), initialState.stations.size());
   auto simStart = std::chrono::system_clock::now();
   loop.start();
   std::cin.get();
