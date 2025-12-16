@@ -51,15 +51,13 @@ void Station::listen(std::barrier<>& syncPoint, State& state) {
           double timestamp = this->entryRequestTimestamps[platform_i];
           this->entryRequests[platform_i] = -1;  // replace with train id
 
-          // std::cout << "Train arrived with "
-          //           << state.getTrain(this->entryRequests[platform_i]).passenger_count << "on
-          //           board"
-          //           << std::endl;
           this->station_ode_system.SolveToTime(this->entryRequestTimestamps[platform_i],
                                                this->station_ode_system.system.InputDriver());
           try {
+            Train train = state.getTrain(this->entryRequests[platform_i]);
             this->station_ode_system.LastState() +=
-              this->station_ode_system.system.PlatformUpdateVector(50, platform_i);
+              this->station_ode_system.system.PlatformUpdateVector(train.disembark(this->name),
+                                                                   platform_i);
 
             // std::cout << this->name << " Platform " << platform_i << "/"
             //           << this->station_ode_system.system.platform_count() << std::endl;
@@ -67,8 +65,10 @@ void Station::listen(std::barrier<>& syncPoint, State& state) {
             int platform_segment =
               this->station_ode_system.system.QueryPlatformDepartingIndex(platform_i);
             int person_count = int(this->station_ode_system.LastState()[platform_segment]);
-            // this->station_ode_system.LastState() +=
-            //   this->station_ode_system.system.PlatformUpdateVector(-person_count, platform_i);
+
+            person_count = train.try_embark(person_count, this->name);
+            this->station_ode_system.LastState() +=
+              this->station_ode_system.system.PlatformUpdateVector(-person_count, platform_i);
           } catch (std::runtime_error err) {
             std::cout << "WARN - invalid station platform id " << platform_i
                       << " for solver. Station " << this->name << " has "
