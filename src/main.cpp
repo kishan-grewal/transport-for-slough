@@ -87,15 +87,11 @@ int main(int argc, char** argv) {
   }
 
   initialState.trains = std::vector<Train>();
-  initialState.trains.reserve(26);
+  initialState.trains.reserve(2 * 26);
   for (int i = 0; i < 26; ++i) {
-    initialState.trains.emplace_back(0, i, 10, i % 2 == 0 ? 1 : -1, station_probabilities);
-    // initialState.trains.emplace_back(0, 2 * i + 1, 10, -1, station_probabilities);
+    initialState.trains.emplace_back(0, i, 10, -1, station_probabilities);
+    initialState.trains.emplace_back(0, i, 10, 1, station_probabilities);
   }
-  initialState.trains.reserve(1);
-  initialState.trains.emplace_back(0, 6, 10, 1, station_probabilities);
-  initialState.trains.reserve(1);
-  initialState.trains.emplace_back(0, 5, 10, 1, station_probabilities);
 
   EventLoop loop = EventLoop(sim_time, std::move(initialState), initialState.stations.size());
   auto simStart = std::chrono::system_clock::now();

@@ -59,9 +59,8 @@ int Train::try_embark(int n, const std::string& station) {
 }
 int Train::disembark(const std::string& station) {
   int n = this->passengers[station];
-  this->passenger_count -= this->passengers[station];
+  this->passenger_count -= n;
   this->passengers[station] = 0;
-  std::cout << n << " disembarked at " << station << std::endl;
   return n;
 }
 

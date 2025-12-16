@@ -10,7 +10,8 @@
 /*!
 Station constructor
 \param name string argument denoting symbolic name
-\param platforms int vector argument denoting platform directions (1 west, -1 east, 0 both directions/turnaround)
+\param platforms int vector argument denoting platform directions (1 west, -1 east, 0 both
+directions/turnaround)
 \param json_definition boost::json::object json object defining the station layout
 
 Sets the following fields
@@ -59,7 +60,8 @@ Station::Station(std::string name, std::vector<int> platforms, boost::json::obje
 //! Station listener
 /*!
 Listens for events while program is still running
-\param syncPoint std::barrier<>& the barrier for lockstep execution between all stations and event loop thread
+\param syncPoint std::barrier<>& the barrier for lockstep execution between all stations and event
+loop thread
 \param state State& reference to the global state
 
 Function checks for arrivals and departures:
@@ -87,7 +89,7 @@ void Station::listen(std::barrier<>& syncPoint, State& state) {
           this->station_ode_system.SolveToTime(timestamp,
                                                this->station_ode_system.system.InputDriver());
           try {
-            Train train = state.getTrain(train_id);
+            Train& train = state.getTrain(train_id);
             this->station_ode_system.LastState() +=
               this->station_ode_system.system.PlatformUpdateVector(train.disembark(this->name),
                                                                    platform_i);
