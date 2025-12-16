@@ -31,7 +31,7 @@ class InitialStateSystem {
   T get_initialised_state() { return this->initial_state; }
 
   protected:
-  Vector initial_state;
+  T initial_state;
 };
 
 class CoefficientSystem {

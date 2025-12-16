@@ -1,12 +1,8 @@
-build/*
-*.csv
-compile_commands.json
 libs/
 .vscode/*
 .cache/*
 *.ttf
 *.ttf:Zone.Identifier
-*.csv
 
 build/
 compile_commands.json
@@ -19,3 +15,6 @@ compile_commands.json
 *.csv
 
 docs/
+out/**/*.csv
+
+old/

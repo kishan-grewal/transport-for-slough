@@ -1,0 +1,36 @@
+{
+  "initial_state": 0,
+  "input": 0,
+  "structure": [
+    {
+      "id": 0,
+      "type": "AREA_OUTFLOW",
+      "next": 2,
+      "xk": 1,
+      "is_entrance": true
+    },
+    {
+      "id": 1,
+      "type": "AREA_INFLOW",
+      "prev": 3,
+      "xk": 2147483647
+    },
+    {
+      "id": 2,
+      "type": "AREA_INFLOW",
+      "prev": 0,
+      "xk": 100,
+      "platform_id": 0,
+      "adjacent": 3
+    },
+    {
+      "id": 3,
+      "type": "AREA_OUTFLOW",
+      "next": 1,
+      "xk": 100,
+      "adjacent": 2,
+      "platform_id": 0,
+      "is_entrance": false
+    }
+  ]
+}
