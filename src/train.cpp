@@ -41,27 +41,17 @@ int Train::try_embark(int n, const std::string& station) {
               << (this->direction == 1 ? "NB" : "SB") << std::endl;
     return 0;
   }
-  std::vector<double> probs = std::vector<double>(sizeof(this->keys) / sizeof(this->keys[0]), 0);
-  // Accumulate probabilities
-  double acc = 0, tmp = 0;
-  for (int i = 0; i < probs.size(); ++i) {
-    const std::string& key = this->keys[i];
-    if (mapping.contains(key)) {
-      JSON_ParseNumericToDouble(tmp, &mapping.at(key));
-      acc += tmp;
-    }
 
-    probs[i] = acc;
-  }
-
-  for (int i = 0; i < n; ++i) {
+  for (int i = 0; i < successful; ++i) {
     double r = ((double)rand()) / RAND_MAX;
-    int j = 0;
-    for (auto it : this->passengers) {
-      if (r > it.second)
-        continue;
-
-      this->passengers[it.first] += 1;
+    double acc = 0;
+    for (auto station : mapping) {
+      // std::cout << station.key() << station.value().as_double() << std::endl;
+      acc += station.value().as_double();
+      if (r < acc) {
+        this->passengers[station.key()] += 1;
+        break;
+      }
     }
   }
 
@@ -71,6 +61,7 @@ int Train::disembark(const std::string& station) {
   int n = this->passengers[station];
   this->passenger_count -= this->passengers[station];
   this->passengers[station] = 0;
+  std::cout << n << " disembarked at " << station << std::endl;
   return n;
 }
 

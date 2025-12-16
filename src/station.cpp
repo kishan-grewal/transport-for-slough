@@ -80,7 +80,6 @@ void Station::listen(std::barrier<>& syncPoint, State& state) {
       std::lock_guard<std::mutex> lock(this->stationMutex);
       for (int platform_i = 0; platform_i < this->platforms.size(); ++platform_i) {
         if (this->entryRequests[platform_i] > -1) {  // Arrival
-          popEnter += 10000;
           int train_id = this->entryRequests[platform_i];
           double timestamp = this->entryRequestTimestamps[platform_i];
           this->entryRequests[platform_i] = -1;  // replace with train id
