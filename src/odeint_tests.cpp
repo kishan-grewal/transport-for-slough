@@ -73,12 +73,14 @@ int main(int argc, char **argv) {
                                            ODE_Solver::Vector, StationFileObserver>(
     odeint::runge_kutta4<ODE_Solver::Vector>(),
     StationSystem(j.as_object().at("Bond Street Underground Station").as_object(),
-                  station_flow_splits_f, station_flows_f),
-    StationFileObserver("out/stations/Bond Street Underground Station.csv", 5));
+                  station_flow_splits_f, station_flows_f, 5,
+                  "out/stations/Bond Street Underground Station flows.csv"),
+    StationFileObserver("out/stations/Bond Street Underground Station.csv", 15));
   // station_system.LastState() += station_system.system.PlatformUpdateVector(5, 0);
 
   station_system.SolveToTime(sim_time, station_system.system.InputDriver());  //
-  station_system.GetGlobalObserver().finalise();
+  station_system.GetGlobalObserver().log_finalise();
+  station_system.system.InputDriver().log_finalise();
 
   station_flow_splits_f.close();
 

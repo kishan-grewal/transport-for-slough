@@ -4,14 +4,19 @@
 #include <boost/tokenizer.hpp>
 #include <string>
 
-// Default constructor, has NULL and -1 by default
-StationSystemInput::StationSystemInput(StationSystem *system, int input)
+// ----------------------------------------
+//  Station Input System
+// ----------------------------------------
+
+// Default constructor, has NULL and -1 as defaults
+StationSystemInput::StationSystemInput(std::string log_path, StationSystem *system, int input)
     : system(system),
       input_n(input),
       last_update_t(0),
       // interp_t(system == NULL ? 0 : system->entrance_count(), 0),
       target_inputs(system == NULL ? 0 : system->entrance_count(), 0),
-      accumulated(system == NULL ? 0 : system->entrance_count(), 0) {}
+      accumulated(system == NULL ? 0 : system->entrance_count(), 0),
+      cache(std::make_shared<StationFileObserverCache>(log_path)) {}
 void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
   if (this->system == NULL)
     return;
@@ -25,6 +30,27 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
   //  ...
   int flow_index;
   auto update_vector = std::vector<double>(system->entrance_count(), 0);
+
+  if (t >= this->last_update_t + TIME_SERIES_TIMESTEP) {
+    // Log inflows here to get same 15min time gap as TFL
+    int sz = this->accumulated.size();
+    auto outflow = this->system->GetOutflowSegments();
+    ODE_Solver::Vector flow_log = ODE_Solver::Vector(outflow.size() + sz + 1, 0);
+    for (int i = 0; i < sz; ++i) {
+      flow_log[i] = this->accumulated[i];
+    }
+    flow_log[sz] = -1;
+    int outflow_amt;
+    for (int i = 0; i < outflow.size(); ++i) {
+      outflow_amt = floor(x[outflow[i]]);
+
+      flow_log[i + sz] = outflow_amt;
+      x[outflow[i]] -= outflow_amt;
+    }
+
+    this->cache->push(flow_log);
+  }
+
   for (int i = 0; i < system->entrance_count(); ++i) {
     // Update flow target if enough time has passed
     if (t >= this->last_update_t + TIME_SERIES_TIMESTEP) {
@@ -39,8 +65,6 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
         this->target_inputs[i] += this->read_inflow(flow_index, t);
         this->target_inputs[i] -= this->accumulated[i];
         this->accumulated[i] = 0;
-
-        // Log inflows here to get same 15min time gap as TFL?
       }
     }
 
@@ -100,10 +124,15 @@ double StationSystemInput::read_inflow(int flow_index, double t) {
     ;
   return std::stod(*start);
 }
+void StationSystemInput::log_finalise() { cache->finalise(); }
+
+// ----------------------------------------
+//  Station System
+// ----------------------------------------
 
 StationSystem::StationSystem(boost::json::object data, std::ifstream &split_ratios,
-                             std::ifstream &flows, double input_timestep)
-    : split_ratios(split_ratios) {
+                             std::ifstream &flows, double input_timestep, std::string flow_logging)
+    : split_ratios(split_ratios), input_driver(flow_logging) {
   // Setup internal equation structure
   if (!data.at("structure").is_array())
     throw std::runtime_error(
@@ -250,133 +279,19 @@ ODE_Solver::Vector StationSystem::PlatformUpdateVector(double n_people, unsigned
   }
   return out;
 }
-
-StationSystem::SegmentData::SegmentData() { this->type = SegmentType::INVALID; }
-StationSystem::SegmentData::SegmentData(boost::json::object data) {
-  if (!data.contains("type") || !data.at("type").is_string())
-    throw std::runtime_error(
-      "Invalid JSON value for station segment data, missing/mistyped key [type]");
-  auto str = data.at("type").as_string();
-  if (str == "DIRECT")
-    this->type = SegmentType::DIRECT;
-  else if (str == "SPLIT_INPUT")
-    this->type = SegmentType::SPLIT_INPUT;
-  else if (str == "SPLIT_OUTPUT")
-    this->type = SegmentType::SPLIT_OUTPUT;
-  else if (str == "AREA_INFLOW")
-    this->type = SegmentType::AREA_INFLOW;
-  else if (str == "AREA_OUTFLOW")
-    this->type = SegmentType::AREA_OUTFLOW;
-  else
-    throw std::runtime_error(
-      "Invalid JSON value for station segment data, invalid value at key [type]");
-
-  if (this->type != AREA_OUTFLOW) {
-    if (!data.contains("prev") || (!data.at("prev").is_int64() && !data.at("prev").is_uint64()))
-      throw std::runtime_error(
-        "Invalid JSON value for station segment data, missing/mistyped key [prev]");
-
-    auto &val = data.at("prev");
-    switch (val.kind()) {
-      case boost::json::kind::int64:
-        this->prev = val.as_int64();
-        break;
-      case boost::json::kind::uint64:
-        this->prev = val.as_uint64();
-        break;
-      default:  // Should be caught in above statement
-        break;
+std::vector<int> StationSystem::GetOutflowSegments() {
+  // Assume there is an exit for every entrance
+  std::vector<int> out = std::vector<int>(this->entrance_count(), 0);
+  int out_i = 0;
+  for (int i = 0; i < this->segments.size(); ++i) {
+    if (segments[i].xk >= INT_MAX - 1) {  // Station exit, should not build up
+      if (out_i >= this->entrance_count())
+        out.resize(out.size() + 1, true);
+      out[out_i++] = i;
     }
   }
 
-  if (this->type != AREA_INFLOW) {
-    if (!data.contains("next") || (!data.at("next").is_int64() && !data.at("next").is_uint64()))
-      throw std::runtime_error(
-        "Invalid JSON value for station segment data, missing/mistyped key [next]");
-
-    auto &val = data.at("next");
-    switch (val.kind()) {
-      case boost::json::kind::int64:
-        this->next = val.as_int64();
-        break;
-      case boost::json::kind::uint64:
-        this->next = val.as_uint64();
-        break;
-      default:  // Should be caught in above statement
-        break;
-    }
-  }
-
-  if (data.contains("adjacent")) {
-    auto &val = data.at("adjacent");
-    switch (val.kind()) {
-      case boost::json::kind::int64:
-        this->adjacent = val.as_int64();
-        break;
-      case boost::json::kind::uint64:
-        this->adjacent = val.as_uint64();
-        break;
-      default:  // Should be caught in above statement
-        throw std::runtime_error("Type mismatch corruption");
-    }
-  }
-  else
-    this->adjacent = -1;
-
-  if (!data.contains("xk") || (!data.at("xk").is_number()))
-    throw std::runtime_error(
-      "Invalid JSON value for station segment data, missing/mistyped key [xk]");
-  auto &val = data.at("xk");
-  JSON_ParseNumericToDouble(this->xk, &val);
-
-  if (this->type == SPLIT_OUTPUT || this->type == SPLIT_INPUT) {  // Read extra fields
-    if (!data.contains("secondary") ||
-        (!data.at("secondary").is_int64() && !data.at("secondary").is_uint64()))
-      throw std::runtime_error(
-        "Invalid JSON value for station segment data, missing/mistyped key [secondary]");
-    val = data.at("secondary");
-    switch (val.kind()) {
-      case boost::json::kind::int64:
-        this->secondary = val.as_int64();
-        break;
-      case boost::json::kind::uint64:
-        this->secondary = val.as_uint64();
-        break;
-      default:  // Should be caught in above statement
-        break;
-    }
-  }
-
-  if (this->type == SPLIT_OUTPUT) {
-    if (!(data.contains("split_ratio")))
-      throw std::runtime_error(
-        "Invalid JSON value for station segment data, missing/mistyped key [split_ratio]");
-
-    if (data.at("split_ratio").is_number()) {
-      val = data.at("split_ratio");
-      JSON_ParseNumericToDouble(this->split_ratio, &val);
-      // Bounds check, and also check for failure in generation script (initialises them to -1,
-      // before calculating ratios)
-      if (this->split_ratio < 0 || this->split_ratio > 1) {
-        std::cout << this->split_ratio << std::endl;
-        throw std::runtime_error("Invalid JSON value for station segment data, value at key "
-                                 "[split_ratio] must be >= 0 and <= 1");
-      }
-    }
-    else if (data.at("split_ratio").is_object()) {
-      // throw std::runtime_error("Time-series driven split ratio not implemented yet");
-      auto &ratio = data.at("split_ratio").as_object();
-      if (!(ratio.contains("index") &&
-            (ratio.at("index").is_int64() || ratio.at("index").is_uint64())))
-        throw std::runtime_error(
-          "Invalid JSON value for station segment data, missing/mistyped  key [split_ratio.index]");
-
-      if (ratio.at("index").is_int64())
-        this->split_ratio_series_index = ratio.at("index").as_int64();
-      else if (ratio.at("index").is_uint64())
-        this->split_ratio_series_index = ratio.at("index").as_uint64();
-    }
-  }
+  return out;
 }
 
 void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt,
@@ -415,6 +330,11 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
         break;
       }
       case SegmentType::AREA_INFLOW: {
+        // if (segments[i].xk >= INT_MAX - 1) {  // Station exit, should not build up
+        //   dxdt[i] = 0;
+        //   break;
+        // }
+
         double p_self = x[i] / segments[i].xk;
         double p_inflow = x[segments[i].prev] / _density_factor(segments[i].prev);
 
@@ -580,6 +500,138 @@ void StationSystem::_check() {
         (this->segments[i].secondary >= l || this->segments[i].prev < 0)) {
       std::cout << "Invalid secondary value for segment " << i << std::endl;
       continue;
+    }
+  }
+}
+
+// ----------------------------------------
+//  Station Segment Data
+// ----------------------------------------
+
+StationSystem::SegmentData::SegmentData() { this->type = SegmentType::INVALID; }
+StationSystem::SegmentData::SegmentData(boost::json::object data) {
+  if (!data.contains("type") || !data.at("type").is_string())
+    throw std::runtime_error(
+      "Invalid JSON value for station segment data, missing/mistyped key [type]");
+  auto str = data.at("type").as_string();
+  if (str == "DIRECT")
+    this->type = SegmentType::DIRECT;
+  else if (str == "SPLIT_INPUT")
+    this->type = SegmentType::SPLIT_INPUT;
+  else if (str == "SPLIT_OUTPUT")
+    this->type = SegmentType::SPLIT_OUTPUT;
+  else if (str == "AREA_INFLOW")
+    this->type = SegmentType::AREA_INFLOW;
+  else if (str == "AREA_OUTFLOW")
+    this->type = SegmentType::AREA_OUTFLOW;
+  else
+    throw std::runtime_error(
+      "Invalid JSON value for station segment data, invalid value at key [type]");
+
+  if (this->type != AREA_OUTFLOW) {
+    if (!data.contains("prev") || (!data.at("prev").is_int64() && !data.at("prev").is_uint64()))
+      throw std::runtime_error(
+        "Invalid JSON value for station segment data, missing/mistyped key [prev]");
+
+    auto &val = data.at("prev");
+    switch (val.kind()) {
+      case boost::json::kind::int64:
+        this->prev = val.as_int64();
+        break;
+      case boost::json::kind::uint64:
+        this->prev = val.as_uint64();
+        break;
+      default:  // Should be caught in above statement
+        break;
+    }
+  }
+
+  if (this->type != AREA_INFLOW) {
+    if (!data.contains("next") || (!data.at("next").is_int64() && !data.at("next").is_uint64()))
+      throw std::runtime_error(
+        "Invalid JSON value for station segment data, missing/mistyped key [next]");
+
+    auto &val = data.at("next");
+    switch (val.kind()) {
+      case boost::json::kind::int64:
+        this->next = val.as_int64();
+        break;
+      case boost::json::kind::uint64:
+        this->next = val.as_uint64();
+        break;
+      default:  // Should be caught in above statement
+        break;
+    }
+  }
+
+  if (data.contains("adjacent")) {
+    auto &val = data.at("adjacent");
+    switch (val.kind()) {
+      case boost::json::kind::int64:
+        this->adjacent = val.as_int64();
+        break;
+      case boost::json::kind::uint64:
+        this->adjacent = val.as_uint64();
+        break;
+      default:  // Should be caught in above statement
+        throw std::runtime_error("Type mismatch corruption");
+    }
+  }
+  else
+    this->adjacent = -1;
+
+  if (!data.contains("xk") || (!data.at("xk").is_number()))
+    throw std::runtime_error(
+      "Invalid JSON value for station segment data, missing/mistyped key [xk]");
+  auto &val = data.at("xk");
+  JSON_ParseNumericToDouble(this->xk, &val);
+
+  if (this->type == SPLIT_OUTPUT || this->type == SPLIT_INPUT) {  // Read extra fields
+    if (!data.contains("secondary") ||
+        (!data.at("secondary").is_int64() && !data.at("secondary").is_uint64()))
+      throw std::runtime_error(
+        "Invalid JSON value for station segment data, missing/mistyped key [secondary]");
+    val = data.at("secondary");
+    switch (val.kind()) {
+      case boost::json::kind::int64:
+        this->secondary = val.as_int64();
+        break;
+      case boost::json::kind::uint64:
+        this->secondary = val.as_uint64();
+        break;
+      default:  // Should be caught in above statement
+        break;
+    }
+  }
+
+  if (this->type == SPLIT_OUTPUT) {
+    if (!(data.contains("split_ratio")))
+      throw std::runtime_error(
+        "Invalid JSON value for station segment data, missing/mistyped key [split_ratio]");
+
+    if (data.at("split_ratio").is_number()) {
+      val = data.at("split_ratio");
+      JSON_ParseNumericToDouble(this->split_ratio, &val);
+      // Bounds check, and also check for failure in generation script (initialises them to -1,
+      // before calculating ratios)
+      if (this->split_ratio < 0 || this->split_ratio > 1) {
+        std::cout << this->split_ratio << std::endl;
+        throw std::runtime_error("Invalid JSON value for station segment data, value at key "
+                                 "[split_ratio] must be >= 0 and <= 1");
+      }
+    }
+    else if (data.at("split_ratio").is_object()) {
+      // throw std::runtime_error("Time-series driven split ratio not implemented yet");
+      auto &ratio = data.at("split_ratio").as_object();
+      if (!(ratio.contains("index") &&
+            (ratio.at("index").is_int64() || ratio.at("index").is_uint64())))
+        throw std::runtime_error(
+          "Invalid JSON value for station segment data, missing/mistyped  key [split_ratio.index]");
+
+      if (ratio.at("index").is_int64())
+        this->split_ratio_series_index = ratio.at("index").as_int64();
+      else if (ratio.at("index").is_uint64())
+        this->split_ratio_series_index = ratio.at("index").as_uint64();
     }
   }
 }
