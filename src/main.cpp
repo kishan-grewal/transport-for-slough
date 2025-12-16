@@ -9,7 +9,6 @@
 #include "train.hpp"
 
 int main(int argc, char** argv) {
-  std::cout << "Hello World!" << std::endl;
   int simTime = 10000;
 
   for (int i = 0; i < argc; ++i) {
@@ -19,14 +18,26 @@ int main(int argc, char** argv) {
     }
   }
 
-  std::ifstream inFile("test.json", std::ios_base::in);
-  boost::json::value simple_station = boost::json::parse(inFile);
-  inFile.close();
+  std::ifstream station_config_f("config/station_structures.json");
+  assert(station_config_f.is_open());
+  boost::json::value station_structures = boost::json::parse(station_config_f);
+  station_config_f.close();
+
+  station_config_f.open("config/fallback_station_structure.json");
+  assert(station_config_f.is_open());
+  boost::json::object fallback_station = boost::json::parse(station_config_f).as_object();
+  station_config_f.close();
+
+  std::basic_ifstream<char> station_flow_splits_f("config/station_split_ratios.csv");
+  assert(station_flow_splits_f.is_open());
+
+  std::basic_ifstream<char> station_flows_f("config/station_entrance_flows.csv");
+  assert(station_flows_f.is_open());
 
   State initialState;
   std::vector<std::pair<std::string, std::vector<int>>> stationNames = {
     {"Stratford",        {0, 0, 0}  },
-    {"West Ham",         {1, -1}    },
+    // {"West Ham",         {1, -1}    },
     {"Canning Town",     {1, -1}    },
     {"North Greenwich",  {1, -1, -1}},
     {"Canary Wharf",     {1, -1}    },
@@ -39,7 +50,7 @@ int main(int argc, char** argv) {
     {"Green Park",       {1, -1}    },
     {"Bond Street",      {1, -1}    },
     {"Baker Street",     {1, -1}    },
-    {"St John's Wood",   {1, -1}    },
+    {"St. John's Wood",  {1, -1}    },
     {"Swiss Cottage",    {1, -1}    },
     {"Finchley Road",    {1, -1}    },
     {"West Hampstead",   {1, -1}    },
@@ -58,9 +69,19 @@ int main(int argc, char** argv) {
   initialState.stations = std::vector<Station>();
   initialState.stations.reserve(stationNames.size());
   for (int i = 0; i < stationNames.size(); ++i) {
-    initialState.stations.emplace_back(std::get<std::string>(stationNames[i]),
-                                       std::get<std::vector<int>>(stationNames[i]),
-                                       simple_station.at("stations").as_array().at(0).as_object());
+    if (station_structures.as_object().contains(std::get<std::string>(stationNames[i]) +
+                                                " Underground Station")) {
+      initialState.stations.emplace_back(
+        std::get<std::string>(stationNames[i]), std::get<std::vector<int>>(stationNames[i]),
+        station_structures.at(std::get<std::string>(stationNames[i]) + " Underground Station")
+          .as_object(),
+        station_flow_splits_f, station_flows_f);
+    }
+    else {
+      initialState.stations.emplace_back(std::get<std::string>(stationNames[i]),
+                                         std::get<std::vector<int>>(stationNames[i]),
+                                         fallback_station, station_flow_splits_f, station_flows_f);
+    }
   }
 
   initialState.trains = std::vector<Train>();

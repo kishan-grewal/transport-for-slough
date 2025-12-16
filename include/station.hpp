@@ -27,7 +27,7 @@ class Station {
   int timeToLeaveRequest;
 
   ODE_Solver::Solver<odeint::runge_kutta_dopri5<ODE_Solver::Vector>, StationSystem,
-                     ODE_Solver::Vector>
+                     ODE_Solver::Vector, StationFileObserver>
     station_ode_system;
 
   std::atomic<bool> running;
@@ -39,7 +39,8 @@ class Station {
   std::vector<int> platforms;  // platforms with integer for direction, setup defined
 
   public:
-  Station(std::string name, std::vector<int> platforms, boost::json::object json_definition);
+  Station(std::string name, std::vector<int> platforms, boost::json::object json_definition,
+          std::ifstream& split_ratios, std::ifstream& flows);
   Station(Station&& other) noexcept
       : name(other.getName()), station_ode_system(other.station_ode_system) {
     this->running.store(true);

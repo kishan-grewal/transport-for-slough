@@ -6,9 +6,12 @@
 #include <barrier>
 #include <mutex>
 
-Station::Station(std::string name, std::vector<int> platforms, boost::json::object json_definition)
+Station::Station(std::string name, std::vector<int> platforms, boost::json::object json_definition,
+                 std::ifstream& split_ratios, std::ifstream& flows)
     : station_ode_system(odeint::runge_kutta_dopri5<ODE_Solver::Vector>(),
-                         StationSystem(json_definition)) {
+                         StationSystem(json_definition, split_ratios, flows, 1,
+                                       "out/stations/" + name + " flows.csv"),
+                         StationFileObserver("out/stations/" + name + ".csv")) {
   this->name = name;
   this->running.store(true);
 
