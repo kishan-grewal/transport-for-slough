@@ -28,11 +28,18 @@ int Train::try_embark(int n, const std::string& station) {
   }
 
   // Distribute the passengers
-  auto mapping = this->probability_mapping.at(this->direction == 1 ? "NB" : "SB")
-                   .as_object()
-                   .at("MON")
-                   .at(station)
-                   .as_object();
+  boost::json::object mapping;
+  try {
+    mapping = this->probability_mapping.at(this->direction == 1 ? "NB" : "SB")
+                .as_object()
+                .at("MON")
+                .at(station)
+                .as_object();
+  } catch (std::runtime_error) {
+    std::cout << "Failed to read mapping for " << station << ", "
+              << (this->direction == 1 ? "NB" : "SB") << std::endl;
+    return 0;
+  }
   std::vector<double> probs = std::vector<double>(sizeof(this->keys) / sizeof(this->keys[0]), 0);
   // Accumulate probabilities
   double acc = 0, tmp = 0;

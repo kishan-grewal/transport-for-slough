@@ -67,6 +67,7 @@ void Station::listen(std::barrier<>& syncPoint, State& state) {
             this->station_ode_system.LastState() +=
               this->station_ode_system.system.PlatformUpdateVector(-person_count, platform_i);
           } catch (std::runtime_error err) {
+            std::cout << err.what() << std::endl;
             std::cout << "WARN - invalid station platform id " << platform_i
                       << " for solver. Station " << this->name << " has "
                       << this->station_ode_system.system.platform_count() << " platforms."
