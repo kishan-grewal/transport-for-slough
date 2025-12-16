@@ -114,6 +114,12 @@ int main(int argc, char** argv) {
 
   std::cout << "Simulation took: " << simTimeReal.count() << "seconds" << std::endl;
 
+  // Log any remaining cached data
+  for (int i = 0; i < stationNames.size(); ++i) {
+    loop.state.stations[i].ode_solver().system.InputDriver().log_finalise();
+    loop.state.stations[i].ode_solver().GetGlobalObserver().log_finalise();
+  }
+
   std::cout << "Program finished successfully." << std::endl;
 
   return 0;

@@ -31,6 +31,36 @@
       "adjacent": 2,
       "platform_id": 0,
       "is_entrance": false
+    },
+    {
+      "id": 4,
+      "type": "AREA_OUTFLOW",
+      "next": 6,
+      "xk": 1,
+      "is_entrance": true
+    },
+    {
+      "id": 5,
+      "type": "AREA_INFLOW",
+      "prev": 7,
+      "xk": 2147483647
+    },
+    {
+      "id": 6,
+      "type": "AREA_INFLOW",
+      "prev": 4,
+      "xk": 100,
+      "platform_id": 1,
+      "adjacent": 7
+    },
+    {
+      "id": 7,
+      "type": "AREA_OUTFLOW",
+      "next": 5,
+      "xk": 100,
+      "adjacent": 6,
+      "platform_id": 1,
+      "is_entrance": false
     }
   ]
 }

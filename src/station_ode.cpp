@@ -318,8 +318,8 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
       case SegmentType::INVALID:
         throw std::runtime_error("Uninitialised segment in station system");
       case SegmentType::DIRECT: {
-        double p_inflow = x[segments[i].prev] / _density_factor(segments[i].prev);
-        double p_outflow = x[segments[i].next] / _density_factor(segments[i].next);
+        double p_inflow = x[segments[i].prev] / _density_factor(segments[i].prev, segments[i].xk);
+        double p_outflow = x[segments[i].next] / _density_factor(segments[i].next, segments[i].xk);
         double p_self = x[i];
         double p_self_full = p_self;
 
@@ -327,9 +327,10 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
           p_inflow /= 2;
         if (segments[segments[i].next].adjacent != -1)
           // Look opposite direction
-          p_outflow = (p_outflow + x[segments[segments[i].adjacent].prev] /
-                                     _density_factor(segments[segments[i].adjacent].prev)) /
-                      2;
+          p_outflow =
+            (p_outflow + x[segments[segments[i].adjacent].prev] /
+                           _density_factor(segments[segments[i].adjacent].prev, segments[i].xk)) /
+            2;
         if (segments[i].adjacent != -1) {
           p_self_full = (p_self_full + x[segments[i].adjacent]) / 2;
           p_self /= 2;
@@ -345,10 +346,14 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
         // }
 
         double p_self = x[i] / segments[i].xk;
-        double p_inflow = x[segments[i].prev] / _density_factor(segments[i].prev);
+        double p_inflow =
+          x[segments[i].prev] / _density_factor(segments[i].prev, segments[segments[i].prev].xk);
 
         if (segments[i].adjacent != -1) {
-          p_self = (p_self + x[segments[i].adjacent] / _density_factor(segments[i].adjacent)) / 2;
+          p_self =
+            (p_self + x[segments[i].adjacent] /
+                        _density_factor(segments[i].adjacent, segments[segments[i].prev].xk)) /
+            2;
         }
         if (segments[segments[i].prev].adjacent != -1) {
           p_inflow /= 2;
@@ -358,13 +363,15 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
         break;
       }
       case SegmentType::AREA_OUTFLOW: {
-        double p_outflow = x[segments[i].next] / _density_factor(segments[i].next);
+        double p_outflow = x[segments[i].next] / _density_factor(segments[i].next, segments[i].xk);
         double p_self = x[i] / segments[i].xk;
 
         if (segments[segments[i].next].adjacent != -1) {
-          p_outflow = (p_outflow + x[segments[segments[i].next].adjacent] /
-                                     _density_factor(segments[segments[i].next].adjacent)) /
-                      2;
+          p_outflow =
+            (p_outflow + x[segments[segments[i].next].adjacent] /
+                           _density_factor(segments[segments[i].next].adjacent,
+                                           segments[segments[segments[i].next].adjacent].xk)) /
+            2;
         }
         if (segments[i].adjacent != -1) {
           p_self /= 2;
@@ -375,21 +382,24 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
         break;
       }
       case SegmentType::SPLIT_OUTPUT: {
-        double p_inflow = x[segments[i].prev] / _density_factor(segments[i].prev);
-        double p_outflow1 = x[segments[i].next] / _density_factor(segments[i].next);
-        double p_outflow2 = x[segments[i].secondary] / _density_factor(segments[i].secondary);
+        double p_inflow = x[segments[i].prev] / _density_factor(segments[i].prev, segments[i].xk);
+        double p_outflow1 = x[segments[i].next] / _density_factor(segments[i].next, segments[i].xk);
+        double p_outflow2 =
+          x[segments[i].secondary] / _density_factor(segments[i].secondary, segments[i].xk);
         double p_self = x[i];
         double p_self_full = p_self;
 
         if (segments[segments[i].prev].adjacent != -1)
           p_inflow /= 2;
         if (segments[segments[i].next].adjacent != -1)
-          p_outflow1 = (p_outflow1 + x[segments[segments[i].next].adjacent] /
-                                       _density_factor(segments[segments[i].next].adjacent)) /
-                       2;
+          p_outflow1 =
+            (p_outflow1 + x[segments[segments[i].next].adjacent] /
+                            _density_factor(segments[segments[i].next].adjacent, segments[i].xk)) /
+            2;
         if (segments[segments[i].secondary].adjacent != -1)
           p_outflow2 = (p_outflow2 + x[segments[segments[i].secondary].adjacent] /
-                                       _density_factor(segments[segments[i].secondary].adjacent)) /
+                                       _density_factor(segments[segments[i].secondary].adjacent,
+                                                       segments[i].xk)) /
                        2;
         if (segments[i].adjacent != -1) {
           p_self_full =
@@ -405,9 +415,10 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
         break;
       }
       case SegmentType::SPLIT_INPUT: {
-        double p_inflow1 = x[segments[i].prev] / _density_factor(segments[i].prev);
-        double p_inflow2 = x[segments[i].secondary] / _density_factor(segments[i].secondary);
-        double p_outflow = x[segments[i].next] / _density_factor(segments[i].next);
+        double p_inflow1 = x[segments[i].prev] / _density_factor(segments[i].prev, segments[i].xk);
+        double p_inflow2 =
+          x[segments[i].secondary] / _density_factor(segments[i].secondary, segments[i].xk);
+        double p_outflow = x[segments[i].next] / _density_factor(segments[i].next, segments[i].xk);
         double p_self = x[i];
         double p_self_full = p_self;
 
@@ -461,9 +472,10 @@ void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &
         if (segments[segments[i].secondary].adjacent != -1)
           p_inflow2 /= 2;
         if (segments[segments[i].next].adjacent != -1)
-          p_outflow = (p_outflow + x[segments[segments[i].next].adjacent] /
-                                     _density_factor(segments[segments[i].next].adjacent)) /
-                      2;
+          p_outflow =
+            (p_outflow + x[segments[segments[i].next].adjacent] /
+                           _density_factor(segments[segments[i].next].adjacent, segments[i].xk)) /
+            2;
         if (segments[i].adjacent != -1) {
           p_self_full =
             (p_self_full + x[segments[i].adjacent] / _density_factor(segments[i].adjacent)) / 2;
