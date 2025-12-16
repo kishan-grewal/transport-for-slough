@@ -5,48 +5,6 @@
 #include "ode/ode_solver.hpp"
 #include "ode/ode_system.hpp"
 
-class StationSystem;
-struct StationSystemInput {
-  double timestep = 1;
-
-  StationSystem *system;
-  double input_n = -1;  // Const input, used for testing (default to negative, which is ignored)
-
-  StationSystemInput(const StationSystemInput &cpy, StationSystem *override = NULL)
-      : system(cpy.system),
-        input_n(cpy.input_n),
-        timestep(cpy.timestep),
-
-        last_update_t(cpy.last_update_t),
-        target_inputs(cpy.target_inputs),
-        accumulated(cpy.accumulated),
-        // interp_t(cpy.interp_t),
-        inflows(cpy.inflows) {
-    if (override != NULL)
-      this->system = override;
-  }
-  StationSystemInput(StationSystem *system = NULL, int input = -1);
-
-  void operator()(ODE_Solver::Vector &x, double t);
-  void initialise_timeseries_input(int entrance_count, std::ifstream *flows);
-
-  private:
-  int last_update_t;
-
-  constexpr static int TIME_SERIES_TIMESTEP = 15 * 60;
-  // constexpr static int TIME_SERIES_ENTRY_COUNT = (24 * 60) / 15;  // 15 minute slices across a
-  // day
-  constexpr static int TIME_SERIES_ROW_OFFSET = 1;  // Skip column headers
-  constexpr static int TIME_SERIES_MAX_LINE_LEN = 2000;
-
-  std::vector<double> accumulated;
-  std::vector<double> target_inputs;
-  // std::vector<double> interp_t;
-
-  std::ifstream *inflows;
-  double read_inflow(int flow_index, double t);
-};
-
 struct StationFileObserverCache {
   constexpr static unsigned int CACHE_SIZE = 50;
   StationFileObserverCache(std::string path) : f(path), fpath(path), cache(50), cache_ptr(0) {
@@ -93,6 +51,52 @@ struct StationFileObserverCache {
     cache_ptr = 0;
   }
 };
+
+class StationSystem;
+struct StationSystemInput {
+  double timestep = 1;
+
+  StationSystem *system;
+  double input_n = -1;  // Const input, used for testing (default to negative, which is ignored)
+
+  StationSystemInput(const StationSystemInput &cpy, StationSystem *override = NULL)
+      : system(cpy.system),
+        input_n(cpy.input_n),
+        timestep(cpy.timestep),
+
+        last_update_t(cpy.last_update_t),
+        target_inputs(cpy.target_inputs),
+        accumulated(cpy.accumulated),
+        inflows(cpy.inflows),
+
+        cache(cpy.cache) {
+    if (override != NULL)
+      this->system = override;
+  }
+  StationSystemInput(std::string log_path, StationSystem *system = NULL, int input = -1);
+
+  void operator()(ODE_Solver::Vector &x, double t);
+  void initialise_timeseries_input(int entrance_count, std::ifstream *flows);
+  void log_finalise();
+
+  private:
+  int last_update_t;
+  std::shared_ptr<StationFileObserverCache> cache;
+
+  constexpr static int TIME_SERIES_TIMESTEP = 15 * 60;
+  // constexpr static int TIME_SERIES_ENTRY_COUNT = (24 * 60) / 15;  // 15 minute slices across a
+  // day
+  constexpr static int TIME_SERIES_ROW_OFFSET = 1;  // Skip column headers
+  constexpr static int TIME_SERIES_MAX_LINE_LEN = 2000;
+
+  std::vector<double> accumulated;
+  std::vector<double> target_inputs;
+  // std::vector<double> interp_t;
+
+  std::ifstream *inflows;
+  double read_inflow(int flow_index, double t);
+};
+
 struct StationFileObserver : ODE_Solver::GlobalTimeObserverTemplate {
   StationFileObserver(std::string path, double timestep = 5)
       : cache(std::make_shared<StationFileObserverCache>(path)) {
@@ -110,7 +114,7 @@ struct StationFileObserver : ODE_Solver::GlobalTimeObserverTemplate {
     }
     cache->push(x);
   };
-  void finalise() { cache->finalise(); }
+  void log_finalise() { cache->finalise(); }
 
   private:
   std::shared_ptr<StationFileObserverCache> cache;
@@ -119,7 +123,7 @@ struct StationFileObserver : ODE_Solver::GlobalTimeObserverTemplate {
 class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> {
   public:
   StationSystem(boost::json::object data, std::ifstream &split_ratios, std::ifstream &flows,
-                double input_timestep = 1);
+                double input_timestep = 1, std::string flow_logging = "");
   // Override copy constructor to make sure the input system pointer updates correctly
   StationSystem(const StationSystem &cpy)
       : segments(cpy.segments),
@@ -127,8 +131,9 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
         platform_alight_segment_mapping(cpy.platform_alight_segment_mapping),
         platform_board_segment_mapping(cpy.platform_board_segment_mapping),
         entrance_flow_rate_indexes(cpy.entrance_flow_rate_indexes),
-        split_ratios(cpy.split_ratios) {
-    this->input_driver = StationSystemInput(cpy.input_driver, this);
+        split_ratios(cpy.split_ratios),
+        input_driver(cpy.input_driver, this) {
+    // this->input_driver = StationSystemInput(cpy.input_driver, this);
   }
 
   void operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt, const double /* t */);
@@ -138,6 +143,8 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
   ODE_Solver::Vector EntranceUpdateVector(std::vector<double> n_people);
   ODE_Solver::Vector PlatformUpdateVector(double n_people, unsigned int platform_id);
   StationSystemInput InputDriver() { return this->input_driver; }
+
+  std::vector<int> GetOutflowSegments();
 
   int entrance_count() { return this->input_segment_index.size(); }
   int entrance_flow_index(int i) {
