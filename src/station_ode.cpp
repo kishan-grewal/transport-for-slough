@@ -44,7 +44,7 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
     for (int i = 0; i < outflow.size(); ++i) {
       outflow_amt = floor(x[outflow[i]]);
 
-      flow_log[i + sz] = outflow_amt;
+      flow_log[i + sz + 1] = outflow_amt;
       x[outflow[i]] -= outflow_amt;
     }
 

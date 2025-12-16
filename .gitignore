@@ -16,5 +16,6 @@ compile_commands.json
 
 docs/
 out/**/*.csv
+out/**/*.jpg
 
 old/

@@ -33,7 +33,6 @@ class Train {
         direction(cpy.direction),
         passengers(cpy.passengers),
         probability_mapping(cpy.probability_mapping) {}
-  int getId() const;
   int getStartIndex() const;
   int getEndIndex() const;
   int getDirection() const;

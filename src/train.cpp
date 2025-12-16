@@ -23,6 +23,7 @@ int Train::try_embark(int n, const std::string& station) {
   int successful = n;
   this->passenger_count += n;
   if (this->passenger_count > this->MAX_CAPACITY) {
+    std::cout << "Train is at capacity" << std::endl;
     successful -= this->passenger_count - this->MAX_CAPACITY;
     this->passenger_count = this->MAX_CAPACITY;
   }
@@ -68,6 +69,7 @@ int Train::try_embark(int n, const std::string& station) {
 }
 int Train::disembark(const std::string& station) {
   int n = this->passengers[station];
+  this->passenger_count -= this->passengers[station];
   this->passengers[station] = 0;
   return n;
 }
