@@ -20,6 +20,7 @@ void load_settings() {
 }
 
 int main(int argc, char** argv) {
+  load_settings();
   std::ifstream station_config_f("config/station_structures_compressed.json");
   assert(station_config_f.is_open());
   boost::json::value station_structures = boost::json::parse(station_config_f);
