@@ -22,7 +22,7 @@
 // }
 
 int main(int argc, char** argv) {
-  int simTime = 2000;
+  int simTime = 10000;
 
   for (int i = 0; i < argc; ++i) {
     std::string arg = argv[i];
@@ -113,6 +113,12 @@ int main(int argc, char** argv) {
   auto simTimeReal = std::chrono::duration_cast<std::chrono::seconds>(simEnd - simStart);
 
   std::cout << "Simulation took: " << simTimeReal.count() << "seconds" << std::endl;
+
+  // Log any remaining cached data
+  for (int i = 0; i < stationNames.size(); ++i) {
+    loop.state.stations[i].ode_solver().system.InputDriver().log_finalise();
+    loop.state.stations[i].ode_solver().GetGlobalObserver().log_finalise();
+  }
 
   std::cout << "Program finished successfully." << std::endl;
 

@@ -58,6 +58,12 @@ class Station {
 
   std::string getName() { return this->name; }
 
+  ODE_Solver::Solver<odeint::runge_kutta_dopri5<ODE_Solver::Vector>, StationSystem,
+                     ODE_Solver::Vector, StationFileObserver>&
+  ode_solver() {
+    return this->station_ode_system;
+  }
+
   void exportCurState();
   void finishExport();
 

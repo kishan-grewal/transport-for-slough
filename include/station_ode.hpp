@@ -143,6 +143,10 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
         input_driver(cpy.input_driver, this) {
     // this->input_driver = StationSystemInput(cpy.input_driver, this);
   }
+  ~StationSystem() {
+    if (split_ratios.is_open())
+      split_ratios.close();
+  }
 
   void operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt, const double /* t */);
   void _check();
@@ -204,9 +208,10 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
     return fmin(Qb_out(p1_in), Qb_in(p2_full)) - fmin(Qb_out(p2_in), Qb_in(p3_full));
   }
 
-  inline double _density_factor(int i) {
-    return (segments[i].type == AREA_INFLOW || segments[i].type == AREA_OUTFLOW) ? segments[i].xk
-                                                                                 : 1;
+  inline double _density_factor(int i, double rel_to = 1) {
+    return (segments[i].type == AREA_INFLOW || segments[i].type == AREA_OUTFLOW)
+             ? segments[i].xk * rel_to
+             : 1;
   }
   inline double _split_ratio(int i, double t) {
     if (segments[i].split_ratio != -1)

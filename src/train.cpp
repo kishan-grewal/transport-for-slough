@@ -18,7 +18,7 @@ Train::Train(int passenger_count, int startIndex, int endIndex, int direction,
 int Train::try_embark(int n, const std::string& station) {
   if (n == 0)
     return 0;
-  std::cout << "Embark" << std::endl;
+  // std::cout << "Embark" << std::endl;
 
   int successful = n;
   this->passenger_count += n;
@@ -55,12 +55,12 @@ int Train::try_embark(int n, const std::string& station) {
 
   for (int i = 0; i < n; ++i) {
     double r = ((double)rand()) / RAND_MAX;
-    for (int j = 0; j < probs.size(); ++j) {
-      if (r > probs[j])
+    int j = 0;
+    for (auto it : this->passengers) {
+      if (r > it.second)
         continue;
 
-      this->passengers[this->keys[i]] += 1;
-      break;
+      this->passengers[it.first] += 1;
     }
   }
 
