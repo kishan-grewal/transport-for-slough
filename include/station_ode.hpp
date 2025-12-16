@@ -1,6 +1,7 @@
 #ifndef STATION_ODE_HPP
 #define STATION_ODE_HPP
 #include <fstream>
+#include <boost/tokenizer.hpp>
 
 #include "ode/ode_solver.hpp"
 #include "ode/ode_system.hpp"
@@ -67,7 +68,8 @@ struct StationSystemInput {
         last_update_t(cpy.last_update_t),
         target_inputs(cpy.target_inputs),
         accumulated(cpy.accumulated),
-        inflows(cpy.inflows),
+        inflows(cpy.inflows_path),
+        inflows_path(cpy.inflows_path),
 
         cache(cpy.cache) {
     if (override != NULL)
@@ -76,7 +78,7 @@ struct StationSystemInput {
   StationSystemInput(std::string log_path, StationSystem *system = NULL, int input = -1);
 
   void operator()(ODE_Solver::Vector &x, double t);
-  void initialise_timeseries_input(int entrance_count, std::ifstream *flows);
+  void initialise_timeseries_input(int entrance_count, std::string flows);
   void log_finalise();
 
   private:
@@ -93,7 +95,8 @@ struct StationSystemInput {
   std::vector<double> target_inputs;
   // std::vector<double> interp_t;
 
-  std::ifstream *inflows;
+  std::ifstream inflows;
+  std::string inflows_path;
   double read_inflow(int flow_index, double t);
 };
 
@@ -122,7 +125,7 @@ struct StationFileObserver : ODE_Solver::GlobalTimeObserverTemplate {
 
 class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> {
   public:
-  StationSystem(boost::json::object data, std::ifstream &split_ratios, std::ifstream &flows,
+  StationSystem(boost::json::object data, std::string split_ratios, std::string flows,
                 double input_timestep = 1, std::string flow_logging = "");
   // Override copy constructor to make sure the input system pointer updates correctly
   StationSystem(const StationSystem &cpy)
@@ -131,7 +134,12 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
         platform_alight_segment_mapping(cpy.platform_alight_segment_mapping),
         platform_board_segment_mapping(cpy.platform_board_segment_mapping),
         entrance_flow_rate_indexes(cpy.entrance_flow_rate_indexes),
-        split_ratios(cpy.split_ratios),
+
+        split_ratios_path(cpy.split_ratios_path),
+        split_ratios(cpy.split_ratios_path),
+        cached_split(cpy.cached_split),
+        cached_split_slice(cpy.cached_split_slice),
+
         input_driver(cpy.input_driver, this) {
     // this->input_driver = StationSystemInput(cpy.input_driver, this);
   }
@@ -142,6 +150,7 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
   // Return the state update vector which should be added to the current state
   ODE_Solver::Vector EntranceUpdateVector(std::vector<double> n_people);
   ODE_Solver::Vector PlatformUpdateVector(double n_people, unsigned int platform_id);
+  int QueryPlatformDepartingIndex(unsigned int platform_id);
   StationSystemInput InputDriver() { return this->input_driver; }
 
   unsigned int platform_count() { return platform_board_segment_mapping.size(); }
@@ -176,7 +185,10 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
 
   std::vector<int> entrance_flow_rate_indexes;
 
-  std::basic_ifstream<char> &split_ratios;
+  std::string split_ratios_path;
+  std::basic_ifstream<char> split_ratios;
+  std::vector<double> cached_split;
+  std::vector<int> cached_split_slice;
 
   // --------------------
   //  Flow rate equations
@@ -203,7 +215,12 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
     if (segments[i].split_ratio_series_index == -1)
       throw std::runtime_error("No valid split ratio found");
     //           (minutes % minutes in a day) / entry count per day
-    int slice = ((int)floor(t / 60) % (24 * 60)) / 15;
+    int slice = ((int)floor(t) % (24 * 60)) / 15;
+
+    // Use cached value rather than reading from file again
+    if (this->cached_split_slice[i] == slice)
+      return this->cached_split[i];
+
     int foffset =
       (segments[i].split_ratio_series_index * (TIME_SERIES_ENTRY_COUNT * TIME_SERIES_ENTRY_LEN)) +
       (slice * TIME_SERIES_ENTRY_LEN);
@@ -216,6 +233,9 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
     if (out > 1 || out < 0)
       std::cout << "WARN - read at " << segments[i].split_ratio_series_index << " " << t << "("
                 << slice << " " << foffset << ")" << " returned invalid " << read << std::endl;
+
+    this->cached_split_slice[i] = slice;
+    this->cached_split[i] = out;
     return out;
   }
 

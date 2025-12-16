@@ -84,11 +84,12 @@ void StationSystemInput::operator()(ODE_Solver::Vector &x, double t) {
   if (t >= this->last_update_t + TIME_SERIES_TIMESTEP)
     this->last_update_t += TIME_SERIES_TIMESTEP;  // Update
 }
-void StationSystemInput::initialise_timeseries_input(int entrance_count, std::ifstream *flows) {
+void StationSystemInput::initialise_timeseries_input(int entrance_count, std::string flows) {
   this->accumulated = std::vector<double>(entrance_count, 0);
   this->target_inputs = std::vector<double>(entrance_count, 0);
   // this->interp_t = std::vector<double>(entrance_count, 0);
-  this->inflows = flows;
+  this->inflows = std::ifstream(flows);
+  this->inflows_path = flows;
 
   int flow_index;
   if (this->system == NULL)
@@ -101,21 +102,21 @@ void StationSystemInput::initialise_timeseries_input(int entrance_count, std::if
   }
 }
 double StationSystemInput::read_inflow(int flow_index, double t) {
-  if (this->inflows == NULL || !this->inflows->is_open())
-    throw std::runtime_error("No open inflow file provided");
+  if (!this->inflows.is_open())
+    throw std::runtime_error("No open inflow filestream");
 
   int slice = ((int)floor(t) % (24 * 3600)) / TIME_SERIES_TIMESTEP;
   typedef boost::tokenizer<boost::escaped_list_separator<char>, std::string::const_iterator,
                            std::string>
     Tokenizer;
 
-  inflows->seekg(0, std::ios_base::beg);
+  inflows.seekg(0, std::ios_base::beg);
   for (int i = 0; i < flow_index + TIME_SERIES_ROW_OFFSET; ++i) {
-    inflows->ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    inflows.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   }
   std::string s;
   s.reserve(TIME_SERIES_MAX_LINE_LEN);
-  std::getline(*inflows, s);
+  std::getline(inflows, s);
   boost::escaped_list_separator<char> seps('\\', ',', '\"');
   Tokenizer tok(s, seps);
 
@@ -130,9 +131,9 @@ void StationSystemInput::log_finalise() { cache->finalise(); }
 //  Station System
 // ----------------------------------------
 
-StationSystem::StationSystem(boost::json::object data, std::ifstream &split_ratios,
-                             std::ifstream &flows, double input_timestep, std::string flow_logging)
-    : split_ratios(split_ratios), input_driver(flow_logging) {
+StationSystem::StationSystem(boost::json::object data, std::string split_ratios, std::string flows,
+                             double input_timestep, std::string flow_logging)
+    : split_ratios(split_ratios), split_ratios_path(split_ratios), input_driver(flow_logging) {
   // Setup internal equation structure
   if (!data.at("structure").is_array())
     throw std::runtime_error(
@@ -242,7 +243,7 @@ StationSystem::StationSystem(boost::json::object data, std::ifstream &split_rati
           throw std::runtime_error(
             "Invalid JSON value for station data, expected int for [index] in list [input]");
 
-        this->input_driver.initialise_timeseries_input(this->entrance_count(), &flows);
+        this->input_driver.initialise_timeseries_input(this->entrance_count(), flows);
       }
     }
   }
@@ -252,6 +253,9 @@ StationSystem::StationSystem(boost::json::object data, std::ifstream &split_rati
     throw std::runtime_error("Mismatched board and alight mapping size - all platform ids must "
                              "have both board and alight segments");
   this->input_driver.timestep = input_timestep;
+
+  this->cached_split = std::vector<double>(this->segments.size(), 0);
+  this->cached_split_slice = std::vector<int>(this->segments.size(), -1);
 }
 
 ODE_Solver::Vector StationSystem::EntranceUpdateVector(std::vector<double> n_people) {
@@ -292,6 +296,11 @@ std::vector<int> StationSystem::GetOutflowSegments() {
   }
 
   return out;
+}
+int StationSystem::QueryPlatformDepartingIndex(unsigned int platform_id) {
+  if (platform_id >= platform_board_segment_mapping.size())
+    throw std::runtime_error("Out of bounds platform id for station system");
+  return this->platform_board_segment_mapping[platform_id];
 }
 
 void StationSystem::operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt,

@@ -27,9 +27,9 @@ Sets the following fields
 Writes csv headers for logging output to the file with the station name
 */
 Station::Station(std::string name, std::vector<int> platforms, boost::json::object json_definition,
-                 std::ifstream& split_ratios, std::ifstream& flows)
+                 std::string split_ratios_path, std::string flows_path)
     : station_ode_system(odeint::runge_kutta_dopri5<ODE_Solver::Vector>(),
-                         StationSystem(json_definition, split_ratios, flows, 1,
+                         StationSystem(json_definition, split_ratios_path, flows_path, 1,
                                        "out/stations/" + name + " flows.csv"),
                          StationFileObserver("out/stations/" + name + ".csv")) {
   this->name = name;
@@ -93,9 +93,20 @@ void Station::listen(std::barrier<>& syncPoint, State& state) {
                                                this->station_ode_system.system.InputDriver());
           try {
             this->station_ode_system.LastState() +=
-              this->station_ode_system.system.PlatformUpdateVector(20, platform_i);
+              this->station_ode_system.system.PlatformUpdateVector(50, platform_i);
+
+            // std::cout << this->name << " Platform " << platform_i << "/"
+            //           << this->station_ode_system.system.platform_count() << std::endl;
+
+            int platform_segment =
+              this->station_ode_system.system.QueryPlatformDepartingIndex(platform_i);
+            int person_count = int(this->station_ode_system.LastState()[platform_segment]);
+            // this->station_ode_system.LastState() +=
+            //   this->station_ode_system.system.PlatformUpdateVector(-person_count, platform_i);
           } catch (std::runtime_error err) {
-            std::cout << "WARN - invalid station platform id " << platform_i << " for solver"
+            std::cout << "WARN - invalid station platform id " << platform_i
+                      << " for solver. Station " << this->name << " has "
+                      << this->station_ode_system.system.platform_count() << " platforms."
                       << std::endl;
           }
         }
