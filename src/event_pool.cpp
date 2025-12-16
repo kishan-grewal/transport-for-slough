@@ -145,6 +145,22 @@ int EventPool::dispatch(Event e) {
   return 0;  // lock goes out of scope at end of function
 }
 
+int EventPool::eraseFirstNot(Event e) {
+  std::lock_guard<std::mutex> lock(this->poolMutex);
+  auto it = this->pool.begin();
+    
+  while (it != pool.end()) {
+    if (it->getTrainIndex() == e.getTrainIndex() && it->getTarget() != e.getTarget()) {
+      it = pool.erase(it);
+    }
+    else {
+      ++it;
+    }
+  }
+
+  return 0;
+}
+
 int EventPool::sendRequest(int target, Event e) {
   // send request to station at target index
   this->target.push_back(target);

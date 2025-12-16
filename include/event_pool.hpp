@@ -30,6 +30,7 @@ private:
 public:
     EventPool(int time, int stationSize, int trainsSize, State* loop);
     int dispatch(Event e);
+    int eraseFirstNot(Event e);
     int getGlobalTime();
     std::vector<int> getTargets();
     std::vector<Event> getTargetInfo();

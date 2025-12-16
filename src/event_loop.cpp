@@ -62,8 +62,9 @@ void EventLoop::run() {
               this->state.stations[targets[i]].receiveEntryRequest(targetInfo[i], &(this->state));
           }
           if (propogation.getTrainIndex() != -1) {
-            std::cout << "propogation" << std::endl;
+            std::cout << "Propogation" << std::endl;
             this->events.load()->dispatch(propogation);
+            this->events.load()->eraseFirstNot(propogation);
           }
         }
       }
