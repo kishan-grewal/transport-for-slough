@@ -143,6 +143,10 @@ class StationSystem : public ODE_Solver::InitialStateSystem<ODE_Solver::Vector> 
         input_driver(cpy.input_driver, this) {
     // this->input_driver = StationSystemInput(cpy.input_driver, this);
   }
+  ~StationSystem() {
+    if (split_ratios.is_open())
+      split_ratios.close();
+  }
 
   void operator()(const ODE_Solver::Vector &x, ODE_Solver::Vector &dxdt, const double /* t */);
   void _check();

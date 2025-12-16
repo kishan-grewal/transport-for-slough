@@ -22,7 +22,7 @@
 // }
 
 int main(int argc, char** argv) {
-  int simTime = 2000;
+  int simTime = 10000;
 
   for (int i = 0; i < argc; ++i) {
     std::string arg = argv[i];
