@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  std::ifstream station_config_f("config/station_structures.json");
+  std::ifstream station_config_f("config/station_structures_compressed.json");
   assert(station_config_f.is_open());
   boost::json::value station_structures = boost::json::parse(station_config_f);
   station_config_f.close();
@@ -98,12 +98,12 @@ int main(int argc, char** argv) {
   }
 
   initialState.trains = std::vector<Train>();
-  // initialState.trains.reserve(26);
-  // for (int i = 0; i < 26; ++i) {
-  //   initialState.trains.emplace_back(100, i, 10, i % 2 == 0 ? 1 : -1, station_probabilities);
-  // }
-  initialState.trains.reserve(1);
-  initialState.trains.emplace_back(0, 0, 10, 1, station_probabilities);
+  initialState.trains.reserve(26);
+  for (int i = 0; i < 26; ++i) {
+    initialState.trains.emplace_back(100, i, 10, i % 2 == 0 ? 1 : -1, station_probabilities);
+  }
+  // initialState.trains.reserve(1);
+  // initialState.trains.emplace_back(0, 0, 10, 1, station_probabilities);
 
   EventLoop loop = EventLoop(simTime, std::move(initialState), initialState.stations.size());
   auto simStart = std::chrono::system_clock::now();

@@ -85,16 +85,13 @@ void Station::listen(std::barrier<>& syncPoint, State& state) {
           double timestamp = this->entryRequestTimestamps[platform_i];
           this->entryRequests[platform_i] = -1;  // replace with train id
 
-          this->station_ode_system.SolveToTime(this->entryRequestTimestamps[platform_i],
+          this->station_ode_system.SolveToTime(timestamp,
                                                this->station_ode_system.system.InputDriver());
           try {
-            Train train = state.getTrain(this->entryRequests[platform_i]);
+            Train train = state.getTrain(train_id);
             this->station_ode_system.LastState() +=
               this->station_ode_system.system.PlatformUpdateVector(train.disembark(this->name),
                                                                    platform_i);
-
-            // std::cout << this->name << " Platform " << platform_i << "/"
-            //           << this->station_ode_system.system.platform_count() << std::endl;
 
             int platform_segment =
               this->station_ode_system.system.QueryPlatformDepartingIndex(platform_i);
@@ -104,6 +101,7 @@ void Station::listen(std::barrier<>& syncPoint, State& state) {
             this->station_ode_system.LastState() +=
               this->station_ode_system.system.PlatformUpdateVector(-person_count, platform_i);
           } catch (std::runtime_error err) {
+            std::cout << err.what() << std::endl;
             std::cout << "WARN - invalid station platform id " << platform_i
                       << " for solver. Station " << this->name << " has "
                       << this->station_ode_system.system.platform_count() << " platforms."

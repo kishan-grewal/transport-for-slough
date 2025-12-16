@@ -279,7 +279,7 @@ ODE_Solver::Vector StationSystem::PlatformUpdateVector(double n_people, unsigned
   else if (n_people < 0) {  // People boarding from a platform
     if (platform_id >= platform_board_segment_mapping.size())
       throw std::runtime_error("Out of bounds platform id for station system");
-    out[this->platform_board_segment_mapping[platform_id]] += n_people;
+    out[this->platform_board_segment_mapping[platform_id]] += n_people;  // Is negative
   }
   return out;
 }

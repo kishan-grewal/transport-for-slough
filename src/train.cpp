@@ -18,6 +18,7 @@ Train::Train(int passenger_count, int startIndex, int endIndex, int direction,
 int Train::try_embark(int n, const std::string& station) {
   if (n == 0)
     return 0;
+  std::cout << "Embark" << std::endl;
 
   int successful = n;
   this->passenger_count += n;
@@ -27,11 +28,18 @@ int Train::try_embark(int n, const std::string& station) {
   }
 
   // Distribute the passengers
-  auto mapping = this->probability_mapping.at(this->direction == 1 ? "NB" : "SB")
-                   .as_object()
-                   .at("MON")
-                   .at(station)
-                   .as_object();
+  boost::json::object mapping;
+  try {
+    mapping = this->probability_mapping.at(this->direction == 1 ? "NB" : "SB")
+                .as_object()
+                .at("MON")
+                .at(station)
+                .as_object();
+  } catch (std::runtime_error) {
+    std::cout << "Failed to read mapping for " << station << ", "
+              << (this->direction == 1 ? "NB" : "SB") << std::endl;
+    return 0;
+  }
   std::vector<double> probs = std::vector<double>(sizeof(this->keys) / sizeof(this->keys[0]), 0);
   // Accumulate probabilities
   double acc = 0, tmp = 0;
@@ -52,19 +60,15 @@ int Train::try_embark(int n, const std::string& station) {
         continue;
 
       this->passengers[this->keys[i]] += 1;
-      std::cout << this->keys[i] << std::endl;
       break;
     }
   }
-  std::cout << std::endl;
 
   return successful;
 }
 int Train::disembark(const std::string& station) {
-  std::cout << station;
   int n = this->passengers[station];
   this->passengers[station] = 0;
-  std::cout << "  dis" << std::endl;
   return n;
 }
 
