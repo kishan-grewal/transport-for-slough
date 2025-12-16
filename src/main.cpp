@@ -8,8 +8,21 @@
 #include "station.hpp"
 #include "train.hpp"
 
+// void load_settings() {
+//   std::ifstream conf("config/config.json", std::ios_base::in);
+//   assert(conf.is_open());
+//   boost::json::object j = boost::json::parse(conf).as_object();
+//   conf.close();
+
+//   JSON_ParseNumericToDouble(input_noise, &j.at("input_noise"));
+//   JSON_ParseNumericToDouble(time_offset, &j.at("time_offset"));
+//   JSON_ParseNumericToDouble(sim_time, &j.at("sim_time"));
+
+//   settings_loaded = true;
+// }
+
 int main(int argc, char** argv) {
-  int simTime = 10000;
+  int simTime = 2000;
 
   for (int i = 0; i < argc; ++i) {
     std::string arg = argv[i];
@@ -28,11 +41,11 @@ int main(int argc, char** argv) {
   boost::json::object fallback_station = boost::json::parse(station_config_f).as_object();
   station_config_f.close();
 
-  std::basic_ifstream<char> station_flow_splits_f("config/station_split_ratios.csv");
-  assert(station_flow_splits_f.is_open());
+  // std::basic_ifstream<char> station_flow_splits_f("config/station_split_ratios.csv");
+  // assert(station_flow_splits_f.is_open());
 
-  std::basic_ifstream<char> station_flows_f("config/station_entrance_flows.csv");
-  assert(station_flows_f.is_open());
+  // std::basic_ifstream<char> station_flows_f("config/station_entrance_flows.csv");
+  // assert(station_flows_f.is_open());
 
   State initialState;
   std::vector<std::pair<std::string, std::vector<int>>> stationNames = {
@@ -75,19 +88,19 @@ int main(int argc, char** argv) {
         std::get<std::string>(stationNames[i]), std::get<std::vector<int>>(stationNames[i]),
         station_structures.at(std::get<std::string>(stationNames[i]) + " Underground Station")
           .as_object(),
-        station_flow_splits_f, station_flows_f);
+        "config/station_split_ratios.csv", "config/station_entrance_flows.csv");
     }
     else {
-      initialState.stations.emplace_back(std::get<std::string>(stationNames[i]),
-                                         std::get<std::vector<int>>(stationNames[i]),
-                                         fallback_station, station_flow_splits_f, station_flows_f);
+      initialState.stations.emplace_back(
+        std::get<std::string>(stationNames[i]), std::get<std::vector<int>>(stationNames[i]),
+        fallback_station, "config/station_split_ratios.csv", "config/station_entrance_flows.csv");
     }
   }
 
   initialState.trains = std::vector<Train>();
   initialState.trains.reserve(26);
   for (int i = 0; i < 26; ++i) {
-    initialState.trains.emplace_back(100, i, 10, 1);
+    initialState.trains.emplace_back(100, i, 10, i % 2 == 0 ? 1 : -1);
   }
   // initialState.trains.emplace_back(100, 0, 10, 1);
   EventLoop loop = EventLoop(simTime, std::move(initialState), initialState.stations.size());

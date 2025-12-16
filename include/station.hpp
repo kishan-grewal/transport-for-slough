@@ -40,7 +40,7 @@ class Station {
 
   public:
   Station(std::string name, std::vector<int> platforms, boost::json::object json_definition,
-          std::ifstream& split_ratios, std::ifstream& flows);
+          std::string split_ratios_path, std::string flows_path);
   Station(Station&& other) noexcept
       : name(other.getName()), station_ode_system(other.station_ode_system) {
     this->running.store(true);

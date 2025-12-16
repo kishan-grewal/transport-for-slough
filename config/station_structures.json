@@ -80141,7 +80141,7 @@
       {
         "id": 2,
         "type": "DIRECT",
-        "next": 4,
+        "next": 76,
         "prev": 0,
         "xk": 1,
         "adjacent": 3
@@ -80150,7 +80150,7 @@
         "id": 3,
         "type": "DIRECT",
         "next": 1,
-        "prev": 5,
+        "prev": 77,
         "xk": 1,
         "adjacent": 2
       },
@@ -80158,14 +80158,14 @@
         "id": 4,
         "type": "DIRECT",
         "next": 6,
-        "prev": 2,
+        "prev": 78,
         "xk": 1,
         "adjacent": 5
       },
       {
         "id": 5,
         "type": "DIRECT",
-        "next": 3,
+        "next": 79,
         "prev": 7,
         "xk": 1,
         "adjacent": 4
@@ -80729,6 +80729,256 @@
         "xk": 100,
         "adjacent": 74,
         "platform_id": 0,
+        "is_entrance": false
+      },
+      {
+        "type": "SPLIT_OUTPUT",
+        "id": 76,
+        "prev": 2,
+        "next": 78,
+        "adjacent": 77,
+        "secondary": 80,
+        "split_ratio": 1,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_INPUT",
+        "id": 77,
+        "prev": 79,
+        "next": 3,
+        "adjacent": 76,
+        "secondary": 81,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_INPUT",
+        "id": 78,
+        "prev": 76,
+        "next": 4,
+        "adjacent": 79,
+        "secondary": 81,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_OUTPUT",
+        "id": 79,
+        "prev": 5,
+        "next": 77,
+        "adjacent": 78,
+        "secondary": 80,
+        "split_ratio": 0,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_INPUT",
+        "id": 80,
+        "prev": 76,
+        "next": 82,
+        "adjacent": 81,
+        "secondary": 79,
+        "xk": 1
+      },
+      {
+        "type": "SPLIT_OUTPUT",
+        "id": 81,
+        "prev": 83,
+        "next": 77,
+        "adjacent": 80,
+        "secondary": 78,
+        "split_ratio": 1,
+        "xk": 1
+      },
+      {
+        "id": 82,
+        "type": "DIRECT",
+        "next": 84,
+        "prev": 80,
+        "xk": 1,
+        "adjacent": 83
+      },
+      {
+        "id": 83,
+        "type": "DIRECT",
+        "next": 81,
+        "prev": 85,
+        "xk": 1,
+        "adjacent": 82
+      },
+      {
+        "id": 84,
+        "type": "DIRECT",
+        "next": 86,
+        "prev": 82,
+        "xk": 1,
+        "adjacent": 85
+      },
+      {
+        "id": 85,
+        "type": "DIRECT",
+        "next": 83,
+        "prev": 87,
+        "xk": 1,
+        "adjacent": 84
+      },
+      {
+        "id": 86,
+        "type": "DIRECT",
+        "next": 88,
+        "prev": 84,
+        "xk": 1,
+        "adjacent": 87
+      },
+      {
+        "id": 87,
+        "type": "DIRECT",
+        "next": 85,
+        "prev": 89,
+        "xk": 1,
+        "adjacent": 86
+      },
+      {
+        "id": 88,
+        "type": "DIRECT",
+        "next": 90,
+        "prev": 86,
+        "xk": 1,
+        "adjacent": 89
+      },
+      {
+        "id": 89,
+        "type": "DIRECT",
+        "next": 87,
+        "prev": 91,
+        "xk": 1,
+        "adjacent": 88
+      },
+      {
+        "id": 90,
+        "type": "DIRECT",
+        "next": 92,
+        "prev": 88,
+        "xk": 1,
+        "adjacent": 91
+      },
+      {
+        "id": 91,
+        "type": "DIRECT",
+        "next": 89,
+        "prev": 93,
+        "xk": 1,
+        "adjacent": 90
+      },
+      {
+        "id": 92,
+        "type": "DIRECT",
+        "next": 94,
+        "prev": 90,
+        "xk": 1,
+        "adjacent": 93
+      },
+      {
+        "id": 93,
+        "type": "DIRECT",
+        "next": 91,
+        "prev": 95,
+        "xk": 1,
+        "adjacent": 92
+      },
+      {
+        "id": 94,
+        "type": "DIRECT",
+        "next": 96,
+        "prev": 92,
+        "xk": 1,
+        "adjacent": 95
+      },
+      {
+        "id": 95,
+        "type": "DIRECT",
+        "next": 93,
+        "prev": 97,
+        "xk": 1,
+        "adjacent": 94
+      },
+      {
+        "id": 96,
+        "type": "DIRECT",
+        "next": 98,
+        "prev": 94,
+        "xk": 1,
+        "adjacent": 97
+      },
+      {
+        "id": 97,
+        "type": "DIRECT",
+        "next": 95,
+        "prev": 99,
+        "xk": 1,
+        "adjacent": 96
+      },
+      {
+        "id": 98,
+        "type": "DIRECT",
+        "next": 100,
+        "prev": 96,
+        "xk": 1,
+        "adjacent": 99
+      },
+      {
+        "id": 99,
+        "type": "DIRECT",
+        "next": 97,
+        "prev": 101,
+        "xk": 1,
+        "adjacent": 98
+      },
+      {
+        "id": 100,
+        "type": "DIRECT",
+        "next": 102,
+        "prev": 98,
+        "xk": 1,
+        "adjacent": 101
+      },
+      {
+        "id": 101,
+        "type": "DIRECT",
+        "next": 99,
+        "prev": 103,
+        "xk": 1,
+        "adjacent": 100
+      },
+      {
+        "id": 102,
+        "type": "DIRECT",
+        "next": 104,
+        "prev": 100,
+        "xk": 1,
+        "adjacent": 103
+      },
+      {
+        "id": 103,
+        "type": "DIRECT",
+        "next": 101,
+        "prev": 105,
+        "xk": 1,
+        "adjacent": 102
+      },
+      {
+        "id": 104,
+        "type": "AREA_INFLOW",
+        "prev": 102,
+        "xk": 100,
+        "platform_id": 1,
+        "adjacent": 105
+      },
+      {
+        "id": 105,
+        "type": "AREA_OUTFLOW",
+        "next": 103,
+        "xk": 100,
+        "adjacent": 104,
+        "platform_id": 1,
         "is_entrance": false
       }
     ]

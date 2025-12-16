@@ -8,6 +8,8 @@ class Train {
   int endIndex;
   int direction;
 
+  constexpr static int max_capacity = 1000;
+
   public:
   Train(int capacity, int startIndex, int endIndex, int direction, int passenger_count = 0);
   int getId() const;
