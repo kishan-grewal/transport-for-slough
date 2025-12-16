@@ -41,16 +41,16 @@ int main(int argc, char** argv) {
   boost::json::object fallback_station = boost::json::parse(station_config_f).as_object();
   station_config_f.close();
 
-  // std::basic_ifstream<char> station_flow_splits_f("config/station_split_ratios.csv");
-  // assert(station_flow_splits_f.is_open());
-
-  // std::basic_ifstream<char> station_flows_f("config/station_entrance_flows.csv");
-  // assert(station_flows_f.is_open());
+  std::ifstream station_probabilities_f("data/od_matrix.json");
+  assert(station_probabilities_f.is_open());
+  boost::json::object station_probabilities =
+    boost::json::parse(station_probabilities_f).as_object();
+  station_probabilities_f.close();
 
   State initialState;
   std::vector<std::pair<std::string, std::vector<int>>> stationNames = {
     {"Stratford",        {0, 0, 0}  },
-    // {"West Ham",         {1, -1}    },
+    {"West Ham",         {1, -1}    },
     {"Canning Town",     {1, -1}    },
     {"North Greenwich",  {1, -1, -1}},
     {"Canary Wharf",     {1, -1}    },
@@ -98,11 +98,13 @@ int main(int argc, char** argv) {
   }
 
   initialState.trains = std::vector<Train>();
-  initialState.trains.reserve(26);
-  for (int i = 0; i < 26; ++i) {
-    initialState.trains.emplace_back(100, i, 10, i % 2 == 0 ? 1 : -1);
-  }
-  // initialState.trains.emplace_back(100, 0, 10, 1);
+  // initialState.trains.reserve(26);
+  // for (int i = 0; i < 26; ++i) {
+  //   initialState.trains.emplace_back(100, i, 10, i % 2 == 0 ? 1 : -1, station_probabilities);
+  // }
+  initialState.trains.reserve(1);
+  initialState.trains.emplace_back(0, 0, 10, 1, station_probabilities);
+
   EventLoop loop = EventLoop(simTime, std::move(initialState), initialState.stations.size());
   auto simStart = std::chrono::system_clock::now();
   loop.start();
