@@ -49,7 +49,7 @@ def vincenty_sphere_distance(lat1, lon1, lat2, lon2, radius=6371008.8):
     return distance
 
 SLICE_LEN = 1
-PLATFORM_LEN = 120
+PLATFORM_LEN = 100
 SPLIT_R = -2
 
 class EdgeData:
@@ -98,7 +98,7 @@ class EdgeData:
     
     distance = vincenty_sphere_distance(float(self.start_node["x"]),float(self.start_node["y"]),float(self.end_node["x"]),float(self.end_node["y"]))
     n_slices = max(1,math.ceil(distance / SLICE_LEN)) # Ensure there is always one segment, even for negligible length regions
-    n_slices = 1
+    # n_slices = 1
 
     for _ in range(n_slices):
       if last_fwd != -1: segments[last_fwd]["next"] = len(segments) + idx_offset
@@ -445,7 +445,7 @@ class EdgeManager:
       if self_edge_id_graph in self.split_nodes:
         raise Exception()
       else:
-        self.split_nodes[self_edge_id_graph] = SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+5],"forward_flows",["reverse_flows","forward_flows"])
+        self.split_nodes[self_edge_id_graph] = SegmentJunction([start_edge_id_graph, next_edge_id_graph],[l+5],"forward_flows",["forward_flows","reverse_flows"])
       
       # self.split_nodes_df = pd.concat([self.split_nodes_df, pd.DataFrame([
       #   {"node_id":l,"inflow_target":self.edges[end].end_node.name,"outflow_target":self.edges[end].end_node.name},
@@ -620,7 +620,7 @@ class EdgeManager:
       # print(primary_outflow, junc.outflow_dirs[i])
       primary_outflow = [*set(n for n in primary_outflow[junc.outflow_dirs[i]] if n in inflow)]
       split = [inflow, primary_outflow]
-      print("  Split ("+str(junc.outflow_idxs[i])+"): "+str(split) + str([n for n in edge_flow_graph.get_edge_data(*junc.outflow_edges[i]).copy()[junc.outflow_dirs[i]]]))
+      print("  Split ("+str(junc.outflow_idxs[i])+"): "+str(split) + "\t|   " + str([n for n in edge_flow_graph.get_edge_data(*junc.outflow_edges[i]).copy()[junc.outflow_dirs[i]]]))
       
       if len(primary_outflow) == 0:
         self.station_structure[junc.outflow_idxs[i]]["split_ratio"] = 0# if junc.dir != "reverse_flows" else 1
@@ -720,7 +720,7 @@ split_ratio_list = []
 station_structures = {}
 station_platforms = {}
 
-for station_id in ["Bond Street Underground Station"]: # paths.paths.keys()
+for station_id in ["Bond Street Underground Station","Baker Street Underground Station","Canons Park Underground Station"]: # paths.paths.keys()
   print(f"Station ID: {station_id}")
 
   station_paths = paths.paths[station_id]
